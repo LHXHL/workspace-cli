@@ -28,7 +28,7 @@ task build
 | `--dry-run` | - | 模拟执行，仅打印组装好的请求，不向服务器发送真实报文 |
 
 **API Token 格式提醒：**
-Insight 的 API Token 是一串 JWT 格式的字符串（例如：`eyJhb...`）。配置后，CLI 会自动将其同时注入至请求的 `Authorization` 和 `Cookie` (以 `jwt=...` 形式) 中，以满足后端的双重鉴权需求。
+Insight 的 API Token 是一串 JWT 格式的字符串。配置后，CLI 会自动将其同时注入至请求的 `Authorization` 和 `Cookie` 中，以满足后端的鉴权需求。
 
 ## 命令概览
 
@@ -78,7 +78,7 @@ chaitin-cli insight task stop --id <task_id>
 
 #### 1.4 查询执行进度 (`task status`)
 
-查询当前某次排查任务的进度（排查中、已完成、失败）。
+查询当前某次排查任务的进度。
 ```bash
 chaitin-cli insight task status --exec-id <execution_id>
 ```
@@ -87,7 +87,7 @@ chaitin-cli insight task status --exec-id <execution_id>
 
 ### 2. 漏洞与排查结果感知 (Vuln & Result)
 
-拉取风险点对应的具体漏洞详情，甚至直接喂给其它工具进行统计分析。
+拉取风险点对应的具体漏洞详情。由于使用了 JSON-RPC，高级查询可以按需通过 JSON Body 传入，CLI 默认支持分页拉取。
 
 #### 2.1 查询 IP 漏洞 (`vuln ip`)
 
@@ -98,6 +98,9 @@ chaitin-cli insight vuln ip [flags]
 **可用参数：**
 * `--count int`: 每页返回数量 (默认 20)
 * `--offset uint`: 跳过数量 (默认 0)
+
+*后端完整支持的过滤字段（API 层）：*
+`id`, `port`, `service`, `protocol`, `vuln_ip`, `vuln_location`, `rel_asset_name`, `vuln_status`, `name` 等。
 
 #### 2.2 查询 Web 漏洞 (`vuln web`)
 
@@ -127,7 +130,7 @@ chaitin-cli insight result diff --exec-id <execution_id>
 
 ### 3. 资产快照与台账 (Asset & Snapshot)
 
-提取或同步 CMDB 和资产管理系统的数据。
+提取或同步 CMDB 和资产管理系统的数据。资产列表查询基于后端的 RPC 接口。
 
 #### 3.1 提取 IP 资产台账 (`asset ip`)
 
@@ -138,6 +141,9 @@ chaitin-cli insight asset ip [flags]
 **可用参数：**
 * `--count int`: 每页返回数量 (默认 20)
 * `--offset uint`: 跳过数量 (默认 0)
+
+*后端完整支持的过滤字段（API 层）：*
+`id`, `name`, `asset_state`, `external` (是否互联网暴露), `business_id`, `scope_id`, `online_status` 等。
 
 #### 3.2 提取 Web 资产台账 (`asset web`)
 
