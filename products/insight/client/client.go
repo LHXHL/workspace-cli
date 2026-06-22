@@ -1,6 +1,7 @@
 package client
 
 import (
+	"crypto/tls"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -68,13 +69,22 @@ func (c *Client) Request(method, path string, body io.Reader) ([]byte, error) {
 
 	if c.cfg.APIToken != "" {
 		req.Header.Set("Authorization", "Bearer "+c.cfg.APIToken)
+		// Insight's GetUserMiddleware specifically requires a Cookie header to fetch user info
+		req.Header.Set("Cookie", "jwt="+c.cfg.APIToken)
 	}
 	if body != nil {
 		req.Header.Set("Content-Type", "application/json")
 	}
 
 	// NOTE: In production, configure insecure transport if needed.
-	client := &http.Client{Timeout: 30 * time.Second}
+	transport := &http.Transport{}
+	if c.insecure {
+		transport.TLSClientConfig = &tls.Config{InsecureSkipVerify: true}
+	}
+	client := &http.Client{
+		Timeout:   30 * time.Second,
+		Transport: transport,
+	}
 
 	resp, err := client.Do(req)
 	if err != nil {

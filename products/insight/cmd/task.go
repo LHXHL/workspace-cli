@@ -19,14 +19,26 @@ func NewTaskCmd(getClient func(cmd *cobra.Command) *client.Client) *cobra.Comman
 		RunE: func(cmd *cobra.Command, args []string) error {
 			c := getClient(cmd)
 
-			id, _ := cmd.Flags().GetString("id")
+			count, _ := cmd.Flags().GetInt64("count")
+			offset, _ := cmd.Flags().GetUint64("offset")
 
-			query := ""
-			if id != "" {
-				query = "?id=" + id
+			// Uses the JSON-RPC V2 specification for Insight
+			payload := map[string]interface{}{
+				"jsonrpc": "2.0",
+				"id":      "0",
+				"method":  "ScanTaskService.SearchTaskList",
+				"params": map[string]interface{}{
+					"count":  count,
+					"offset": offset,
+				},
 			}
 
-			resp, err := c.Request("GET", "/exposure/api/task"+query, nil)
+			payloadBytes, err := json.Marshal(payload)
+			if err != nil {
+				return err
+			}
+
+			resp, err := c.Request("POST", "/pedestal/rpc", bytes.NewReader(payloadBytes))
 			if err != nil {
 				return err
 			}
@@ -37,7 +49,8 @@ func NewTaskCmd(getClient func(cmd *cobra.Command) *client.Client) *cobra.Comman
 		},
 	}
 
-	listCmd.Flags().String("id", "", "task id to filter")
+	listCmd.Flags().Int64("count", 20, "Number of items to return")
+	listCmd.Flags().Uint64("offset", 0, "Number of items to skip")
 	cmd.AddCommand(listCmd)
 	
 	startCmd := &cobra.Command{

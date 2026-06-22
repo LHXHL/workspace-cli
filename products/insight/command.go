@@ -65,6 +65,9 @@ Common examples:
 	rootCmd.AddCommand(cmd.NewResultCmd(getClientFn))
 	rootCmd.AddCommand(cmd.NewSnapshotCmd(getClientFn))
 	rootCmd.AddCommand(cmd.NewRawCmd(getClientFn))
+	rootCmd.AddCommand(cmd.NewVulnCmd(getClientFn))
+	rootCmd.AddCommand(cmd.NewAssetCmd(getClientFn))
+	rootCmd.AddCommand(cmd.NewOrderCmd(getClientFn))
 
 	return rootCmd
 }
