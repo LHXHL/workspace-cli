@@ -17,7 +17,15 @@ task build
 
 ## 配置
 
-支持通过命令行参数、环境变量或项目根目录 `config.yaml` / `.env` 进行配置：
+在当前工作目录的 `config.yaml` 中配置：
+
+```yaml
+insight:
+  url: "https://your-insight-platform.com"
+  api_token: "YOUR_JWT_TOKEN"
+```
+
+同时，也支持通过命令行参数或环境变量进行配置：
 
 | 参数 | 环境变量 | 说明 |
 |------|----------|------|
