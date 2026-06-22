@@ -155,7 +155,20 @@ chaitin-cli insight asset web [flags]
 * `--count int`: 每页返回数量 (默认 20)
 * `--offset uint`: 跳过数量 (默认 0)
 
-#### 3.3 平台资产全量快照 (`snapshot asset`)
+#### 3.3 提取主机软件资产台账 (`asset software`)
+
+查询所有从主机提取出的软件组件与中间件版本等资产。
+```bash
+chaitin-cli insight asset software [flags]
+```
+**可用参数：**
+* `--count int`: 每页返回数量 (默认 20)
+* `--offset uint`: 跳过数量 (默认 0)
+
+*后端完整支持的过滤字段（API 层）：*
+`id`, `name`, `ip`, `agent_id`, `owner_id` 等。
+
+#### 3.4 平台资产全量快照 (`snapshot asset`)
 
 查看某一时刻平台纳管的整体资产快照数据。
 ```bash

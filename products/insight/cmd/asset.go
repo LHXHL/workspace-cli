@@ -91,5 +91,44 @@ func NewAssetCmd(getClient func(cmd *cobra.Command) *client.Client) *cobra.Comma
 	webCmd.Flags().Uint64("offset", 0, "Number of items to skip")
 	cmd.AddCommand(webCmd)
 
+	softwareCmd := &cobra.Command{
+		Use:   "software",
+		Short: "List Software assets overview",
+		RunE: func(cmd *cobra.Command, args []string) error {
+			c := getClient(cmd)
+
+			count, _ := cmd.Flags().GetInt64("count")
+			offset, _ := cmd.Flags().GetUint64("offset")
+
+			payload := map[string]interface{}{
+				"jsonrpc": "2.0",
+				"id":      "0",
+				"method":  "AssetMgrService.SoftwareAssetOverviewList",
+				"params": map[string]interface{}{
+					"filter": map[string]interface{}{},
+					"count":  count,
+					"offset": offset,
+				},
+			}
+
+			payloadBytes, err := json.Marshal(payload)
+			if err != nil {
+				return err
+			}
+
+			resp, err := c.Request("POST", "/pedestal/rpc", bytes.NewReader(payloadBytes))
+			if err != nil {
+				return err
+			}
+
+			format, _ := cmd.Flags().GetString("output")
+			renderer := client.NewRenderer(format, cmd.OutOrStdout())
+			return renderer.Render(resp)
+		},
+	}
+	softwareCmd.Flags().Int64("count", 20, "Number of items to return")
+	softwareCmd.Flags().Uint64("offset", 0, "Number of items to skip")
+	cmd.AddCommand(softwareCmd)
+
 	return cmd
 }
