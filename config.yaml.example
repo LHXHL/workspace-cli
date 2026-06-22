@@ -54,3 +54,8 @@ codeforce:
 cosmos:
   url: ""
   api_key: ""
+
+# TODO: Replace with real insight API Token and URL
+insight:
+  url: "http://192.168.1.100"
+  api_token: "your-token-xyz"
