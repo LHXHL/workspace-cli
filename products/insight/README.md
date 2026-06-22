@@ -168,7 +168,20 @@ chaitin-cli insight asset software [flags]
 *后端完整支持的过滤字段（API 层）：*
 `id`, `name`, `ip`, `agent_id`, `owner_id` 等。
 
-#### 3.4 平台资产全量快照 (`snapshot asset`)
+#### 3.4 提取资产标签列表 (`asset tag`)
+
+查询系统中定义的所有资产标签列表，这通常用于其他脚本自动化给资产打标之前获取合法的标签数据。
+```bash
+chaitin-cli insight asset tag [flags]
+```
+**可用参数：**
+* `--count int`: 每页返回数量 (默认 20)
+* `--offset uint`: 跳过数量 (默认 0)
+
+*后端完整支持的过滤字段（API 层）：*
+`id`, `tag_name`, `description`, `auto_mark_enable`, `updated_by_id` 等。
+
+#### 3.5 平台资产全量快照 (`snapshot asset`)
 
 查看某一时刻平台纳管的整体资产快照数据。
 ```bash
