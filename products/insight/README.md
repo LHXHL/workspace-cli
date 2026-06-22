@@ -181,7 +181,20 @@ chaitin-cli insight asset tag [flags]
 *后端完整支持的过滤字段（API 层）：*
 `id`, `tag_name`, `description`, `auto_mark_enable`, `updated_by_id` 等。
 
-#### 3.5 平台资产全量快照 (`snapshot asset`)
+#### 3.5 提取业务系统列表 (`asset business`)
+
+查询系统中定义的业务系统台账列表，方便将漏洞或资产根据所属业务系统进行进一步聚合。
+```bash
+chaitin-cli insight asset business [flags]
+```
+**可用参数：**
+* `--count int`: 每页返回数量 (默认 20)
+* `--offset uint`: 跳过数量 (默认 0)
+
+*后端完整支持的过滤字段（API 层）：*
+`id`, `name`, `full_name`, `importance`, `organization_id`, `maintainer_id` 等。
+
+#### 3.6 平台资产全量快照 (`snapshot asset`)
 
 查看某一时刻平台纳管的整体资产快照数据。
 ```bash
