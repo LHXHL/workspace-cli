@@ -52,7 +52,7 @@ func NewTaskCmd(getClient func(cmd *cobra.Command) *client.Client) *cobra.Comman
 	listCmd.Flags().Int64("count", 20, "Number of items to return")
 	listCmd.Flags().Uint64("offset", 0, "Number of items to skip")
 	cmd.AddCommand(listCmd)
-	
+
 	startCmd := &cobra.Command{
 		Use:   "start",
 		Short: "Start a task re-execution",

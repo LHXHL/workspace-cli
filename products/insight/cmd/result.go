@@ -44,7 +44,7 @@ func NewResultCmd(getClient func(cmd *cobra.Command) *client.Client) *cobra.Comm
 			c := getClient(cmd)
 
 			execId, _ := cmd.Flags().GetString("exec-id")
-			
+
 			query := ""
 			if execId != "" {
 				query = "?exec_id=" + execId
@@ -54,7 +54,7 @@ func NewResultCmd(getClient func(cmd *cobra.Command) *client.Client) *cobra.Comm
 			if err != nil {
 				return err
 			}
-			
+
 			format, _ := cmd.Flags().GetString("output")
 			renderer := client.NewRenderer(format, cmd.OutOrStdout())
 			return renderer.Render(resp)

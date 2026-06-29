@@ -15,7 +15,7 @@ func NewRawCmd(getClient func(cmd *cobra.Command) *client.Client) *cobra.Command
 			method := args[0]
 			path := args[1]
 			c := getClient(cmd)
-			
+
 			resp, err := c.Request(method, path, nil)
 			if err != nil {
 				return err

@@ -31,7 +31,7 @@ func NewApiTokenCmd(getClient func(cmd *cobra.Command) *client.Client) *cobra.Co
 			if err != nil {
 				return err
 			}
-			
+
 			format, _ := cmd.Flags().GetString("output")
 			renderer := client.NewRenderer(format, cmd.OutOrStdout())
 			return renderer.Render(resp)
@@ -47,7 +47,7 @@ func NewApiTokenCmd(getClient func(cmd *cobra.Command) *client.Client) *cobra.Co
 		Short: "Get API token details",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			c := getClient(cmd)
-			
+
 			id, _ := cmd.Flags().GetInt("id")
 			query := ""
 			if id > 0 {
@@ -58,7 +58,7 @@ func NewApiTokenCmd(getClient func(cmd *cobra.Command) *client.Client) *cobra.Co
 			if err != nil {
 				return err
 			}
-			
+
 			format, _ := cmd.Flags().GetString("output")
 			renderer := client.NewRenderer(format, cmd.OutOrStdout())
 			return renderer.Render(resp)
@@ -72,7 +72,7 @@ func NewApiTokenCmd(getClient func(cmd *cobra.Command) *client.Client) *cobra.Co
 		Short: "Create a new API token",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			_ = getClient(cmd)
-			
+
 			// For POST requests, we typically read a JSON file or stdin using a standard helper.
 			// Since we haven't implemented a full JSON payload flag like --payload-file yet,
 			// this serves as a structural placeholder for mutating operations.

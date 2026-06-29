@@ -2,9 +2,9 @@ package cmd
 
 import (
 	"fmt"
-	"net/url"
 	"github.com/chaitin/chaitin-cli/products/insight/client"
 	"github.com/spf13/cobra"
+	"net/url"
 )
 
 func NewOrderCmd(getClient func(cmd *cobra.Command) *client.Client) *cobra.Command {
@@ -48,7 +48,7 @@ func NewOrderCmd(getClient func(cmd *cobra.Command) *client.Client) *cobra.Comma
 			return renderer.Render(resp)
 		},
 	}
-	
+
 	listCmd.Flags().Int("page", 1, "Page number")
 	listCmd.Flags().Int("size", 20, "Number of items per page")
 	listCmd.Flags().String("name", "", "Filter by order name")
