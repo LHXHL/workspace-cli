@@ -45,7 +45,7 @@ func (c *Client) Request(method, path string, body io.Reader) ([]byte, error) {
 	if err != nil {
 		return nil, fmt.Errorf("invalid request path: %v", err)
 	}
-	
+
 	// Safely merge path and raw queries so they don't get double encoded
 	u.Path, err = url.JoinPath(u.Path, parsedPath.Path)
 	if err != nil {
@@ -67,10 +67,10 @@ func (c *Client) Request(method, path string, body io.Reader) ([]byte, error) {
 		return nil, err
 	}
 
-	if c.cfg.APIToken != "" {
-		req.Header.Set("Authorization", "Bearer "+c.cfg.APIToken)
+	if c.cfg.APIKey != "" {
+		req.Header.Set("Authorization", "Bearer "+c.cfg.APIKey)
 		// Insight's GetUserMiddleware specifically requires a Cookie header to fetch user info
-		req.Header.Set("Cookie", "jwt="+c.cfg.APIToken)
+		req.Header.Set("Cookie", "jwt="+c.cfg.APIKey)
 	}
 	if body != nil {
 		req.Header.Set("Content-Type", "application/json")

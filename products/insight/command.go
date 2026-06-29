@@ -24,16 +24,16 @@ func NewCommand() *cobra.Command {
 		Short: "Insight API CLI",
 		Long: `Insight risk operations management platform CLI
 
-Authentication uses the APIToken.
+Authentication uses the API key.
 
 Config example:
   insight:
     url: https://your-insight.example.com
-    api_token: your-api-token
+    api_key: your-api-key
 
 Environment variables:
   INSIGHT_URL
-  INSIGHT_API_TOKEN
+  INSIGHT_API_KEY
 
 Common examples:
   chaitin-cli insight task list
@@ -48,7 +48,7 @@ Common examples:
 	}
 
 	rootCmd.PersistentFlags().String("url", "", "Insight API URL")
-	rootCmd.PersistentFlags().String("api-token", "", "Insight API token")
+	rootCmd.PersistentFlags().String("api-key", "", "Insight API key")
 	rootCmd.PersistentFlags().StringP("output", "o", "json", "Output format (table|json)")
 	rootCmd.PersistentFlags().BoolVar(&runtimeInsecure, "insecure", true, "Skip TLS certificate verification")
 	rootCmd.PersistentFlags().BoolVarP(&verbose, "verbose", "v", false, "Print request URL, headers, and body")
@@ -85,14 +85,14 @@ func applyRuntimeConfig(c *cobra.Command) {
 	if flag := lookupFlag(c, "url"); flag != nil && !flag.Changed && runtimeCfg.URL != "" {
 		_ = setFlag(c, "url", runtimeCfg.URL)
 	}
-	if flag := lookupFlag(c, "api-token"); flag != nil && !flag.Changed && runtimeCfg.APIToken != "" {
-		_ = setFlag(c, "api-token", runtimeCfg.APIToken)
+	if flag := lookupFlag(c, "api-key"); flag != nil && !flag.Changed && runtimeCfg.APIKey != "" {
+		_ = setFlag(c, "api-key", runtimeCfg.APIKey)
 	}
 	if flag := lookupFlag(c, "url"); flag != nil {
 		runtimeCfg.URL = flag.Value.String()
 	}
-	if flag := lookupFlag(c, "api-token"); flag != nil {
-		runtimeCfg.APIToken = flag.Value.String()
+	if flag := lookupFlag(c, "api-key"); flag != nil {
+		runtimeCfg.APIKey = flag.Value.String()
 	}
 }
 

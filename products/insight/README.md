@@ -22,7 +22,7 @@ task build
 ```yaml
 insight:
   url: "https://your-insight-platform.com"
-  api_token: "YOUR_JWT_TOKEN"
+  api_key: "YOUR_JWT_TOKEN"
 ```
 
 同时，也支持通过命令行参数或环境变量进行配置：
@@ -30,13 +30,13 @@ insight:
 | 参数 | 环境变量 | 说明 |
 |------|----------|------|
 | `--url` | `INSIGHT_URL` | Insight 平台地址（必填） |
-| `--api-token` | `INSIGHT_API_TOKEN` | API Token（必填，请在后台生成） |
+| `--api-key` | `INSIGHT_API_KEY` | API Key（必填，请在后台生成） |
 | `--output` / `-o`| - | 输出格式，支持 `table` 或 `json` (默认 json) |
 | `--verbose` / `-v`| - | 打印完整的 HTTP 请求与响应信息 |
 | `--dry-run` | - | 模拟执行，仅打印组装好的请求，不向服务器发送真实报文 |
 
-**API Token 格式提醒：**
-Insight 的 API Token 是一串 JWT 格式的字符串。配置后，CLI 会自动将其同时注入至请求的 `Authorization` 和 `Cookie` 中，以满足后端的鉴权需求。
+**API Key 格式提醒：**
+Insight 的 API Key 是一串 JWT 格式的字符串。配置后，CLI 会自动将其同时注入至请求的 `Authorization` 和 `Cookie` 中，以满足后端的鉴权需求。
 
 ## 命令概览
 
