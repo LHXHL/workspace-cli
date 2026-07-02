@@ -6,15 +6,15 @@ import (
 	"github.com/spf13/cobra"
 )
 
-func NewApiTokenCmd(getClient func(cmd *cobra.Command) *client.Client) *cobra.Command {
+func NewApiKeyCmd(getClient func(cmd *cobra.Command) *client.Client) *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "api-token",
-		Short: "Manage Insight API tokens",
+		Use:   "api-key",
+		Short: "Manage Insight API key",
 	}
 
 	listCmd := &cobra.Command{
 		Use:   "list",
-		Short: "List API tokens",
+		Short: "List API key",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			c := getClient(cmd)
 

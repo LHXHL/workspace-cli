@@ -59,7 +59,7 @@ Common examples:
 	}
 
 	// Register subcommands from the cmd package
-	rootCmd.AddCommand(cmd.NewApiTokenCmd(getClientFn))
+	rootCmd.AddCommand(cmd.NewApiKeyCmd(getClientFn))
 	rootCmd.AddCommand(cmd.NewTaskCmd(getClientFn))
 	rootCmd.AddCommand(cmd.NewSystemCmd(getClientFn))
 	rootCmd.AddCommand(cmd.NewResultCmd(getClientFn))
