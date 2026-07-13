@@ -10,12 +10,13 @@ import (
 )
 
 // TestAlarmJSON_Structure 验证 alarm.json 的结构完整性：
-// - 6 个 API 全部存在
+// - 7 个 API 全部存在
 // - UpdateAlarmInfo 关键字段为必填
 // - UpdateAlarmMoreInfo 包含新增的 5 个嵌套对象
+// - UpdateAiFieldsContent 使用 ai_fields 包装专用 AI 字段
 // - MultiJudgeAlert.remark 为必填
 func TestAlarmJSON_Structure(t *testing.T) {
-	ops := loadAPIOperations(t, "alarm.json", 6)
+	ops := loadAPIOperations(t, "alarm.json", 7)
 	byName := mapByName(ops)
 
 	// 1) GetAlarmList 存在且 queryType 注解正确
@@ -143,7 +144,111 @@ func TestAlarmJSON_Structure(t *testing.T) {
 		}
 	})
 
-	t.Log("All 6 APIs validated successfully")
+	// 8) AI 字段只能通过专用接口写回，且必须包装在 ai_fields 中。
+	t.Run("UpdateAiFieldsContent", func(t *testing.T) {
+		op, ok := byName["AlarmService.UpdateAiFieldsContent"]
+		if !ok {
+			t.Fatal("missing UpdateAiFieldsContent")
+		}
+
+		if field, ok := op.Args["ai_fields.alarm_id"]; !ok {
+			t.Fatal("missing ai_fields.alarm_id")
+		} else if field.Optional {
+			t.Error("ai_fields.alarm_id should be required")
+		}
+
+		for _, name := range []string{
+			"ai_fields.analysis_report",
+			"ai_fields.confidence_score",
+			"ai_fields.ai_analysis",
+			"ai_fields.ai_judgment_result",
+			"ai_fields.ai_judgment_level",
+			"ai_fields.ai_event_nature",
+			"ai_fields.disposal_report",
+			"ai_fields.ai_disposal",
+			"ai_fields.created_at",
+		} {
+			field, ok := op.Args[name]
+			if !ok {
+				t.Errorf("missing %s", name)
+				continue
+			}
+			if !field.Optional {
+				t.Errorf("%s should be optional", name)
+			}
+		}
+		assertOperationRegistered(t, op)
+	})
+
+	t.Log("All 7 APIs validated successfully")
+}
+
+func TestUpdateAiFieldsContentDryRun(t *testing.T) {
+	oldServerURL := serverURL
+	oldAPIToken := apiToken
+	oldDryRun := dryRun
+	t.Cleanup(func() {
+		serverURL = oldServerURL
+		apiToken = oldAPIToken
+		dryRun = oldDryRun
+	})
+
+	serverURL = "https://cosmos.example.com"
+	apiToken = "test-token"
+	dryRun = true
+
+	cmd := NewCommand()
+	var out bytes.Buffer
+	cmd.SetOut(&out)
+	cmd.SetArgs([]string{
+		"alarm", "update-ai-fields-content",
+		"--ai_fields.alarm_id", "alarm-1",
+		"--ai_fields.analysis_report", "analysis",
+		"--ai_fields.confidence_score", "85",
+		"--ai_fields.ai_analysis", "1",
+		"--ai_fields.ai_judgment_result", "误报",
+		"--ai_fields.ai_judgment_level", "1",
+		"--ai_fields.ai_event_nature", "业务测试",
+		"--ai_fields.disposal_report", "disposal",
+		"--ai_fields.ai_disposal", "1",
+		"--raw",
+	})
+
+	if err := cmd.Execute(); err != nil {
+		t.Fatalf("execute update-ai-fields-content: %v", err)
+	}
+
+	var summary dryRunRequestSummary
+	if err := json.Unmarshal(out.Bytes(), &summary); err != nil {
+		t.Fatalf("unmarshal dry-run output: %v\n%s", err, out.String())
+	}
+	if summary.Body.Method != "AlarmService.UpdateAiFieldsContent" {
+		t.Fatalf("method = %q, want AlarmService.UpdateAiFieldsContent", summary.Body.Method)
+	}
+
+	params, ok := summary.Body.Params.(map[string]interface{})
+	if !ok {
+		t.Fatalf("params type = %T, want map[string]interface{}", summary.Body.Params)
+	}
+	aiFields, ok := params["ai_fields"].(map[string]interface{})
+	if !ok {
+		t.Fatalf("ai_fields type = %T, want map[string]interface{}", params["ai_fields"])
+	}
+	for name, want := range map[string]interface{}{
+		"alarm_id":           "alarm-1",
+		"analysis_report":    "analysis",
+		"confidence_score":   float64(85),
+		"ai_analysis":        float64(1),
+		"ai_judgment_result": "误报",
+		"ai_judgment_level":  "1",
+		"ai_event_nature":    "业务测试",
+		"disposal_report":    "disposal",
+		"ai_disposal":        float64(1),
+	} {
+		if got := aiFields[name]; got != want {
+			t.Errorf("ai_fields.%s = %#v, want %#v", name, got, want)
+		}
+	}
 }
 
 func TestAssetJSONStructure(t *testing.T) {

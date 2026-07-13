@@ -134,6 +134,24 @@ chaitin-cli cosmos alarm get-alarm-list \
 chaitin-cli cosmos alarm get-alarm-info --id ALARM_ID --created_at CREATED_AT_MS --raw
 ```
 
+预览写回告警 AI 研判与处置字段。专用后端接口为 `AlarmService.UpdateAiFieldsContent`，参数必须包装在 `ai_fields` 中；去掉根级 `--dry-run` 后才会真实写入：
+
+```bash
+chaitin-cli --dry-run cosmos alarm update-ai-fields-content \
+  --ai_fields.alarm_id ALARM_ID \
+  --ai_fields.analysis_report '# AI研判报告' \
+  --ai_fields.confidence_score 85 \
+  --ai_fields.ai_analysis 1 \
+  --ai_fields.ai_judgment_result '误报' \
+  --ai_fields.ai_judgment_level 1 \
+  --ai_fields.ai_event_nature '业务测试' \
+  --ai_fields.disposal_report '# AI处置报告' \
+  --ai_fields.ai_disposal 1 \
+  --raw
+```
+
+字段映射为：`analysis_report -> ai_analysis_result`、`confidence_score -> ai_confidence_score`、`disposal_report -> ai_disposal_result`；其余 AI 参数与告警返回字段同名。`ai_fields.created_at` 是可选 RFC3339 分区键，只能使用告警详情返回的真实创建时间转换得到；不确定时不要传。
+
 查询安全日志：
 
 ```bash

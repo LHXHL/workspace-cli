@@ -682,6 +682,63 @@
     "reply": {}
   },
   {
+    "name": "AlarmService.UpdateAiFieldsContent",
+    "comment": "更新告警 AI 研判与处置字段",
+    "args": {
+      "ai_fields.alarm_id": {
+        "type": "string",
+        "optional": false,
+        "comment": "告警ID（必填）"
+      },
+      "ai_fields.analysis_report": {
+        "type": "string",
+        "optional": true,
+        "comment": "AI研判报告，写入告警字段 ai_analysis_result"
+      },
+      "ai_fields.confidence_score": {
+        "type": "integer",
+        "optional": true,
+        "comment": "AI置信度，写入告警字段 ai_confidence_score"
+      },
+      "ai_fields.ai_analysis": {
+        "type": "integer",
+        "optional": true,
+        "comment": "AI是否研判: 0否 1是"
+      },
+      "ai_fields.ai_judgment_result": {
+        "type": "string",
+        "optional": true,
+        "comment": "AI研判结果: 真实/误报/研判要素缺失/失败"
+      },
+      "ai_fields.ai_judgment_level": {
+        "type": "string",
+        "optional": true,
+        "comment": "AI研判等级: -1未知 0无威胁 1低危 2中危 3高危 4超危"
+      },
+      "ai_fields.ai_event_nature": {
+        "type": "string",
+        "optional": true,
+        "comment": "AI事件性质"
+      },
+      "ai_fields.disposal_report": {
+        "type": "string",
+        "optional": true,
+        "comment": "AI处置报告，写入告警字段 ai_disposal_result"
+      },
+      "ai_fields.ai_disposal": {
+        "type": "integer",
+        "optional": true,
+        "comment": "AI是否处置: 0否 1是"
+      },
+      "ai_fields.created_at": {
+        "type": "string",
+        "optional": true,
+        "comment": "可选分区键：告警真实创建时间，RFC3339 格式；不确定时不要传"
+      }
+    },
+    "reply": {}
+  },
+  {
     "name": "JudgeService.MultiJudgeAlert",
     "comment": "批量研判告警",
     "args": {

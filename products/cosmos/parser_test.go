@@ -270,6 +270,53 @@ func TestBuildRequestBodyConvertsExplicitEmptyStringSliceToEmptySlice(t *testing
 	}
 }
 
+func TestBuildRequestBodyNestsAIFields(t *testing.T) {
+	cmd := &cobra.Command{Use: "test"}
+	flags := []flagDef{
+		{name: "ai_fields.alarm_id", typeName: "string", required: true},
+		{name: "ai_fields.analysis_report", typeName: "string"},
+		{name: "ai_fields.confidence_score", typeName: "integer"},
+		{name: "ai_fields.ai_analysis", typeName: "integer"},
+		{name: "ai_fields.disposal_report", typeName: "string"},
+		{name: "ai_fields.ai_disposal", typeName: "integer"},
+	}
+	values := make(map[string]interface{})
+	for _, f := range flags {
+		bindFlag(cmd, f, values)
+	}
+
+	for name, value := range map[string]string{
+		"ai_fields.alarm_id":         "alarm-1",
+		"ai_fields.analysis_report":  "analysis",
+		"ai_fields.confidence_score": "85",
+		"ai_fields.ai_analysis":      "1",
+		"ai_fields.disposal_report":  "disposal",
+		"ai_fields.ai_disposal":      "1",
+	} {
+		if err := cmd.Flags().Set(name, value); err != nil {
+			t.Fatalf("set %s: %v", name, err)
+		}
+	}
+
+	params := buildRequestBody(cmd, values, flags)
+	aiFields, ok := params["ai_fields"].(map[string]interface{})
+	if !ok {
+		t.Fatalf("ai_fields type = %T, want map[string]interface{}", params["ai_fields"])
+	}
+	for name, want := range map[string]interface{}{
+		"alarm_id":         "alarm-1",
+		"analysis_report":  "analysis",
+		"confidence_score": 85,
+		"ai_analysis":      1,
+		"disposal_report":  "disposal",
+		"ai_disposal":      1,
+	} {
+		if got := aiFields[name]; got != want {
+			t.Errorf("ai_fields.%s = %#v, want %#v", name, got, want)
+		}
+	}
+}
+
 func firstQueryItem(t *testing.T, params map[string]interface{}, key string) map[string]interface{} {
 	t.Helper()
 
