@@ -46,7 +46,7 @@ npx skills add chaitin/chaitin-cli
 - "列出 Cloud Atlas 中待处理的漏洞"
 - "列出 CloudWalker 中的漏洞事件"
 - "在 CodeForce 中创建降噪任务并查看结果"
-- "使用 MonkeyScan Review 当前代码改动"
+- "使用 MonkeyScan 对当前项目发起全量安全扫描"
 
 ## 演示
 
@@ -95,7 +95,7 @@ npx skills add chaitin/chaitin-cli
 | `codeinsight` | 智能静态应用程序安全测试系统（慧鉴）     | CodeInsight 项目、代码托管配置、扫描任务和报告导出管理                        |
 | `codeforce`   | 智能开发与安全一体化平台（码力）       | CodeForce 项目、项目 AI 员工、AI 开发任务、原生审计、降噪、代码包、仓库和 Git 授权配置管理 |
 | `cosmos`      | 安全分析与运营管理平台（万象）        | Cosmos / AISOC 告警、日志、情报、封禁、资产、通知、运维、SOAR 和漏洞管理           |
-| `monkeyscan`  | AI 代码安全平台 MonkeyScan      | 本地代码差分 Review、代码仓库与源码包全量安全扫描                               |
+| `monkeyscan`  | AI 代码安全平台 MonkeyScan      | 本地目录、源码压缩包与 GitHub 仓库全量安全扫描                                 |
 
 
 
@@ -202,7 +202,7 @@ monkeyscan.api_key   -> MONKEYSCAN_API_KEY
 
 ### MonkeyScan
 
-MonkeyScan 支持本地代码差分 Review，以及对本地目录、源码压缩包或 GitHub 仓库发起全量安全扫描。首次使用时，先保存 MonkeyScan CLI API Key 并确认授权状态：
+MonkeyScan 支持对本地目录、源码压缩包或 GitHub 仓库发起全量安全扫描。首次使用时，先保存 MonkeyScan CLI API Key 并确认授权状态：
 
 ```bash
 chaitin-cli monkeyscan auth set-key
@@ -210,22 +210,6 @@ chaitin-cli monkeyscan auth status
 ```
 
 也可以通过 `MONKEYSCAN_API_KEY` 环境变量提供 API Key；服务地址默认是 `https://monkeyscan-ai.com`，可通过 `MONKEYSCAN_URL` 覆盖。
-
-在 Git 仓库中按需要选择 Review 范围：
-
-```bash
-# Review 未暂存的改动
-chaitin-cli monkeyscan review --type uncommitted
-
-# Review 已暂存的改动
-chaitin-cli monkeyscan review --type staged
-
-# Review 当前分支相对 main 的已提交改动
-chaitin-cli monkeyscan review --type committed --base main
-
-# Review 未暂存和已暂存的全部改动
-chaitin-cli monkeyscan review --all
-```
 
 全量扫描支持目录、压缩包和 GitHub 仓库三种来源。添加 `--wait` 可等待任务完成并输出结果，添加 `--full` 可获取完整报告，`--output` 可将结果写入文件：
 
