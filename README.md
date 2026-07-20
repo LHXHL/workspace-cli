@@ -202,7 +202,7 @@ monkeyscan.api_key   -> MONKEYSCAN_API_KEY
 
 ### MonkeyScan
 
-MonkeyScan 支持对本地目录、源码压缩包或 GitHub 仓库发起全量安全扫描。首次使用时，先保存 MonkeyScan CLI API Key 并确认授权状态：
+MonkeyScan 支持对本地目录、源码压缩包或 GitHub 仓库发起全量安全扫描。首次使用时，先设置 MonkeyScan CLI API Key，再确认授权状态：
 
 ```bash
 chaitin-cli monkeyscan auth set-key
