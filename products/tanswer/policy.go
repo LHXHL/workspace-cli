@@ -357,8 +357,8 @@ func newPolicyDetectionWhitelistFromAlarmCommand(opts *RootOptions) *cobra.Comma
 		Long: "从告警对象生成检测白名单，用于把已确认误报的威胁告警转换为候选误报抑制规则。该命令是高影响写操作：预览阶段会读取告警详情并生成候选白名单；必须使用 --confirm CONFIRM_POLICY_DETECTION_WHITELIST_FROM_ALARM 才会调用后端创建接口。\n\n" +
 			"输出预览：source_alarm、suggested_whitelist、requires_confirmation、confirmation_token、risk_warnings。\n" +
 			"执行输出：confirmed、result、object、audit。",
-		Example: "  chaitin-cli tanswer policy detection-whitelist-from-alarm --id <doc_id> --preview\n" +
-			"  chaitin-cli tanswer policy detection-whitelist-from-alarm --id <doc_id> --remark 已确认误报 --confirm CONFIRM_POLICY_DETECTION_WHITELIST_FROM_ALARM",
+		Example: "  chaitin-cli tanswer policy detection-whitelist-from-alarm --id '<doc_id>' --preview\n" +
+			"  chaitin-cli tanswer policy detection-whitelist-from-alarm --id '<doc_id>' --remark 已确认误报 --confirm CONFIRM_POLICY_DETECTION_WHITELIST_FROM_ALARM",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			if strings.TrimSpace(policyOpts.id) == "" {
 				return writePolicyError(cmd, "从告警对象生成检测白名单", commandText, "MISSING_ALARM_ID", "missing alarm doc_id: set --id", false)
@@ -444,7 +444,7 @@ func newPolicyFileExportCommand(opts *RootOptions, use string, task string, meth
 	cmd := &cobra.Command{
 		Use:     use,
 		Short:   task,
-		Long:    fmt.Sprintf("%s，用于批量备份或线下维护安全策略文件。未指定 --id-list 时导出全部；指定 --id-list 时只导出选中对象。该命令只下载文件，不修改策略。\n\n输出：file_name、file_path、size_bytes、status_code、method、download_query、export_scope。", task),
+		Long:    fmt.Sprintf("%s，用于批量备份或离线审计安全策略文件。未指定 --id-list 时导出全部；指定 --id-list 时只导出选中对象。该命令只下载文件，不修改策略。\n\n输出：file_name、file_path、size_bytes、status_code、method、download_query、export_scope。", task),
 		Example: fmt.Sprintf("  %s --output ./%s\n  %s --id-list 21,22 --output ./selected-%s", commandText, defaultName, commandText, defaultName),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			cfg, err := LoadConfig(ConfigOptions{Address: opts.Address, Token: opts.Token, Timeout: opts.Timeout, InsecureSkipVerify: opts.InsecureSkipVerify})

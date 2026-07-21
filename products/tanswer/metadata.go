@@ -124,7 +124,7 @@ func newMetadataDetailCommand(opts *RootOptions) *cobra.Command {
 		Use:     "detail",
 		Short:   "查看元数据详情",
 		Long:    "查看元数据详情，用于从元数据列表返回的 id、timestamp 和 protocol 下钻到单条原始元数据详情。该命令只读取已有详情，不下载文件，不修改配置。\n\n输出：id、timestamp、protocol、detail。",
-		Example: "  chaitin-cli tanswer metadata detail --id <metadata_id> --timestamp 1784282400000 --protocol http",
+		Example: "  chaitin-cli tanswer metadata detail --id '<metadata_id>' --timestamp 1784282400000 --protocol http",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			if strings.TrimSpace(metaOpts.id) == "" {
 				return writeMetadataError(cmd, "查看元数据详情", "chaitin-cli tanswer metadata detail", "MISSING_METADATA_ID", "missing metadata id: set --id", false)
@@ -184,7 +184,7 @@ func newMetadataConfigCommand(opts *RootOptions) *cobra.Command {
 		Short: "查询元数据数据配置",
 		Long:  "查询元数据数据配置，用于只读查看当前节点或指定节点的元数据协议采集配置。该命令不调整配置。\n\n输出：node_id、configurations。",
 		Example: "  chaitin-cli tanswer metadata config\n" +
-			"  chaitin-cli tanswer metadata config --node-id <node_id>",
+			"  chaitin-cli tanswer metadata config --node-id '<node_id>'",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			cfg, err := LoadConfig(ConfigOptions{Address: opts.Address, Token: opts.Token, Timeout: opts.Timeout, InsecureSkipVerify: opts.InsecureSkipVerify})
 			if err != nil {
@@ -229,8 +229,8 @@ func newMetadataConfigUpdateCommand(opts *RootOptions) *cobra.Command {
 		Long: "调整元数据数据配置，用于修改指定节点的元数据协议存储范围。该命令是高影响写操作：预览阶段会读取当前配置并返回 before/after；必须使用 --confirm CONFIRM_METADATA_CONFIG_UPDATE 才会调用后端更新接口。\n\n" +
 			"输出预览：requires_confirmation、confirmed、operation_type、target、change_summary、impact、risk_warnings、confirmation_token。\n" +
 			"执行输出：confirmed、result、object、audit。",
-		Example: "  chaitin-cli tanswer metadata config-update --node-id <node_id> --enable http,dns --preview\n" +
-			"  chaitin-cli tanswer metadata config-update --node-id <node_id> --disable tcp,udp --confirm CONFIRM_METADATA_CONFIG_UPDATE",
+		Example: "  chaitin-cli tanswer metadata config-update --node-id '<node_id>' --enable http,dns --preview\n" +
+			"  chaitin-cli tanswer metadata config-update --node-id '<node_id>' --disable tcp,udp --confirm CONFIRM_METADATA_CONFIG_UPDATE",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			if strings.TrimSpace(metaOpts.confirm) != "" {
 				if err := ValidateWriteConfirmation(metaOpts.confirm, metadataConfigUpdateConfirmToken); err != nil {
@@ -299,8 +299,8 @@ func newMetadataNearAlarmCommand(opts *RootOptions) *cobra.Command {
 		Use:   "near-alarm",
 		Short: "查询告警附近元数据",
 		Long:  "查询告警附近元数据，用于围绕一条威胁告警的时间点和五元组检索附近流量元数据，辅助还原上下文。返回结果仅代表同时间窗内的上下文，不直接判定为攻击证据。\n\n输出：alarm、window、metadata_query、total、page_size、current_count、metadata。",
-		Example: "  chaitin-cli tanswer metadata near-alarm --id <alarm_doc_id> --window 30m --page-size 10\n" +
-			"  chaitin-cli tanswer metadata near-alarm --id <alarm_doc_id> --protocol http --window 10m",
+		Example: "  chaitin-cli tanswer metadata near-alarm --id '<alarm_doc_id>' --window 30m --page-size 10\n" +
+			"  chaitin-cli tanswer metadata near-alarm --id '<alarm_doc_id>' --protocol http --window 10m",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			if strings.TrimSpace(metaOpts.id) == "" {
 				return writeMetadataError(cmd, "查询告警附近元数据", "chaitin-cli tanswer metadata near-alarm", "MISSING_ALARM_ID", "missing alarm doc_id: set --id", false)

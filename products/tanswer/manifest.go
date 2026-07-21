@@ -100,7 +100,7 @@ func BuildCommandManifest() CommandManifest {
 					"需要确认 Token 是否有效或具备接口权限时，使用 tanswer auth check。",
 				},
 				OutputType:           "connection_status",
-				OutputFields:         []string{"environment", "token_set", "timeout", "format"},
+				OutputFields:         []string{"environment", "token_set", "timeout", "insecure_skip_verify"},
 				RiskLevel:            "read",
 				RequiresConfirmation: false,
 				Examples: []ManifestExample{
@@ -307,7 +307,7 @@ func BuildCommandManifest() CommandManifest {
 			},
 			{
 				Name:        "tanswer alarm detail",
-				FullCommand: "chaitin-cli tanswer alarm detail --id <doc_id>",
+				FullCommand: "chaitin-cli tanswer alarm detail --id '<doc_id>'",
 				Layer:       "semantic_shortcut",
 				Summary:     "查看威胁告警详情，用于从列表 doc_id 下钻到单条告警研判信息。",
 				UseWhen: []string{
@@ -325,7 +325,7 @@ func BuildCommandManifest() CommandManifest {
 				RiskLevel:            "read",
 				RequiresConfirmation: false,
 				Examples: []ManifestExample{
-					{Description: "查看单条告警详情", Command: "chaitin-cli tanswer alarm detail --id <doc_id>"},
+					{Description: "查看单条告警详情", Command: "chaitin-cli tanswer alarm detail --id '<doc_id>'"},
 				},
 				Backend: map[string]interface{}{
 					"rpc_methods": []string{"AlarmService.GetAlarm"},
@@ -333,7 +333,7 @@ func BuildCommandManifest() CommandManifest {
 			},
 			{
 				Name:        "tanswer alarm by-attacker",
-				FullCommand: "chaitin-cli tanswer alarm by-attacker --attacker <ip>",
+				FullCommand: "chaitin-cli tanswer alarm by-attacker --attacker '<ip>'",
 				Layer:       "semantic_shortcut",
 				Summary:     "查询指定攻击源相关告警，用于查看攻击范围、威胁类型和最近活动。",
 				UseWhen: []string{
@@ -366,7 +366,7 @@ func BuildCommandManifest() CommandManifest {
 			},
 			{
 				Name:        "tanswer alarm by-victim",
-				FullCommand: "chaitin-cli tanswer alarm by-victim --victim <ip>",
+				FullCommand: "chaitin-cli tanswer alarm by-victim --victim '<ip>'",
 				Layer:       "semantic_shortcut",
 				Summary:     "查询指定受害对象相关告警，用于判断资产或对象被攻击情况。",
 				UseWhen: []string{
@@ -525,7 +525,7 @@ func BuildCommandManifest() CommandManifest {
 			},
 			{
 				Name:        "tanswer alarm related",
-				FullCommand: "chaitin-cli tanswer alarm related --id <doc_id>",
+				FullCommand: "chaitin-cli tanswer alarm related --id '<doc_id>'",
 				Layer:       "semantic_shortcut",
 				Summary:     "查看相关告警，用于从一条告警出发查询前后时间窗口内同攻击源或同受害对象的其他告警。",
 				UseWhen: []string{
@@ -551,8 +551,8 @@ func BuildCommandManifest() CommandManifest {
 				RiskLevel:            "read",
 				RequiresConfirmation: false,
 				Examples: []ManifestExample{
-					{Description: "查看原告警前后 30 分钟同攻击源或同受害对象告警", Command: "chaitin-cli tanswer alarm related --id <doc_id>"},
-					{Description: "只查看同攻击源相关告警", Command: "chaitin-cli tanswer alarm related --id <doc_id> --window 1h --relation attacker"},
+					{Description: "查看原告警前后 30 分钟同攻击源或同受害对象告警", Command: "chaitin-cli tanswer alarm related --id '<doc_id>'"},
+					{Description: "只查看同攻击源相关告警", Command: "chaitin-cli tanswer alarm related --id '<doc_id>' --window 1h --relation attacker"},
 				},
 				Backend: map[string]interface{}{
 					"rpc_methods": []string{"AlarmService.GetAlarm", "AlarmService.SearchAlarmList"},
@@ -689,7 +689,7 @@ func BuildCommandManifest() CommandManifest {
 			},
 			{
 				Name:        "tanswer file-alarm detail",
-				FullCommand: "chaitin-cli tanswer file-alarm detail --id <doc_id>",
+				FullCommand: "chaitin-cli tanswer file-alarm detail --id '<doc_id>'",
 				Layer:       "semantic_shortcut",
 				Summary:     "查看文件告警详情，用于研判单条文件告警风险。",
 				UseWhen: []string{
@@ -708,7 +708,7 @@ func BuildCommandManifest() CommandManifest {
 				RiskLevel:            "read",
 				RequiresConfirmation: false,
 				Examples: []ManifestExample{
-					{Description: "查看文件告警详情", Command: "chaitin-cli tanswer file-alarm detail --id <doc_id>"},
+					{Description: "查看文件告警详情", Command: "chaitin-cli tanswer file-alarm detail --id '<doc_id>'"},
 				},
 				Backend: map[string]interface{}{
 					"rpc_methods": []string{"AlarmService.GetAlarmFdetect"},
@@ -785,7 +785,7 @@ func BuildCommandManifest() CommandManifest {
 			},
 			{
 				Name:        "tanswer asset detail",
-				FullCommand: "chaitin-cli tanswer asset detail --id <asset_id>",
+				FullCommand: "chaitin-cli tanswer asset detail --id '<asset_id>'",
 				Layer:       "semantic_shortcut",
 				Summary:     "查看资产详情，用于确认资产归属和基础信息。",
 				UseWhen: []string{
@@ -804,7 +804,7 @@ func BuildCommandManifest() CommandManifest {
 				RiskLevel:            "read",
 				RequiresConfirmation: false,
 				Examples: []ManifestExample{
-					{Description: "查看资产详情", Command: "chaitin-cli tanswer asset detail --id <asset_id>"},
+					{Description: "查看资产详情", Command: "chaitin-cli tanswer asset detail --id '<asset_id>'"},
 				},
 				Backend: map[string]interface{}{
 					"rpc_methods": []string{"AssetService.GetAssetInfo"},
@@ -976,7 +976,7 @@ func BuildCommandManifest() CommandManifest {
 			},
 			{
 				Name:        "tanswer asset update",
-				FullCommand: "chaitin-cli tanswer asset update --id <asset_id>",
+				FullCommand: "chaitin-cli tanswer asset update --id '<asset_id>'",
 				Layer:       "semantic_shortcut",
 				Summary:     "编辑资产，更新单个资产基础信息。",
 				UseWhen: []string{
@@ -1029,7 +1029,7 @@ func BuildCommandManifest() CommandManifest {
 			},
 			{
 				Name:        "tanswer asset delete",
-				FullCommand: "chaitin-cli tanswer asset delete --id-list <asset_ids>",
+				FullCommand: "chaitin-cli tanswer asset delete --id-list '<asset_ids>'",
 				Layer:       "semantic_shortcut",
 				Summary:     "删除资产，移除一个或多个已有资产配置。",
 				UseWhen: []string{
@@ -1072,7 +1072,7 @@ func BuildCommandManifest() CommandManifest {
 			},
 			{
 				Name:        "tanswer asset batch-maintain",
-				FullCommand: "chaitin-cli tanswer asset batch-maintain --id-list <asset_ids>",
+				FullCommand: "chaitin-cli tanswer asset batch-maintain --id-list '<asset_ids>'",
 				Layer:       "semantic_shortcut",
 				Summary:     "批量维护资产，更新多个资产的资产组、负责人、地理位置或备注。",
 				UseWhen: []string{
@@ -1119,7 +1119,7 @@ func BuildCommandManifest() CommandManifest {
 			},
 			{
 				Name:        "tanswer asset batch-tag",
-				FullCommand: "chaitin-cli tanswer asset batch-tag --id-list <asset_ids> --tag-id <tag_ids>",
+				FullCommand: "chaitin-cli tanswer asset batch-tag --id-list '<asset_ids>' --tag-id '<tag_ids>'",
 				Layer:       "semantic_shortcut",
 				Summary:     "批量维护资产标签，给一个或多个资产设置标签。",
 				UseWhen: []string{
@@ -1163,7 +1163,7 @@ func BuildCommandManifest() CommandManifest {
 			},
 			{
 				Name:        "tanswer asset group-create",
-				FullCommand: "chaitin-cli tanswer asset group-create --name <name>",
+				FullCommand: "chaitin-cli tanswer asset group-create --name '<name>'",
 				Layer:       "semantic_shortcut",
 				Summary:     "创建资产组，在指定父资产组下新增一个资产组。",
 				UseWhen: []string{
@@ -1197,7 +1197,7 @@ func BuildCommandManifest() CommandManifest {
 			},
 			{
 				Name:        "tanswer asset group-rename",
-				FullCommand: "chaitin-cli tanswer asset group-rename --id <group_id> --name <name>",
+				FullCommand: "chaitin-cli tanswer asset group-rename --id '<group_id>' --name '<name>'",
 				Layer:       "semantic_shortcut",
 				Summary:     "重命名资产组，修改一个已有资产组名称。",
 				UseWhen: []string{
@@ -1231,7 +1231,7 @@ func BuildCommandManifest() CommandManifest {
 			},
 			{
 				Name:        "tanswer asset group-delete",
-				FullCommand: "chaitin-cli tanswer asset group-delete --id-list <group_ids>",
+				FullCommand: "chaitin-cli tanswer asset group-delete --id-list '<group_ids>'",
 				Layer:       "semantic_shortcut",
 				Summary:     "删除资产组，删除一个或多个非根资产组。",
 				UseWhen: []string{
@@ -1264,7 +1264,7 @@ func BuildCommandManifest() CommandManifest {
 			},
 			{
 				Name:        "tanswer asset tree-move",
-				FullCommand: "chaitin-cli tanswer asset tree-move --id <id> --type <group|asset> --prev-id <id> --prev-type <group|asset>",
+				FullCommand: "chaitin-cli tanswer asset tree-move --id '<id>' --type '<group|asset>' --prev-id '<id>' --prev-type '<group|asset>'",
 				Layer:       "semantic_shortcut",
 				Summary:     "调整资产树层级，移动资产或资产组在资产树中的位置。",
 				UseWhen: []string{
@@ -1302,7 +1302,7 @@ func BuildCommandManifest() CommandManifest {
 			},
 			{
 				Name:        "tanswer asset import",
-				FullCommand: "chaitin-cli tanswer asset import --file <xlsx>",
+				FullCommand: "chaitin-cli tanswer asset import --file '<xlsx>'",
 				Layer:       "semantic_shortcut",
 				Summary:     "导入资产，上传资产导入模板文件并批量初始化或更新资产。",
 				UseWhen: []string{
@@ -1350,7 +1350,7 @@ func BuildCommandManifest() CommandManifest {
 			},
 			{
 				Name:        "tanswer metadata protocol",
-				FullCommand: "chaitin-cli tanswer metadata protocol --protocol <protocol>",
+				FullCommand: "chaitin-cli tanswer metadata protocol --protocol '<protocol>'",
 				Layer:       "semantic_shortcut",
 				Summary:     "按协议检索流量元数据摘要。",
 				UseWhen: []string{
@@ -1383,7 +1383,7 @@ func BuildCommandManifest() CommandManifest {
 			},
 			{
 				Name:        "tanswer metadata search",
-				FullCommand: "chaitin-cli tanswer metadata search --protocol <protocol> --advanced-query <query>",
+				FullCommand: "chaitin-cli tanswer metadata search --protocol '<protocol>' --advanced-query '<query>'",
 				Layer:       "semantic_shortcut",
 				Summary:     "按高级条件检索流量元数据。",
 				UseWhen: []string{
@@ -1416,7 +1416,7 @@ func BuildCommandManifest() CommandManifest {
 			},
 			{
 				Name:        "tanswer metadata detail",
-				FullCommand: "chaitin-cli tanswer metadata detail --id <metadata_id> --timestamp <ms> --protocol <protocol>",
+				FullCommand: "chaitin-cli tanswer metadata detail --id '<metadata_id>' --timestamp '<ms>' --protocol '<protocol>'",
 				Layer:       "semantic_shortcut",
 				Summary:     "查看单条流量元数据详情。",
 				UseWhen: []string{
@@ -1437,7 +1437,7 @@ func BuildCommandManifest() CommandManifest {
 				RiskLevel:            "read",
 				RequiresConfirmation: false,
 				Examples: []ManifestExample{
-					{Description: "查看元数据详情", Command: "chaitin-cli tanswer metadata detail --id <metadata_id> --timestamp 1784282400000 --protocol http"},
+					{Description: "查看元数据详情", Command: "chaitin-cli tanswer metadata detail --id '<metadata_id>' --timestamp 1784282400000 --protocol http"},
 				},
 				Backend: map[string]interface{}{
 					"rpc_methods": []string{"LogSearchService.GetOrigDataLogDetail"},
@@ -1445,7 +1445,7 @@ func BuildCommandManifest() CommandManifest {
 			},
 			{
 				Name:        "tanswer metadata near-alarm",
-				FullCommand: "chaitin-cli tanswer metadata near-alarm --id <alarm_doc_id>",
+				FullCommand: "chaitin-cli tanswer metadata near-alarm --id '<alarm_doc_id>'",
 				Layer:       "semantic_shortcut",
 				Summary:     "查询告警附近流量元数据上下文。",
 				UseWhen: []string{
@@ -1467,7 +1467,7 @@ func BuildCommandManifest() CommandManifest {
 				RiskLevel:            "read",
 				RequiresConfirmation: false,
 				Examples: []ManifestExample{
-					{Description: "查询告警附近元数据", Command: "chaitin-cli tanswer metadata near-alarm --id <alarm_doc_id> --window 30m --page-size 10"},
+					{Description: "查询告警附近元数据", Command: "chaitin-cli tanswer metadata near-alarm --id '<alarm_doc_id>' --window 30m --page-size 10"},
 				},
 				Backend: map[string]interface{}{
 					"rpc_methods": []string{"AlarmService.GetAlarm", "LogSearchService.SearchOrigDataHTTPLog", "LogSearchService.SearchOrigDataDNSLog", "LogSearchService.SearchOrigDataTCPUDPLog", "LogSearchService.SearchOtherOrigDataLog"},
@@ -1494,7 +1494,7 @@ func BuildCommandManifest() CommandManifest {
 				RequiresConfirmation: false,
 				Examples: []ManifestExample{
 					{Description: "查询当前节点元数据配置", Command: "chaitin-cli tanswer metadata config"},
-					{Description: "查询指定节点元数据配置", Command: "chaitin-cli tanswer metadata config --node-id <node_id>"},
+					{Description: "查询指定节点元数据配置", Command: "chaitin-cli tanswer metadata config --node-id '<node_id>'"},
 				},
 				Backend: map[string]interface{}{
 					"rpc_methods": []string{"LogSearchService.GetOrigDataLogProtocolList"},
@@ -1532,8 +1532,8 @@ func BuildCommandManifest() CommandManifest {
 				RiskLevel:            "write_high",
 				RequiresConfirmation: true,
 				Examples: []ManifestExample{
-					{Description: "预览启用 HTTP/DNS 元数据存储", Command: "chaitin-cli tanswer metadata config-update --node-id <node_id> --enable http,dns --preview"},
-					{Description: "确认停用 TCP/UDP 元数据存储", Command: "chaitin-cli tanswer metadata config-update --node-id <node_id> --disable tcp,udp --confirm CONFIRM_METADATA_CONFIG_UPDATE"},
+					{Description: "预览启用 HTTP/DNS 元数据存储", Command: "chaitin-cli tanswer metadata config-update --node-id '<node_id>' --enable http,dns --preview"},
+					{Description: "确认停用 TCP/UDP 元数据存储", Command: "chaitin-cli tanswer metadata config-update --node-id '<node_id>' --disable tcp,udp --confirm CONFIRM_METADATA_CONFIG_UPDATE"},
 				},
 				Backend: map[string]interface{}{
 					"rpc_methods":         []string{"LogSearchService.GetOrigDataLogProtocolList", "LogSearchService.ConfigureOrigDataLogProtocol"},
@@ -1609,8 +1609,8 @@ func BuildCommandManifest() CommandManifest {
 				"已经确认一条威胁告警为误报，需要基于告警字段生成候选检测白名单。",
 				"需要执行前查看告警对象、建议白名单匹配范围和风险提示。",
 			}, policyDetectionWhitelistFromAlarmManifestFlags(), "policy_detection_whitelist_from_alarm_result", []ManifestExample{
-				{Description: "预览从告警生成检测白名单", Command: "chaitin-cli tanswer policy detection-whitelist-from-alarm --id <doc_id> --preview"},
-				{Description: "确认从告警生成检测白名单", Command: "chaitin-cli tanswer policy detection-whitelist-from-alarm --id <doc_id> --remark 已确认误报 --confirm CONFIRM_POLICY_DETECTION_WHITELIST_FROM_ALARM"},
+				{Description: "预览从告警生成检测白名单", Command: "chaitin-cli tanswer policy detection-whitelist-from-alarm --id '<doc_id>' --preview"},
+				{Description: "确认从告警生成检测白名单", Command: "chaitin-cli tanswer policy detection-whitelist-from-alarm --id '<doc_id>' --remark 已确认误报 --confirm CONFIRM_POLICY_DETECTION_WHITELIST_FROM_ALARM"},
 			}, []string{"AlarmService.GetAlarm", "AlarmService.CreateWhiteList"}, policyDetectionWhitelistFromAlarmConfirmToken),
 			policyFileExportManifestCommand("tanswer policy detection-whitelist-export", "chaitin-cli tanswer policy detection-whitelist-export", "导出检测白名单文件。", "detection_whitelist_export_file", []ManifestExample{
 				{Description: "导出全部检测白名单", Command: "chaitin-cli tanswer policy detection-whitelist-export --output ./detection-whitelist.xlsx"},
@@ -1796,15 +1796,15 @@ func BuildCommandManifest() CommandManifest {
 				"需要基于已研判恶意告警生成候选旁路阻断策略。",
 				"需要执行前查看告警上下文和候选阻断对象。",
 			}, responseBlockPolicyFromAlarmManifestFlags(), "response_block_policy_from_alarm_result", []ManifestExample{
-				{Description: "预览从告警生成旁路阻断策略", Command: "chaitin-cli tanswer response block-policy-from-alarm --id <doc_id> --target attacker --preview"},
-				{Description: "确认从告警生成旁路阻断策略", Command: "chaitin-cli tanswer response block-policy-from-alarm --id <doc_id> --target flow --duration 3600 --confirm CONFIRM_RESPONSE_BLOCK_POLICY_FROM_ALARM"},
+				{Description: "预览从告警生成旁路阻断策略", Command: "chaitin-cli tanswer response block-policy-from-alarm --id '<doc_id>' --target attacker --preview"},
+				{Description: "确认从告警生成旁路阻断策略", Command: "chaitin-cli tanswer response block-policy-from-alarm --id '<doc_id>' --target flow --duration 3600 --confirm CONFIRM_RESPONSE_BLOCK_POLICY_FROM_ALARM"},
 			}, []string{"AlarmService.GetAlarm", "RulesService.CreateBlockRules"}, responseBlockPolicyFromAlarmConfirmToken),
 			responseWriteManifestCommand("tanswer response whitelist-from-alarm", "chaitin-cli tanswer response whitelist-from-alarm", "从告警生成响应白名单。", []string{
 				"需要基于已确认可信或误阻断风险的告警生成候选响应白名单。",
 				"需要执行前查看告警上下文和候选白名单对象。",
 			}, responseWhitelistFromAlarmManifestFlags(), "response_whitelist_from_alarm_result", []ManifestExample{
-				{Description: "预览从告警生成响应白名单", Command: "chaitin-cli tanswer response whitelist-from-alarm --id <doc_id> --target victim --expire 1784277612410 --preview"},
-				{Description: "确认从告警生成响应白名单", Command: "chaitin-cli tanswer response whitelist-from-alarm --id <doc_id> --target url --expire 1784277612410 --confirm CONFIRM_RESPONSE_WHITELIST_FROM_ALARM"},
+				{Description: "预览从告警生成响应白名单", Command: "chaitin-cli tanswer response whitelist-from-alarm --id '<doc_id>' --target victim --expire 1784277612410 --preview"},
+				{Description: "确认从告警生成响应白名单", Command: "chaitin-cli tanswer response whitelist-from-alarm --id '<doc_id>' --target url --expire 1784277612410 --confirm CONFIRM_RESPONSE_WHITELIST_FROM_ALARM"},
 			}, []string{"AlarmService.GetAlarm", "FirewallService.CreateWhiteList"}, responseWhitelistFromAlarmConfirmToken),
 			responseManifestCommand("tanswer response devices", "chaitin-cli tanswer response devices", "查询联动设备配置。", []string{
 				"需要查看第三方协同处置设备是否配置、设备状态、设备地址或更新时间。",
@@ -1813,7 +1813,7 @@ func BuildCommandManifest() CommandManifest {
 			}, responseDevicesManifestFlags(), "response_device_list", "devices", []ManifestExample{
 				{Description: "查询联动设备", Command: "chaitin-cli tanswer response devices --page-size 10"},
 			}, []string{"FirewallService.SearchFirewall"}),
-			responseManifestCommand("tanswer response device-records", "chaitin-cli tanswer response device-records --device-id <device_id>", "查询联动设备处置记录。", []string{
+			responseManifestCommand("tanswer response device-records", "chaitin-cli tanswer response device-records --device-id '<device_id>'", "查询联动设备处置记录。", []string{
 				"需要查看某个联动设备的处置下发记录和状态。",
 			}, []string{
 				"没有 device-id 时，先使用 tanswer response devices 查询设备。",
@@ -1823,7 +1823,7 @@ func BuildCommandManifest() CommandManifest {
 				{Name: "--page", Type: "integer", Required: false, Default: "1", Description: "page number, starts from 1"},
 				{Name: "--page-size", Type: "integer", Required: false, Default: "10", Description: "page size, 1-100"},
 			}, "response_device_record_list", "device_records", []ManifestExample{
-				{Description: "查询联动设备处置记录", Command: "chaitin-cli tanswer response device-records --device-id <device_id> --page-size 10"},
+				{Description: "查询联动设备处置记录", Command: "chaitin-cli tanswer response device-records --device-id '<device_id>' --page-size 10"},
 			}, []string{"FirewallService.SearchSendRecord"}),
 			responseManifestCommand("tanswer response auto-policies", "chaitin-cli tanswer response auto-policies", "查询自动响应策略。", []string{
 				"需要查看自动响应策略配置、启停状态、联动处置、处置方式或更新时间。",

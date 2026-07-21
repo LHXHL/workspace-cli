@@ -270,7 +270,7 @@ func newAssetDetailCommand(opts *RootOptions) *cobra.Command {
 		Short: "查看资产详情",
 		Long: "查看资产详情，用于确认资产归属和基础信息。该命令返回产品资产档案详情字段，包括资产名称、IP、MAC、资产类型、资产等级、资产组、资产标签、负责人、地理位置、备注、来源、添加时间和最后编辑时间。\n\n" +
 			"输出：id、detail。detail 中保留后端资产详情字段。",
-		Example: "  chaitin-cli tanswer asset detail --id <asset_id>",
+		Example: "  chaitin-cli tanswer asset detail --id '<asset_id>'",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			id, err := parseRequiredAssetID(assetOpts.id)
 			if err != nil {

@@ -44,15 +44,15 @@ chaitin-cli tanswer api POST /rpc --body @./request.json
 | `chaitin-cli tanswer alarm timeline` | 查询告警趋势和严重性分桶。 |
 | `chaitin-cli tanswer alarm list` | 查询威胁告警列表和分页信息。 |
 | `chaitin-cli tanswer alarm high-priority` | 查询 critical/high 且成功或失陷的优先告警。 |
-| `chaitin-cli tanswer alarm detail --id <doc_id>` | 查询单条威胁告警详情。 |
-| `chaitin-cli tanswer alarm by-attacker --attacker <ip>` | 按攻击者汇总告警。 |
-| `chaitin-cli tanswer alarm by-victim --victim <ip>` | 按受害对象汇总告警。 |
+| `chaitin-cli tanswer alarm detail --id '<doc_id>'` | 查询单条威胁告警详情。 |
+| `chaitin-cli tanswer alarm by-attacker --attacker '<ip>'` | 按攻击者汇总告警。 |
+| `chaitin-cli tanswer alarm by-victim --victim '<ip>'` | 按受害对象汇总告警。 |
 | `chaitin-cli tanswer alarm by-threat` | 按威胁名称、类型或阶段汇总告警。 |
 | `chaitin-cli tanswer alarm important-assets` | 查询重要资产相关告警。 |
 | `chaitin-cli tanswer alarm attacker-rank` | 查询攻击者排行。 |
 | `chaitin-cli tanswer alarm victim-rank` | 查询受害对象排行。 |
 | `chaitin-cli tanswer alarm phase-distribution` | 查询攻击阶段分布。 |
-| `chaitin-cli tanswer alarm related --id <doc_id>` | 基于源告警查找相近相关告警。 |
+| `chaitin-cli tanswer alarm related --id '<doc_id>'` | 基于源告警查找相近相关告警。 |
 
 ## File alarm
 
@@ -62,36 +62,36 @@ chaitin-cli tanswer api POST /rpc --body @./request.json
 | `chaitin-cli tanswer file-alarm malicious` | 查询恶意文件告警。 |
 | `chaitin-cli tanswer file-alarm webshell` | 查询 Webshell 文件告警。 |
 | `chaitin-cli tanswer file-alarm sandbox` | 查询已有沙箱检测结果告警。 |
-| `chaitin-cli tanswer file-alarm detail --id <doc_id>` | 查询单条文件告警详情。 |
+| `chaitin-cli tanswer file-alarm detail --id '<doc_id>'` | 查询单条文件告警详情。 |
 
 ## Asset
 
 | 命令 | 用途 |
 | --- | --- |
 | `chaitin-cli tanswer asset list` | 查询资产配置列表。 |
-| `chaitin-cli tanswer asset detail --id <asset_id>` | 查询单个资产详情。 |
+| `chaitin-cli tanswer asset detail --id '<asset_id>'` | 查询单个资产详情。 |
 | `chaitin-cli tanswer asset group-tree` | 查询资产组树和分组数量。 |
 | `chaitin-cli tanswer asset download-template` | 下载资产导入模板。 |
 | `chaitin-cli tanswer asset export` | 导出资产配置。 |
 | `chaitin-cli tanswer asset create` | preview/confirm 创建资产。 |
-| `chaitin-cli tanswer asset update --id <asset_id>` | preview/confirm 更新资产。 |
-| `chaitin-cli tanswer asset delete --id-list <asset_ids>` | preview/confirm 删除资产。 |
-| `chaitin-cli tanswer asset batch-maintain --id-list <asset_ids>` | preview/confirm 批量维护资产字段。 |
-| `chaitin-cli tanswer asset batch-tag --id-list <asset_ids> --tag-id <tag_ids>` | preview/confirm 批量维护资产标签。 |
-| `chaitin-cli tanswer asset group-create --name <name>` | preview/confirm 创建资产组。 |
-| `chaitin-cli tanswer asset group-rename --id <group_id> --name <name>` | preview/confirm 重命名资产组。 |
-| `chaitin-cli tanswer asset group-delete --id-list <group_ids>` | preview/confirm 删除资产组。 |
-| `chaitin-cli tanswer asset tree-move --id <id> --type <group|asset> --prev-id <id> --prev-type <group|asset>` | preview/confirm 调整资产树层级。 |
-| `chaitin-cli tanswer asset import --file <xlsx>` | preview/confirm 上传资产导入文件。 |
+| `chaitin-cli tanswer asset update --id '<asset_id>'` | preview/confirm 更新资产。 |
+| `chaitin-cli tanswer asset delete --id-list '<asset_ids>'` | preview/confirm 删除资产。 |
+| `chaitin-cli tanswer asset batch-maintain --id-list '<asset_ids>'` | preview/confirm 批量维护资产字段。 |
+| `chaitin-cli tanswer asset batch-tag --id-list '<asset_ids>' --tag-id '<tag_ids>'` | preview/confirm 批量维护资产标签。 |
+| `chaitin-cli tanswer asset group-create --name '<name>'` | preview/confirm 创建资产组。 |
+| `chaitin-cli tanswer asset group-rename --id '<group_id>' --name '<name>'` | preview/confirm 重命名资产组。 |
+| `chaitin-cli tanswer asset group-delete --id-list '<group_ids>'` | preview/confirm 删除资产组。 |
+| `chaitin-cli tanswer asset tree-move --id '<id>' --type '<group|asset>' --prev-id '<id>' --prev-type '<group|asset>'` | preview/confirm 调整资产树层级。 |
+| `chaitin-cli tanswer asset import --file '<xlsx>'` | preview/confirm 上传资产导入文件。 |
 
 ## Metadata
 
 | 命令 | 用途 |
 | --- | --- |
-| `chaitin-cli tanswer metadata protocol --protocol <protocol>` | 按协议查询流量元数据。 |
-| `chaitin-cli tanswer metadata search --protocol <protocol> --advanced-query <query>` | 使用高级条件查询流量元数据。 |
-| `chaitin-cli tanswer metadata detail --id <metadata_id> --timestamp <ms> --protocol <protocol>` | 查询单条元数据详情。 |
-| `chaitin-cli tanswer metadata near-alarm --id <alarm_doc_id>` | 查询告警附近的流量上下文。 |
+| `chaitin-cli tanswer metadata protocol --protocol '<protocol>'` | 按协议查询流量元数据。 |
+| `chaitin-cli tanswer metadata search --protocol '<protocol>' --advanced-query '<query>'` | 使用高级条件查询流量元数据。 |
+| `chaitin-cli tanswer metadata detail --id '<metadata_id>' --timestamp '<ms>' --protocol '<protocol>'` | 查询单条元数据详情。 |
+| `chaitin-cli tanswer metadata near-alarm --id '<alarm_doc_id>'` | 查询告警附近的流量上下文。 |
 | `chaitin-cli tanswer metadata config` | 查询协议采集配置。 |
 | `chaitin-cli tanswer metadata config-update` | preview/confirm 更新协议采集配置。 |
 
@@ -137,7 +137,7 @@ chaitin-cli tanswer api POST /rpc --body @./request.json
 | `chaitin-cli tanswer response block-policy-from-alarm` | preview/confirm 从告警生成阻断策略。 |
 | `chaitin-cli tanswer response whitelist-from-alarm` | preview/confirm 从告警生成响应白名单。 |
 | `chaitin-cli tanswer response devices` | 查询联动设备配置。 |
-| `chaitin-cli tanswer response device-records --device-id <device_id>` | 查询联动设备发送记录。 |
+| `chaitin-cli tanswer response device-records --device-id '<device_id>'` | 查询联动设备发送记录。 |
 | `chaitin-cli tanswer response auto-policies` | 查询自动响应策略。 |
 | `chaitin-cli tanswer response auto-list` | 查询自动响应生成列表。 |
 
@@ -153,7 +153,7 @@ chaitin-cli tanswer alarm overview --time 24h --severity critical,high --result 
 chaitin-cli tanswer alarm timeline --time 24h --interval 1h --severity critical,high
 chaitin-cli tanswer alarm list --time today --page-size 10
 chaitin-cli tanswer alarm high-priority --time today
-chaitin-cli tanswer alarm detail --id <doc_id>
+chaitin-cli tanswer alarm detail --id '<doc_id>'
 chaitin-cli tanswer alarm by-attacker --attacker 192.0.2.10 --time today
 chaitin-cli tanswer alarm by-victim --victim 192.0.2.20 --time today
 chaitin-cli tanswer alarm by-threat --name SQL注入 --time today
@@ -161,7 +161,7 @@ chaitin-cli tanswer alarm important-assets --time today
 chaitin-cli tanswer alarm attacker-rank --time today --top 10
 chaitin-cli tanswer alarm victim-rank --time today --top 10
 chaitin-cli tanswer alarm phase-distribution --time today
-chaitin-cli tanswer alarm related --id <doc_id>
+chaitin-cli tanswer alarm related --id '<doc_id>'
 ```
 
 ```bash
@@ -169,19 +169,19 @@ chaitin-cli tanswer file-alarm overview --time today
 chaitin-cli tanswer file-alarm malicious --time today --page-size 10
 chaitin-cli tanswer file-alarm webshell --time today --page-size 10
 chaitin-cli tanswer file-alarm sandbox --time today --page-size 10
-chaitin-cli tanswer file-alarm detail --id <doc_id>
+chaitin-cli tanswer file-alarm detail --id '<doc_id>'
 chaitin-cli tanswer metadata protocol --protocol http --time today --page-size 10
 chaitin-cli tanswer metadata search --protocol dns --advanced-query "dns_rrname = 'example.com'"
-chaitin-cli tanswer metadata detail --id <metadata_id> --timestamp 1784282400000 --protocol http
-chaitin-cli tanswer metadata near-alarm --id <doc_id> --window 30m --page-size 10
+chaitin-cli tanswer metadata detail --id '<metadata_id>' --timestamp 1784282400000 --protocol http
+chaitin-cli tanswer metadata near-alarm --id '<doc_id>' --window 30m --page-size 10
 chaitin-cli tanswer metadata config
-chaitin-cli tanswer metadata config-update --node-id <node_id> --enable http,dns --preview
-chaitin-cli tanswer metadata config-update --node-id <node_id> --disable tcp,udp --confirm CONFIRM_METADATA_CONFIG_UPDATE
+chaitin-cli tanswer metadata config-update --node-id '<node_id>' --enable http,dns --preview
+chaitin-cli tanswer metadata config-update --node-id '<node_id>' --disable tcp,udp --confirm CONFIRM_METADATA_CONFIG_UPDATE
 ```
 
 ```bash
 chaitin-cli tanswer asset list --page-size 10
-chaitin-cli tanswer asset detail --id <asset_id>
+chaitin-cli tanswer asset detail --id '<asset_id>'
 chaitin-cli tanswer asset group-tree --depth 2
 chaitin-cli tanswer asset download-template --output ./asset-template.xlsx
 chaitin-cli tanswer asset import --file ./assets.xlsx --preview
@@ -205,7 +205,7 @@ chaitin-cli tanswer asset tree-move --id 9 --type asset --prev-id 3 --prev-type 
 chaitin-cli tanswer policy detection-whitelist --page-size 10
 chaitin-cli tanswer policy detection-whitelist-create --name 登录误报 --src-ip 192.0.2.10 --preview
 chaitin-cli tanswer policy detection-whitelist-create --name 登录误报 --src-ip 192.0.2.10 --confirm CONFIRM_POLICY_DETECTION_WHITELIST_CREATE
-chaitin-cli tanswer policy detection-whitelist-from-alarm --id <doc_id> --remark 已确认误报 --confirm CONFIRM_POLICY_DETECTION_WHITELIST_FROM_ALARM
+chaitin-cli tanswer policy detection-whitelist-from-alarm --id '<doc_id>' --remark 已确认误报 --confirm CONFIRM_POLICY_DETECTION_WHITELIST_FROM_ALARM
 chaitin-cli tanswer policy detection-whitelist-export --id-list 21,22 --output ./detection-whitelist.xlsx
 chaitin-cli tanswer policy detection-whitelist-import --file ./detection-whitelist.xlsx --preview
 chaitin-cli tanswer policy custom-intelligence --ioc evil.example --type domain --status enabled
@@ -221,10 +221,10 @@ chaitin-cli tanswer response block-records --time 24h --page-size 10
 chaitin-cli tanswer response whitelist --object 192.0.2.40 --type ip
 chaitin-cli tanswer response whitelist-create --type ip --object 192.0.2.40 --expire 1784277612410 --preview
 chaitin-cli tanswer response whitelist-create --type ip --object 192.0.2.40 --expire 1784277612410 --confirm CONFIRM_RESPONSE_WHITELIST_CREATE
-chaitin-cli tanswer response block-policy-from-alarm --id <doc_id> --target attacker --preview
-chaitin-cli tanswer response whitelist-from-alarm --id <doc_id> --target victim --expire 1784277612410 --confirm CONFIRM_RESPONSE_WHITELIST_FROM_ALARM
+chaitin-cli tanswer response block-policy-from-alarm --id '<doc_id>' --target attacker --preview
+chaitin-cli tanswer response whitelist-from-alarm --id '<doc_id>' --target victim --expire 1784277612410 --confirm CONFIRM_RESPONSE_WHITELIST_FROM_ALARM
 chaitin-cli tanswer response devices --page-size 10
-chaitin-cli tanswer response device-records --device-id <device_id> --page-size 10
+chaitin-cli tanswer response device-records --device-id '<device_id>' --page-size 10
 chaitin-cli tanswer response auto-policies --page-size 10
 chaitin-cli tanswer response auto-list --time 7d --page-size 10
 ```

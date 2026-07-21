@@ -24,8 +24,8 @@ func newAlarmRelatedCommand(opts *RootOptions) *cobra.Command {
 		Short: "查看相关告警",
 		Long: "查看相关告警，用于从一条告警出发，查询原告警前后时间窗口内同攻击源或同受害对象的其他告警。默认窗口为前后 30m，默认关联口径为 both。\n\n" +
 			"输出：原告警摘要、时间窗口、关联口径、相关告警数量、最早/最新告警时间、相关告警摘要。",
-		Example: "  chaitin-cli tanswer alarm related --id <doc_id>\n" +
-			"  chaitin-cli tanswer alarm related --id <doc_id> --window 1h --relation attacker",
+		Example: "  chaitin-cli tanswer alarm related --id '<doc_id>'\n" +
+			"  chaitin-cli tanswer alarm related --id '<doc_id>' --window 1h --relation attacker",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			return runAlarmRelatedCommand(cmd, opts, alarmOpts)
 		},

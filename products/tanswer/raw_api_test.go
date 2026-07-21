@@ -158,3 +158,49 @@ func TestRawAPINonJSONResponseOutputsRawString(t *testing.T) {
 		t.Fatalf("raw = %#v", data["raw"])
 	}
 }
+
+func TestRawAPIRejectsExternalURLPathBeforeRequest(t *testing.T) {
+	called := false
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		called = true
+		t.Fatalf("external URL should not be requested")
+	}))
+	defer server.Close()
+
+	for _, path := range []string{server.URL + "/steal", "//example.com/steal"} {
+		var out bytes.Buffer
+		cmd := NewRootCommand(RootOptions{Out: &out, ErrOut: &out})
+		cmd.SetArgs([]string{
+			"tanswer", "--url", server.URL, "--api-key", "token-123",
+			"api", "GET", path,
+		})
+
+		err := cmd.Execute()
+		if err == nil {
+			t.Fatalf("path %q should be rejected", path)
+		}
+		if !strings.Contains(err.Error(), "not a full URL") {
+			t.Fatalf("path %q error = %v", path, err)
+		}
+	}
+	if called {
+		t.Fatalf("external request was sent")
+	}
+}
+
+func TestRawAPIRejectsRelativePath(t *testing.T) {
+	var out bytes.Buffer
+	cmd := NewRootCommand(RootOptions{Out: &out, ErrOut: &out})
+	cmd.SetArgs([]string{
+		"tanswer", "--url", "https://tanswer.test", "--api-key", "token-123",
+		"api", "GET", "api/example",
+	})
+
+	err := cmd.Execute()
+	if err == nil {
+		t.Fatalf("relative path should be rejected")
+	}
+	if !strings.Contains(err.Error(), "must start with /") {
+		t.Fatalf("error = %v", err)
+	}
+}

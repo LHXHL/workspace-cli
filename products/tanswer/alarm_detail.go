@@ -22,7 +22,7 @@ func newAlarmDetailCommand(opts *RootOptions) *cobra.Command {
 		Short: "查看威胁告警详情",
 		Long: "查看威胁告警详情，用于从告警列表返回的 doc_id 下钻到单条告警。该命令返回产品已有详情字段，包括列表基础字段、cve_list、alert_msg 和 alarm_description。\n\n" +
 			"输出：doc_id、detail。detail 中保留后端告警详情字段，如 name、severity、timestamp、attacker、victim、payload、cve_list、alert_msg、alarm_description。",
-		Example: "  chaitin-cli tanswer alarm detail --id <doc_id>",
+		Example: "  chaitin-cli tanswer alarm detail --id '<doc_id>'",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			if strings.TrimSpace(alarmOpts.id) == "" {
 				return writeAlarmDetailError(cmd, "MISSING_ALARM_ID", "missing alarm doc_id: set --id", false)

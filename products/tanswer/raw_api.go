@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"net/url"
 	"os"
 	"strings"
 
@@ -21,6 +22,10 @@ func newRawAPICommand(opts *RootOptions) *cobra.Command {
 			"  chaitin-cli tanswer api GET /api/openapi/rpc/openapi.json",
 		Args: cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
+			path, err := validateRawAPIPath(args[1])
+			if err != nil {
+				return err
+			}
 			cfg, err := LoadConfig(ConfigOptions{
 				Address:            opts.Address,
 				Token:              opts.Token,
@@ -39,7 +44,7 @@ func newRawAPICommand(opts *RootOptions) *cobra.Command {
 				return err
 			}
 			client := NewClient(cfg)
-			resp, err := client.DoJSON(cmd.Context(), strings.ToUpper(args[0]), args[1], query, body)
+			resp, err := client.DoJSON(cmd.Context(), strings.ToUpper(args[0]), path, query, body)
 			if err != nil {
 				return err
 			}
@@ -62,6 +67,21 @@ func newRawAPICommand(opts *RootOptions) *cobra.Command {
 	cmd.Flags().StringVar(&queryText, "query", "", "query parameters as JSON object")
 	cmd.Flags().StringVar(&bodyText, "body", "", "request body as JSON object or @file path")
 	return cmd
+}
+
+func validateRawAPIPath(path string) (string, error) {
+	path = strings.TrimSpace(path)
+	parsed, err := url.Parse(path)
+	if err != nil {
+		return "", err
+	}
+	if parsed.IsAbs() || parsed.Host != "" {
+		return "", fmt.Errorf("api path must be a path under the configured T-Answer URL, not a full URL")
+	}
+	if !strings.HasPrefix(path, "/") {
+		return "", fmt.Errorf("api path must start with /")
+	}
+	return path, nil
 }
 
 func rawAPIResponseValue(body []byte) any {

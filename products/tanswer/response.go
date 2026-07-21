@@ -605,8 +605,8 @@ func newResponseBlockPolicyFromAlarmCommand(opts *RootOptions) *cobra.Command {
 		Long: "从告警生成旁路阻断策略，用于基于已研判恶意告警生成候选阻断策略。该命令是高影响写操作：预览阶段会读取告警详情并生成候选策略；必须使用 --confirm CONFIRM_RESPONSE_BLOCK_POLICY_FROM_ALARM 才会调用后端创建接口。\n\n" +
 			"输出预览：source_alarm、suggested_block_policy、requires_confirmation、confirmation_token、risk_warnings。\n" +
 			"执行输出：confirmed、result、object、audit。",
-		Example: "  chaitin-cli tanswer response block-policy-from-alarm --id <doc_id> --target attacker --preview\n" +
-			"  chaitin-cli tanswer response block-policy-from-alarm --id <doc_id> --target flow --duration 3600 --confirm CONFIRM_RESPONSE_BLOCK_POLICY_FROM_ALARM",
+		Example: "  chaitin-cli tanswer response block-policy-from-alarm --id '<doc_id>' --target attacker --preview\n" +
+			"  chaitin-cli tanswer response block-policy-from-alarm --id '<doc_id>' --target flow --duration 3600 --confirm CONFIRM_RESPONSE_BLOCK_POLICY_FROM_ALARM",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			if strings.TrimSpace(responseOpts.id) == "" {
 				return writeResponseError(cmd, "从告警生成旁路阻断策略", commandText, "MISSING_ALARM_ID", "missing alarm doc_id: set --id", false)
@@ -679,8 +679,8 @@ func newResponseWhitelistFromAlarmCommand(opts *RootOptions) *cobra.Command {
 		Long: "从告警生成响应白名单，用于基于已确认可信或误阻断风险的告警生成候选响应白名单。该命令是高影响写操作：预览阶段会读取告警详情并生成候选白名单；必须使用 --confirm CONFIRM_RESPONSE_WHITELIST_FROM_ALARM 才会调用后端创建接口。\n\n" +
 			"输出预览：source_alarm、suggested_whitelist、requires_confirmation、confirmation_token、risk_warnings。\n" +
 			"执行输出：confirmed、result、object、audit。",
-		Example: "  chaitin-cli tanswer response whitelist-from-alarm --id <doc_id> --target victim --expire 1784277612410 --preview\n" +
-			"  chaitin-cli tanswer response whitelist-from-alarm --id <doc_id> --target url --expire 1784277612410 --confirm CONFIRM_RESPONSE_WHITELIST_FROM_ALARM",
+		Example: "  chaitin-cli tanswer response whitelist-from-alarm --id '<doc_id>' --target victim --expire 1784277612410 --preview\n" +
+			"  chaitin-cli tanswer response whitelist-from-alarm --id '<doc_id>' --target url --expire 1784277612410 --confirm CONFIRM_RESPONSE_WHITELIST_FROM_ALARM",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			if strings.TrimSpace(responseOpts.id) == "" {
 				return writeResponseError(cmd, "从告警生成响应白名单", commandText, "MISSING_ALARM_ID", "missing alarm doc_id: set --id", false)

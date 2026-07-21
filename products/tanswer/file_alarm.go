@@ -137,7 +137,7 @@ func newFileAlarmDetailCommand(opts *RootOptions) *cobra.Command {
 		Use:     "detail",
 		Short:   "查看文件告警详情",
 		Long:    "查看文件告警详情，用于研判单条恶意文件、Webshell 或沙箱检测告警。该命令只读取已有详情，不下载原始样本，不触发新的深度分析。\n\n输出：doc_id、detail。detail 中保留后端文件告警详情字段，包括基础信息、检测结果、检测依据、文件内容片段或沙箱报告字段。",
-		Example: "  chaitin-cli tanswer file-alarm detail --id <doc_id>",
+		Example: "  chaitin-cli tanswer file-alarm detail --id '<doc_id>'",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			if strings.TrimSpace(fileOpts.id) == "" {
 				return writeFileAlarmError(cmd, "查看文件告警详情", "chaitin-cli tanswer file-alarm detail", "MISSING_FILE_ALARM_ID", "missing file alarm doc_id: set --id", false)

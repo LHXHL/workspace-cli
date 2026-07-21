@@ -84,7 +84,7 @@ chaitin-cli tanswer --insecure auth check
 ```bash
 chaitin-cli tanswer system status
 chaitin-cli tanswer alarm overview --time 24h --severity critical,high
-chaitin-cli tanswer alarm detail --id <doc_id>
+chaitin-cli tanswer alarm detail --id '<doc_id>'
 chaitin-cli tanswer file-alarm malicious --time 7d --page-size 10
 ```
 
