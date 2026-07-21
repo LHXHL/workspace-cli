@@ -1,6 +1,6 @@
 # 全悉 AI 可读 CLI
 
-`chaitin-cli tanswer` 是全悉面向人类操作者和 AI Agent 的命令行入口。它以语义命令覆盖一期安全运营场景，并保留 `api <METHOD> <PATH>` 作为 Open API fallback。
+`chaitin-cli tanswer` 是全悉面向人类操作者和 AI Agent 的命令行入口。它将高频安全运营动作封装为语义命令，并保留 `api <METHOD> <PATH>` 作为 Open API fallback。
 
 ## 快速开始
 
@@ -13,6 +13,6 @@ chaitin-cli tanswer alarm +overview --time today
 
 ## 安全边界
 
-- 只提交脱敏示例，不提交真实 token、真实测试地址或真实内网地址。
-- 查询命令直接执行；写命令必须 preview/confirm/audit。
-- `risk`、`risk-host`、`asset-risk`、`vulnerability-risk` 不在一期范围。
+- 请通过环境变量、配置文件或命令行参数传入访问凭证，不要在脚本、日志或共享文档中暴露 API key。
+- 查询命令直接执行；会修改产品配置或处置对象的命令必须先预览变更，再使用确认令牌执行。
+- 使用 `chaitin-cli tanswer manifest` 查看当前版本支持的命令、参数、输出字段和确认要求。
