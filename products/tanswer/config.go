@@ -1,104 +1,108 @@
 package tanswer
 
 import (
+	"errors"
 	"os"
-	"strconv"
+	"strings"
 	"time"
 
 	"github.com/chaitin/chaitin-cli/config"
 	"github.com/spf13/cobra"
 )
 
-const defaultTimeout = 30 * time.Second
-
-type RuntimeConfig struct {
-	URL      string        `yaml:"url"`
-	APIKey   string        `yaml:"api_key"`
-	Timeout  time.Duration `yaml:"timeout"`
-	Insecure bool          `yaml:"insecure"`
-	Output   string        `yaml:"output"`
+type ConfigOptions struct {
+	Address            string
+	Token              string
+	Timeout            string
+	Format             string
+	InsecureSkipVerify bool
+	AllowMissingToken  bool
 }
 
-func DefaultRuntimeConfig() RuntimeConfig {
-	return RuntimeConfig{
-		Timeout: defaultTimeout,
-		Output:  "json",
+type Config struct {
+	BaseURL            string
+	APIToken           string
+	Timeout            time.Duration
+	Format             string
+	InsecureSkipVerify bool
+}
+
+type runtimeConfig struct {
+	URL      string `yaml:"url"`
+	APIKey   string `yaml:"api_key"`
+	Timeout  string `yaml:"timeout"`
+	Output   string `yaml:"output"`
+	Insecure bool   `yaml:"insecure"`
+}
+
+func ApplyRuntimeConfig(cmd *cobra.Command, raw config.Raw) {
+	productCfg, err := config.DecodeProduct[runtimeConfig](raw, "tanswer")
+	if err != nil {
+		return
+	}
+	applyFlagString(cmd, "url", productCfg.URL)
+	applyFlagString(cmd, "api-key", productCfg.APIKey)
+	applyFlagString(cmd, "timeout", productCfg.Timeout)
+	applyFlagString(cmd, "output", productCfg.Output)
+	if productCfg.Insecure {
+		applyFlagString(cmd, "insecure", "true")
 	}
 }
 
-func ApplyRuntimeConfig(cmd *cobra.Command, cfg config.Raw) {
-	runtime := DefaultRuntimeConfig()
-	if productCfg, err := config.DecodeProduct[RuntimeConfig](cfg, "tanswer"); err == nil {
-		runtime = mergeRuntimeConfig(runtime, productCfg)
-	}
+func LoadConfig(opts ConfigOptions) (Config, error) {
+	addr := firstNonEmpty(opts.Address, os.Getenv("TANSWER_URL"))
+	token := firstNonEmpty(opts.Token, os.Getenv("TANSWER_API_KEY"))
+	timeoutText := firstNonEmpty(opts.Timeout, os.Getenv("TANSWER_TIMEOUT"), "30s")
+	format := firstNonEmpty(opts.Format, "json")
+	insecureSkipVerify := opts.InsecureSkipVerify || truthy(os.Getenv("TANSWER_INSECURE"))
 
-	runtime = mergeEnvConfig(runtime)
-	applyFlagString(cmd, "url", runtime.URL)
-	applyFlagString(cmd, "api-key", runtime.APIKey)
-	applyFlagDuration(cmd, "timeout", durationOrDefault(runtime.Timeout, defaultTimeout))
-	applyFlagBool(cmd, "insecure", runtime.Insecure)
-	applyFlagString(cmd, "output", runtime.Output)
+	addr = strings.TrimRight(strings.TrimSpace(addr), "/")
+	if addr == "" {
+		return Config{}, errors.New("missing Quanxi address: set --url or TANSWER_URL")
+	}
+	if token == "" && !opts.AllowMissingToken {
+		return Config{}, errors.New("missing OpenAPI token: set --api-key or TANSWER_API_KEY")
+	}
+	timeout, err := time.ParseDuration(timeoutText)
+	if err != nil {
+		return Config{}, err
+	}
+	return Config{
+		BaseURL:            addr,
+		APIToken:           token,
+		Timeout:            timeout,
+		Format:             format,
+		InsecureSkipVerify: insecureSkipVerify,
+	}, nil
 }
 
-func mergeRuntimeConfig(base, next RuntimeConfig) RuntimeConfig {
-	if next.URL != "" {
-		base.URL = next.URL
-	}
-	if next.APIKey != "" {
-		base.APIKey = next.APIKey
-	}
-	if next.Timeout > 0 {
-		base.Timeout = next.Timeout
-	}
-	if next.Insecure {
-		base.Insecure = true
-	}
-	if next.Output != "" {
-		base.Output = next.Output
-	}
-	return base
-}
-
-func mergeEnvConfig(cfg RuntimeConfig) RuntimeConfig {
-	if v := os.Getenv("TANSWER_URL"); v != "" {
-		cfg.URL = v
-	}
-	if v := os.Getenv("TANSWER_API_KEY"); v != "" {
-		cfg.APIKey = v
-	}
-	if v := os.Getenv("TANSWER_TIMEOUT"); v != "" {
-		if timeout, err := time.ParseDuration(v); err == nil {
-			cfg.Timeout = timeout
+func firstNonEmpty(values ...string) string {
+	for _, value := range values {
+		if strings.TrimSpace(value) != "" {
+			return strings.TrimSpace(value)
 		}
 	}
-	if v := os.Getenv("TANSWER_INSECURE"); v != "" {
-		if insecure, err := strconv.ParseBool(v); err == nil {
-			cfg.Insecure = insecure
-		}
+	return ""
+}
+
+func truthy(value string) bool {
+	switch strings.ToLower(strings.TrimSpace(value)) {
+	case "1", "t", "true", "yes", "y", "on":
+		return true
+	default:
+		return false
 	}
-	return cfg
 }
 
 func applyFlagString(cmd *cobra.Command, name, value string) {
-	flag := cmd.Flags().Lookup(name)
-	if flag == nil || flag.Changed || value == "" {
+	if value == "" {
 		return
 	}
-	_ = cmd.Flags().Set(name, value)
-}
-
-func applyFlagDuration(cmd *cobra.Command, name string, value time.Duration) {
-	flag := cmd.Flags().Lookup(name)
-	if flag == nil || flag.Changed || value <= 0 {
+	if flag := cmd.Flags().Lookup(name); flag != nil && !flag.Changed {
+		_ = cmd.Flags().Set(name, value)
 		return
 	}
-	_ = cmd.Flags().Set(name, value.String())
-}
-
-func applyFlagBool(cmd *cobra.Command, name string, value bool) {
-	flag := cmd.Flags().Lookup(name)
-	if flag == nil || flag.Changed || !value {
-		return
+	if flag := cmd.PersistentFlags().Lookup(name); flag != nil && !flag.Changed {
+		_ = cmd.PersistentFlags().Set(name, value)
 	}
-	_ = cmd.Flags().Set(name, strconv.FormatBool(value))
 }

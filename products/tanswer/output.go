@@ -1,47 +1,41 @@
 package tanswer
 
+import (
+	"bytes"
+	"encoding/json"
+)
+
 type SuccessEnvelope struct {
-	Success  bool   `json:"success"`
-	Task     string `json:"task"`
-	Command  string `json:"command"`
-	Query    any    `json:"query,omitempty"`
-	Data     any    `json:"data"`
-	Warnings any    `json:"warnings,omitempty"`
+	Success  bool        `json:"success"`
+	Task     string      `json:"task"`
+	Command  string      `json:"command"`
+	Query    any         `json:"query,omitempty"`
+	Data     any         `json:"data,omitempty"`
+	Warnings []string    `json:"warnings,omitempty"`
+	Raw      interface{} `json:"raw,omitempty"`
 }
 
 type ErrorEnvelope struct {
-	Success bool         `json:"success"`
-	Task    string       `json:"task"`
-	Command string       `json:"command"`
-	Error   CommandError `json:"error"`
+	Success bool     `json:"success"`
+	Task    string   `json:"task"`
+	Command string   `json:"command"`
+	Error   CLIError `json:"error"`
 }
 
-type CommandError struct {
+type CLIError struct {
 	Code      string `json:"code"`
 	Message   string `json:"message"`
 	Retryable bool   `json:"retryable"`
+	Detail    any    `json:"detail,omitempty"`
 }
 
-func NewSuccessEnvelope(task, command string, query, data, warnings any) SuccessEnvelope {
-	return SuccessEnvelope{
-		Success:  true,
-		Task:     task,
-		Command:  command,
-		Query:    query,
-		Data:     data,
-		Warnings: warnings,
+func RenderJSON(v any) ([]byte, error) {
+	var buf bytes.Buffer
+	encoder := json.NewEncoder(&buf)
+	encoder.SetEscapeHTML(false)
+	encoder.SetIndent("", "  ")
+	if err := encoder.Encode(v); err != nil {
+		return nil, err
 	}
-}
-
-func NewErrorEnvelope(task, command, code, message string, retryable bool) ErrorEnvelope {
-	return ErrorEnvelope{
-		Success: false,
-		Task:    task,
-		Command: command,
-		Error: CommandError{
-			Code:      code,
-			Message:   message,
-			Retryable: retryable,
-		},
-	}
+	return bytes.TrimRight(buf.Bytes(), "\n"), nil
 }

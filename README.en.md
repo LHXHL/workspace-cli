@@ -85,7 +85,7 @@ After installation, simply describe your needs to the AI agent, for example:
 | `xray` | X-Ray scan task, asset, vulnerability, report, and system configuration management |
 | `cloudwalker` | CloudWalker CWPP event, asset, vulnerability, protection policy, and system management |
 | `veinmind` | CloudWalker CNAPP container, image, and escape protection management |
-| `tanswer` | T-Answer firewall, whitelist, and block rule management |
+| `tanswer` | T-Answer semantic security operations for alarms, file alarms, assets, policies, response actions, and Open API fallback |
 | `ddr` | DDR API token and connection configuration helpers |
 | `dsensor` | D-Sensor security monitoring, agent, honeypot, alarm, and threat log management |
 | `codeinsight` | CodeInsight project, repository configuration, scan task, and report export management |
@@ -104,8 +104,8 @@ cloudwalker:
   api_key: YOUR_API_KEY
 
 tanswer:
-  url: https://tanswer.example.com
-  api_key: YOUR_API_KEY
+  url: 'https://<全悉 Web 端 IP>'
+  api_key: '<全悉 OpenAPI Token>'
 
 # chaitin-cli ddr get-api-token --url https://ddr.example.com:8443 --jwt-token "YOUR_JWT_TOKEN" can directly get url & api_key & company_id
 ddr:
