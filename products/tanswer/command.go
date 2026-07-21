@@ -20,7 +20,7 @@ func NewCommand() *cobra.Command {
 	}
 
 	cmd.PersistentFlags().StringVar(&cfg.URL, "url", cfg.URL, "T-Answer console URL")
-	cmd.PersistentFlags().StringVar(&cfg.APIKey, "api-key", cfg.APIKey, "Open API key for T-Answer")
+	cmd.PersistentFlags().StringVar(&cfg.APIKey, "api-key", cfg.APIKey, "OpenAPI Token for T-Answer")
 	cmd.PersistentFlags().DurationVar(&cfg.Timeout, "timeout", cfg.Timeout, "Request timeout")
 	cmd.PersistentFlags().BoolVar(&cfg.Insecure, "insecure", cfg.Insecure, "Skip TLS certificate verification")
 	cmd.PersistentFlags().StringVar(&cfg.Output, "output", cfg.Output, "Output format, currently json")

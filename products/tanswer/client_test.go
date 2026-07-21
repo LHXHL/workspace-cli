@@ -12,7 +12,7 @@ import (
 
 func TestClientBuildsJSONRPCRequest(t *testing.T) {
 	client := NewClient(RuntimeConfig{
-		URL:      "https://quanxi.example.com/",
+		URL:      "https://tanswer.test/",
 		APIKey:   "token-placeholder",
 		Timeout:  5 * time.Second,
 		Insecure: true,
@@ -25,7 +25,7 @@ func TestClientBuildsJSONRPCRequest(t *testing.T) {
 	if req.Method != http.MethodPost {
 		t.Fatalf("method = %s", req.Method)
 	}
-	if req.URL.String() != "https://quanxi.example.com/rpc" {
+	if req.URL.String() != "https://tanswer.test/rpc" {
 		t.Fatalf("url = %s", req.URL.String())
 	}
 	if got := req.Header.Get("API-Token"); got != "token-placeholder" {

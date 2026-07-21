@@ -60,32 +60,23 @@ func mergeRuntimeConfig(base, next RuntimeConfig) RuntimeConfig {
 }
 
 func mergeEnvConfig(cfg RuntimeConfig) RuntimeConfig {
-	if v := firstEnv("TANSWER_URL", "TA_ANSWER_ADDR"); v != "" {
+	if v := os.Getenv("TANSWER_URL"); v != "" {
 		cfg.URL = v
 	}
-	if v := firstEnv("TANSWER_API_KEY", "TA_ANSWER_TOKEN"); v != "" {
+	if v := os.Getenv("TANSWER_API_KEY"); v != "" {
 		cfg.APIKey = v
 	}
-	if v := firstEnv("TA_ANSWER_TIMEOUT"); v != "" {
+	if v := os.Getenv("TANSWER_TIMEOUT"); v != "" {
 		if timeout, err := time.ParseDuration(v); err == nil {
 			cfg.Timeout = timeout
 		}
 	}
-	if v := firstEnv("TA_ANSWER_INSECURE_SKIP_VERIFY"); v != "" {
+	if v := os.Getenv("TANSWER_INSECURE"); v != "" {
 		if insecure, err := strconv.ParseBool(v); err == nil {
 			cfg.Insecure = insecure
 		}
 	}
 	return cfg
-}
-
-func firstEnv(names ...string) string {
-	for _, name := range names {
-		if value := os.Getenv(name); value != "" {
-			return value
-		}
-	}
-	return ""
 }
 
 func applyFlagString(cmd *cobra.Command, name, value string) {
