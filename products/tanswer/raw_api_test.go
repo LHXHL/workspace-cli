@@ -121,3 +121,40 @@ func TestRawAPIPostBodyFileOutputsNon2xxStatus(t *testing.T) {
 		t.Fatalf("raw = %#v", raw)
 	}
 }
+
+func TestRawAPINonJSONResponseOutputsRawString(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodGet {
+			t.Fatalf("method = %s", r.Method)
+		}
+		w.Header().Set("Content-Type", "text/plain")
+		w.WriteHeader(http.StatusBadGateway)
+		_, _ = w.Write([]byte("bad gateway"))
+	}))
+	defer server.Close()
+
+	var out bytes.Buffer
+	cmd := NewRootCommand(RootOptions{Out: &out, ErrOut: &out})
+	cmd.SetArgs([]string{
+		"tanswer", "--url", server.URL, "--api-key", "token-123",
+		"api", "GET", "/api/text-error",
+	})
+
+	if err := cmd.Execute(); err != nil {
+		t.Fatalf("Execute returned error: %v", err)
+	}
+	var env SuccessEnvelope
+	if err := json.Unmarshal(out.Bytes(), &env); err != nil {
+		t.Fatalf("decode output: %v\n%s", err, out.String())
+	}
+	if env.Success != false {
+		t.Fatalf("success = %v", env.Success)
+	}
+	data := env.Data.(map[string]any)
+	if data["status_code"] != float64(http.StatusBadGateway) {
+		t.Fatalf("status_code = %v", data["status_code"])
+	}
+	if data["raw"] != "bad gateway" {
+		t.Fatalf("raw = %#v", data["raw"])
+	}
+}

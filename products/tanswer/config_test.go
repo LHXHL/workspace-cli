@@ -24,9 +24,6 @@ func TestLoadConfigFromEnv(t *testing.T) {
 	if cfg.Timeout != 15*time.Second {
 		t.Fatalf("Timeout = %s", cfg.Timeout)
 	}
-	if cfg.Format != "json" {
-		t.Fatalf("Format = %q", cfg.Format)
-	}
 	if !cfg.InsecureSkipVerify {
 		t.Fatal("InsecureSkipVerify should be true")
 	}

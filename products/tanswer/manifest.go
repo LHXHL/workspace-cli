@@ -84,7 +84,7 @@ func BuildCommandManifest() CommandManifest {
 			"TANSWER_URL":      "Quanxi console address, for example https://<全悉 Web 端 IP>",
 			"TANSWER_API_KEY":  "OpenAPI Token used by Quanxi TokenAuth",
 			"TANSWER_TIMEOUT":  "request timeout, default 30s",
-			"TANSWER_INSECURE": "skip TLS certificate verification for demo/internal environments, default false",
+			"TANSWER_INSECURE": "skip TLS certificate verification when certificate validation must be bypassed, default false",
 		},
 		Commands: []ManifestCommand{
 			{
@@ -860,7 +860,7 @@ func BuildCommandManifest() CommandManifest {
 				Summary:     "下载资产导入模板，用于按产品模板准备资产导入文件。",
 				UseWhen: []string{
 					"需要获取资产导入 Excel 模板。",
-					"需要让 AI 或交付人员按产品模板字段填写资产后再导入。",
+					"需要让 AI 或运维人员按产品模板字段填写资产后再导入。",
 				},
 				DoNotUseWhen: []string{
 					"需要实际导入资产时，应使用后续带预览和确认保护的导入命令。",
@@ -892,7 +892,7 @@ func BuildCommandManifest() CommandManifest {
 				Name:        "tanswer asset export",
 				FullCommand: "chaitin-cli tanswer asset export",
 				Layer:       "semantic_shortcut",
-				Summary:     "导出资产配置文件，用于备份、交付或线下编辑。",
+				Summary:     "导出资产配置文件，用于备份或离线编辑。",
 				UseWhen: []string{
 					"需要导出当前资产配置文件。",
 					"需要按指定资产 ID 导出选中资产。",
@@ -1914,7 +1914,7 @@ func policyFileExportManifestCommand(name string, fullCommand string, summary st
 		Layer:       "semantic_shortcut",
 		Summary:     summary,
 		UseWhen: []string{
-			"需要导出检测白名单或自定义情报文件用于备份、交付或线下维护。",
+			"需要导出检测白名单或自定义情报文件用于备份或离线维护。",
 			"需要按选中 ID 导出部分策略对象，或未指定 ID 时导出全部对象。",
 		},
 		DoNotUseWhen: []string{

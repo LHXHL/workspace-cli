@@ -14,7 +14,6 @@ type ConfigOptions struct {
 	Address            string
 	Token              string
 	Timeout            string
-	Format             string
 	InsecureSkipVerify bool
 	AllowMissingToken  bool
 }
@@ -23,7 +22,6 @@ type Config struct {
 	BaseURL            string
 	APIToken           string
 	Timeout            time.Duration
-	Format             string
 	InsecureSkipVerify bool
 }
 
@@ -51,7 +49,6 @@ func LoadConfig(opts ConfigOptions) (Config, error) {
 	addr := firstNonEmpty(opts.Address, os.Getenv("TANSWER_URL"))
 	token := firstNonEmpty(opts.Token, os.Getenv("TANSWER_API_KEY"))
 	timeoutText := firstNonEmpty(opts.Timeout, os.Getenv("TANSWER_TIMEOUT"), "30s")
-	format := firstNonEmpty(opts.Format, "json")
 	insecureSkipVerify := opts.InsecureSkipVerify || truthy(os.Getenv("TANSWER_INSECURE"))
 
 	addr = strings.TrimRight(strings.TrimSpace(addr), "/")
@@ -69,7 +66,6 @@ func LoadConfig(opts ConfigOptions) (Config, error) {
 		BaseURL:            addr,
 		APIToken:           token,
 		Timeout:            timeout,
-		Format:             format,
 		InsecureSkipVerify: insecureSkipVerify,
 	}, nil
 }

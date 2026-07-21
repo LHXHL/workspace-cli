@@ -27,7 +27,7 @@ func newAlarmDetailCommand(opts *RootOptions) *cobra.Command {
 			if strings.TrimSpace(alarmOpts.id) == "" {
 				return writeAlarmDetailError(cmd, "MISSING_ALARM_ID", "missing alarm doc_id: set --id", false)
 			}
-			cfg, err := LoadConfig(ConfigOptions{Address: opts.Address, Token: opts.Token, Timeout: opts.Timeout, Format: opts.Format, InsecureSkipVerify: opts.InsecureSkipVerify})
+			cfg, err := LoadConfig(ConfigOptions{Address: opts.Address, Token: opts.Token, Timeout: opts.Timeout, InsecureSkipVerify: opts.InsecureSkipVerify})
 			if err != nil {
 				return err
 			}

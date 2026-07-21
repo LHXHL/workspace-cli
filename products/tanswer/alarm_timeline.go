@@ -55,7 +55,7 @@ func runAlarmTimelineCommand(cmd *cobra.Command, opts *RootOptions, alarmOpts al
 	const task = "查看威胁告警趋势"
 	const command = "chaitin-cli tanswer alarm timeline"
 
-	cfg, err := LoadConfig(ConfigOptions{Address: opts.Address, Token: opts.Token, Timeout: opts.Timeout, Format: opts.Format, InsecureSkipVerify: opts.InsecureSkipVerify})
+	cfg, err := LoadConfig(ConfigOptions{Address: opts.Address, Token: opts.Token, Timeout: opts.Timeout, InsecureSkipVerify: opts.InsecureSkipVerify})
 	if err != nil {
 		return err
 	}

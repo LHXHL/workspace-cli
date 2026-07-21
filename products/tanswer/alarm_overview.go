@@ -50,7 +50,7 @@ func newAlarmOverviewCommand(opts *RootOptions) *cobra.Command {
 		Example: "  chaitin-cli tanswer alarm overview --time today\n" +
 			"  chaitin-cli tanswer alarm overview --time 24h --severity critical,high --result success,control",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			cfg, err := LoadConfig(ConfigOptions{Address: opts.Address, Token: opts.Token, Timeout: opts.Timeout, Format: opts.Format, InsecureSkipVerify: opts.InsecureSkipVerify})
+			cfg, err := LoadConfig(ConfigOptions{Address: opts.Address, Token: opts.Token, Timeout: opts.Timeout, InsecureSkipVerify: opts.InsecureSkipVerify})
 			if err != nil {
 				return err
 			}

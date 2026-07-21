@@ -1,6 +1,7 @@
 package tanswer
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"os"
@@ -24,7 +25,6 @@ func newRawAPICommand(opts *RootOptions) *cobra.Command {
 				Address:            opts.Address,
 				Token:              opts.Token,
 				Timeout:            opts.Timeout,
-				Format:             opts.Format,
 				InsecureSkipVerify: opts.InsecureSkipVerify,
 			})
 			if err != nil {
@@ -49,7 +49,7 @@ func newRawAPICommand(opts *RootOptions) *cobra.Command {
 				Command: "chaitin-cli tanswer api",
 				Data: map[string]any{
 					"status_code": resp.StatusCode,
-					"raw":         json.RawMessage(resp.Body),
+					"raw":         rawAPIResponseValue(resp.Body),
 				},
 			})
 			if err != nil {
@@ -62,6 +62,17 @@ func newRawAPICommand(opts *RootOptions) *cobra.Command {
 	cmd.Flags().StringVar(&queryText, "query", "", "query parameters as JSON object")
 	cmd.Flags().StringVar(&bodyText, "body", "", "request body as JSON object or @file path")
 	return cmd
+}
+
+func rawAPIResponseValue(body []byte) any {
+	trimmed := bytes.TrimSpace(body)
+	if len(trimmed) == 0 {
+		return ""
+	}
+	if json.Valid(trimmed) {
+		return json.RawMessage(trimmed)
+	}
+	return string(body)
 }
 
 func parseQueryJSON(text string) (map[string]string, error) {

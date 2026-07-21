@@ -28,7 +28,7 @@ func newSystemStatusCommand(opts *RootOptions) *cobra.Command {
 			"输出：version、license、health。health 中包含整体状态、节点总数、在线节点数、更新时间和 nodes。",
 		Example: "  chaitin-cli tanswer system status",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			cfg, err := LoadConfig(ConfigOptions{Address: opts.Address, Token: opts.Token, Timeout: opts.Timeout, Format: opts.Format, InsecureSkipVerify: opts.InsecureSkipVerify})
+			cfg, err := LoadConfig(ConfigOptions{Address: opts.Address, Token: opts.Token, Timeout: opts.Timeout, InsecureSkipVerify: opts.InsecureSkipVerify})
 			if err != nil {
 				return err
 			}

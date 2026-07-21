@@ -137,7 +137,7 @@ func newMetadataDetailCommand(opts *RootOptions) *cobra.Command {
 			if info.eventType == "" {
 				return writeMetadataError(cmd, "查看元数据详情", "chaitin-cli tanswer metadata detail", "MISSING_METADATA_PROTOCOL", "missing protocol: set --protocol", false)
 			}
-			cfg, err := LoadConfig(ConfigOptions{Address: opts.Address, Token: opts.Token, Timeout: opts.Timeout, Format: opts.Format, InsecureSkipVerify: opts.InsecureSkipVerify})
+			cfg, err := LoadConfig(ConfigOptions{Address: opts.Address, Token: opts.Token, Timeout: opts.Timeout, InsecureSkipVerify: opts.InsecureSkipVerify})
 			if err != nil {
 				return err
 			}
@@ -186,7 +186,7 @@ func newMetadataConfigCommand(opts *RootOptions) *cobra.Command {
 		Example: "  chaitin-cli tanswer metadata config\n" +
 			"  chaitin-cli tanswer metadata config --node-id <node_id>",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			cfg, err := LoadConfig(ConfigOptions{Address: opts.Address, Token: opts.Token, Timeout: opts.Timeout, Format: opts.Format, InsecureSkipVerify: opts.InsecureSkipVerify})
+			cfg, err := LoadConfig(ConfigOptions{Address: opts.Address, Token: opts.Token, Timeout: opts.Timeout, InsecureSkipVerify: opts.InsecureSkipVerify})
 			if err != nil {
 				return err
 			}
@@ -237,7 +237,7 @@ func newMetadataConfigUpdateCommand(opts *RootOptions) *cobra.Command {
 					return writeMetadataError(cmd, "调整元数据数据配置", commandText, "METADATA_CONFIG_UPDATE_CONFIRMATION_REQUIRED", err.Error(), false)
 				}
 			}
-			cfg, err := LoadConfig(ConfigOptions{Address: opts.Address, Token: opts.Token, Timeout: opts.Timeout, Format: opts.Format, InsecureSkipVerify: opts.InsecureSkipVerify})
+			cfg, err := LoadConfig(ConfigOptions{Address: opts.Address, Token: opts.Token, Timeout: opts.Timeout, InsecureSkipVerify: opts.InsecureSkipVerify})
 			if err != nil {
 				return err
 			}
@@ -312,7 +312,7 @@ func newMetadataNearAlarmCommand(opts *RootOptions) *cobra.Command {
 			if err != nil || window <= 0 {
 				return writeMetadataError(cmd, "查询告警附近元数据", "chaitin-cli tanswer metadata near-alarm", "INVALID_WINDOW", "window must be a positive duration, for example 10m or 1h", false)
 			}
-			cfg, err := LoadConfig(ConfigOptions{Address: opts.Address, Token: opts.Token, Timeout: opts.Timeout, Format: opts.Format, InsecureSkipVerify: opts.InsecureSkipVerify})
+			cfg, err := LoadConfig(ConfigOptions{Address: opts.Address, Token: opts.Token, Timeout: opts.Timeout, InsecureSkipVerify: opts.InsecureSkipVerify})
 			if err != nil {
 				return err
 			}
@@ -393,7 +393,7 @@ func runMetadataListCommand(cmd *cobra.Command, opts *RootOptions, metaOpts meta
 	if info.eventType == "" {
 		return writeMetadataError(cmd, task, command, "MISSING_METADATA_PROTOCOL", "missing protocol: set --protocol", false)
 	}
-	cfg, err := LoadConfig(ConfigOptions{Address: opts.Address, Token: opts.Token, Timeout: opts.Timeout, Format: opts.Format, InsecureSkipVerify: opts.InsecureSkipVerify})
+	cfg, err := LoadConfig(ConfigOptions{Address: opts.Address, Token: opts.Token, Timeout: opts.Timeout, InsecureSkipVerify: opts.InsecureSkipVerify})
 	if err != nil {
 		return err
 	}

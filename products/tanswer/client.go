@@ -42,7 +42,7 @@ type UploadedFile struct {
 func NewClient(cfg Config) *Client {
 	transport := http.DefaultTransport.(*http.Transport).Clone()
 	if cfg.InsecureSkipVerify {
-		transport.TLSClientConfig = &tls.Config{InsecureSkipVerify: true} //nolint:gosec // Explicit CLI opt-in for demo/internal self-signed environments.
+		transport.TLSClientConfig = &tls.Config{InsecureSkipVerify: true} //nolint:gosec // Explicit CLI opt-in to bypass certificate validation.
 	}
 	return &Client{
 		cfg: cfg,

@@ -11,7 +11,6 @@ type RootOptions struct {
 	Address            string
 	Token              string
 	Timeout            string
-	Format             string
 	InsecureSkipVerify bool
 	Out                io.Writer
 	ErrOut             io.Writer

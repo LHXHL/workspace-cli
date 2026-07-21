@@ -80,7 +80,7 @@ func runAlarmListCommand(cmd *cobra.Command, opts *RootOptions, alarmOpts alarmL
 	if alarmOpts.pageSize < 1 || alarmOpts.pageSize > 100 {
 		return writeAlarmListError(cmd, task, command, "INVALID_PAGE_SIZE", "page-size must be between 1 and 100", false)
 	}
-	cfg, err := LoadConfig(ConfigOptions{Address: opts.Address, Token: opts.Token, Timeout: opts.Timeout, Format: opts.Format, InsecureSkipVerify: opts.InsecureSkipVerify})
+	cfg, err := LoadConfig(ConfigOptions{Address: opts.Address, Token: opts.Token, Timeout: opts.Timeout, InsecureSkipVerify: opts.InsecureSkipVerify})
 	if err != nil {
 		return err
 	}

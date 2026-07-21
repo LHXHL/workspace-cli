@@ -22,7 +22,7 @@ func newAuthStatusCommand(opts *RootOptions) *cobra.Command {
 	return &cobra.Command{
 		Use:   "status",
 		Short: "查看当前连接状态",
-		Long:  "查看当前连接状态。返回当前配置的全悉环境地址、是否配置 OpenAPI Token、输出格式和请求超时时间。环境地址可通过 --url 或 TANSWER_URL 提供，Token 可通过 --api-key 或 TANSWER_API_KEY 提供。",
+		Long:  "查看当前连接状态。返回当前配置的全悉环境地址、是否配置 OpenAPI Token、请求超时时间。环境地址可通过 --url 或 TANSWER_URL 提供，Token 可通过 --api-key 或 TANSWER_API_KEY 提供。",
 		Example: "  chaitin-cli tanswer auth status --url 'https://<全悉 Web 端 IP>'\n" +
 			"  TANSWER_URL='https://<全悉 Web 端 IP>' chaitin-cli tanswer auth status",
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -30,7 +30,6 @@ func newAuthStatusCommand(opts *RootOptions) *cobra.Command {
 				Address:            opts.Address,
 				Token:              opts.Token,
 				Timeout:            opts.Timeout,
-				Format:             opts.Format,
 				InsecureSkipVerify: opts.InsecureSkipVerify,
 				AllowMissingToken:  true,
 			})
@@ -45,7 +44,6 @@ func newAuthStatusCommand(opts *RootOptions) *cobra.Command {
 					"environment":          cfg.BaseURL,
 					"token_set":            cfg.APIToken != "",
 					"timeout":              cfg.Timeout.String(),
-					"format":               cfg.Format,
 					"insecure_skip_verify": cfg.InsecureSkipVerify,
 				},
 			})
@@ -69,7 +67,6 @@ func newAuthCheckCommand(opts *RootOptions) *cobra.Command {
 				Address:            opts.Address,
 				Token:              opts.Token,
 				Timeout:            opts.Timeout,
-				Format:             opts.Format,
 				InsecureSkipVerify: opts.InsecureSkipVerify,
 			})
 			if err != nil {
