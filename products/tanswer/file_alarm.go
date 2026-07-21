@@ -119,7 +119,7 @@ func newFileAlarmListCommand(opts *RootOptions, use string, task string, default
 		Short: task,
 		Long:  fmt.Sprintf("%s，用于查询文件检测已有告警摘要。该命令返回发现时间、风险等级、文件名、文件类型、源/目的 IP、应用层协议、MD5、SHA256 和分页信息；字段无值时返回空。\n\n输出：查询时间范围、实际筛选条件、total、page、page_size、current_count、has_more、file_alarms。", task),
 		Example: fmt.Sprintf("  chaitin-cli tanswer file-alarm %s --time today --page-size 10\n", use) +
-			fmt.Sprintf("  chaitin-cli tanswer file-alarm %s --src-ip 1.1.1.1 --dest-ip 192.0.2.10", use),
+			fmt.Sprintf("  chaitin-cli tanswer file-alarm %s --src-ip 198.51.100.10 --dest-ip 192.0.2.10", use),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			if strings.TrimSpace(fileOpts.tag) == "" {
 				fileOpts.tag = defaultTag

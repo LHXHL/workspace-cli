@@ -66,7 +66,6 @@ func newTAnswerCommand(opts *RootOptions, registerFlags bool) *cobra.Command {
 		cmd.PersistentFlags().StringVar(&opts.Address, "url", "", "T-Answer console URL, or TANSWER_URL")
 		cmd.PersistentFlags().StringVar(&opts.Token, "api-key", "", "OpenAPI Token, or TANSWER_API_KEY")
 		cmd.PersistentFlags().StringVar(&opts.Timeout, "timeout", "", "request timeout, default 30s")
-		cmd.PersistentFlags().StringVar(&opts.Format, "output", "", "output format, default json")
 		cmd.PersistentFlags().BoolVar(&opts.InsecureSkipVerify, "insecure", false, "skip TLS certificate verification, or TANSWER_INSECURE")
 	}
 
@@ -95,9 +94,6 @@ func syncOptionsFromFlags(cmd *cobra.Command, opts *RootOptions) {
 	}
 	if value := inheritedFlagValue(cmd, "timeout"); value != "" {
 		opts.Timeout = value
-	}
-	if value := inheritedFlagValue(cmd, "output"); value != "" {
-		opts.Format = value
 	}
 	if flag := cmd.Flags().Lookup("insecure"); flag != nil && flag.Value.String() == "true" {
 		opts.InsecureSkipVerify = true

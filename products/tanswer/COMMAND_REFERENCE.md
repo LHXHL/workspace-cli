@@ -22,6 +22,14 @@ chaitin-cli tanswer --url 'https://<全悉 Web 端 IP>' --api-key "$TANSWER_API_
 | `chaitin-cli tanswer manifest` | 输出 AI 可读命令清单。 |
 | `chaitin-cli tanswer api <METHOD> <PATH>` | 访问用户已知且已授权的全悉 Open API。 |
 
+`api <METHOD> <PATH>` 仅用于用户已知且已授权、但没有对应语义命令的 Open API。它支持 `--query` 传入 JSON object 形式的 query 参数，支持 `--body` 传入 inline JSON 或 `@file` JSON 文件路径，输出包含 `status_code` 和 `raw` 原始响应。
+
+```bash
+chaitin-cli tanswer api GET /api/example --query '{"count":10,"offset":0}'
+chaitin-cli tanswer api POST /rpc --body '{"jsonrpc":"2.0","method":"OpsService.GetBaseInfo","params":{},"id":"1"}'
+chaitin-cli tanswer api POST /rpc --body @./request.json
+```
+
 ## System
 
 | 命令 | 用途 |

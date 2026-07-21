@@ -33,7 +33,7 @@ func TestBuildFileAlarmListRequestMapsSemanticFilters(t *testing.T) {
 		severity: "critical,high",
 		tag:      "elf",
 		fileType: "virus,backdoor",
-		srcIP:    "1.1.1.1",
+		srcIP:    "198.51.100.10",
 		destIP:   "192.0.2.10",
 		appProto: "http",
 		srcPort:  "12345",
@@ -86,7 +86,7 @@ func TestFileAlarmMaliciousCommandCallsSearchAlarmFdetectList(t *testing.T) {
 			JSONRPC: "2.0",
 			ID:      req.ID,
 			Result: json.RawMessage(`{
-				"data":[{"id":"fd-1","timestamp":1784282400,"severity":2,"tag":"elf","type":"virus","filename":"evil.exe","src_ip":"1.1.1.1","dest_ip":"192.0.2.10","app_proto":"http","md5":"m1","sha256":"s1","sandbox":{"score":9.5}}],
+				"data":[{"id":"fd-1","timestamp":1784282400,"severity":2,"tag":"elf","type":"virus","filename":"evil.exe","src_ip":"198.51.100.10","dest_ip":"192.0.2.10","app_proto":"http","md5":"m1","sha256":"s1","sandbox":{"score":9.5}}],
 				"total": 1,
 				"page_total": 1
 			}`),
@@ -181,7 +181,7 @@ func TestFileAlarmSandboxCommandCallsSearchSandboxAlarmFdetectList(t *testing.T)
 		_ = json.NewEncoder(w).Encode(rpcResponse{
 			JSONRPC: "2.0",
 			ID:      req.ID,
-			Result:  json.RawMessage(`{"data":[{"id":"sb-1","filename":"sample.doc","operating_env":"Windows 7","score":8.8,"src_ip":"1.1.1.1","dest_ip":"192.0.2.10"}],"total":1,"page_total":1}`),
+			Result:  json.RawMessage(`{"data":[{"id":"sb-1","filename":"sample.doc","operating_env":"Windows 7","score":8.8,"src_ip":"198.51.100.10","dest_ip":"192.0.2.10"}],"total":1,"page_total":1}`),
 		})
 	}))
 	defer server.Close()

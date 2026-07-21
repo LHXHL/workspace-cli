@@ -180,7 +180,7 @@ func newAssetCommand(opts *RootOptions) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "asset",
 		Short: "资产配置语义命令",
-		Long:  "资产配置语义命令。用于查询资产列表、资产详情、资产组树、下载资产导入模板和导出资产；资产风险能力不在一期范围内。",
+		Long:  "资产配置语义命令。用于查询资产列表、资产详情、资产组树、下载资产导入模板和导出资产；资产风险能力不在当前版本范围内。",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			return cmd.Help()
 		},

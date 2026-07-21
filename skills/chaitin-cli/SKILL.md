@@ -168,7 +168,7 @@ Each product uses its own output convention — there is no unified `-f` / `--fo
 | `chaitin-cli xray` | JSON (no alternative) | — | `--debug` for debug logs |
 | `chaitin-cli cloudwalker` | text | `-f json` (or `--format json`) | `--no-trunc` to disable text truncation |
 | `chaitin-cli veinmind` | table | `-o json` (or `--output json`) | `-v` for request debug; `--dry-run` prints request summary |
-| `chaitin-cli tanswer` | JSON | `--output json` is the default | `--insecure` for TLS certificate verification bypass |
+| `chaitin-cli tanswer` | JSON | default; no format switch required | `--insecure` for TLS certificate verification bypass |
 
 When piping into `jq`, note that SafeLine uses `--indent` (not `-o`/`-f`), and T-Answer outputs JSON by default.
 
@@ -759,7 +759,6 @@ Do not invent VeinMind request bodies. Confirm the leaf command with `--help`, i
 | `--api-key` | `TANSWER_API_KEY` | T-Answer OpenAPI Token |
 | `--timeout` | `TANSWER_TIMEOUT` | Request timeout, default `30s` |
 | `--insecure` | `TANSWER_INSECURE` | Skip TLS certificate verification |
-| `--output` | — | Output format, default `json` |
 
 ### Commands
 

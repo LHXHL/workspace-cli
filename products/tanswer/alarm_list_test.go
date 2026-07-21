@@ -33,8 +33,8 @@ func TestBuildAlarmListRequestMapsSemanticFilters(t *testing.T) {
 		severity:  "critical,high",
 		result:    "success,control",
 		phase:     "recon",
-		attacker:  "1.1.1.1",
-		victim:    "2.2.2.2",
+		attacker:  "198.51.100.10",
+		victim:    "203.0.113.20",
 		assetIP:   "192.0.2.10,192.0.2.11",
 		keyword:   "webshell,sql",
 		name:      "SQL注入",
@@ -43,7 +43,7 @@ func TestBuildAlarmListRequestMapsSemanticFilters(t *testing.T) {
 		appProto:  "http",
 		url:       "/login",
 		host:      "example.com",
-		xff:       "3.3.3.3",
+		xff:       "203.0.113.30",
 		srcPort:   "12345",
 		destPort:  "443",
 	})
@@ -92,7 +92,7 @@ func TestAlarmListCommandCallsSearchAlarmList(t *testing.T) {
 			JSONRPC: "2.0",
 			ID:      req.ID,
 			Result: json.RawMessage(`{
-				"data":[{"doc_id":"doc-1","name":"SQL注入","severity":2,"attacker":"1.1.1.1","victim":"2.2.2.2","result":"success","payload":"large-payload","appbrief":{"http":{"url":"/login","hostname":"example.com"}}}],
+				"data":[{"doc_id":"doc-1","name":"SQL注入","severity":2,"attacker":"198.51.100.10","victim":"203.0.113.20","result":"success","payload":"large-payload","appbrief":{"http":{"url":"/login","hostname":"example.com"}}}],
 				"total": 1,
 				"page_total": 1
 			}`),

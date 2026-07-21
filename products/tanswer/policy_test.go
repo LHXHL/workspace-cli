@@ -51,7 +51,7 @@ func TestBuildPolicyDetectionWhitelistRequestMapsFilters(t *testing.T) {
 		page:     2,
 		pageSize: 20,
 		name:     "误报",
-		srcIP:    "1.1.1.1",
+		srcIP:    "198.51.100.10",
 		destIP:   "192.0.2.10",
 		status:   "enabled",
 		ruleID:   "sid-1",
@@ -64,7 +64,7 @@ func TestBuildPolicyDetectionWhitelistRequestMapsFilters(t *testing.T) {
 	if got := req["name"].([]map[string]any)[0]["target"]; got != "误报" {
 		t.Fatalf("name target = %#v", got)
 	}
-	if got := req["src_ip"].([]map[string]any)[0]["target"]; got != "1.1.1.1" {
+	if got := req["src_ip"].([]map[string]any)[0]["target"]; got != "198.51.100.10" {
 		t.Fatalf("src_ip target = %#v", got)
 	}
 	if got := req["status"].([]map[string]any)[0]["target"]; got != 1 {
@@ -96,7 +96,7 @@ func TestPolicyDetectionWhitelistCommandCallsSearchWhiteList(t *testing.T) {
 			JSONRPC: "2.0",
 			ID:      req.ID,
 			Result: json.RawMessage(`{
-				"data":[{"id":7,"name":"误报白名单","src_ip":"1.1.1.1","dest_ip":"192.0.2.10","domain":"example.com","url_path":"/login","user_agent":"curl","xff":"2.2.2.2","resp_status_code":"200","resp_body":"ok","type":"SQL注入","sid":"1001","updated_at":"2026-07-17T10:00:00Z","expire":1784277612410,"status":1,"remark":"case closed"}],
+				"data":[{"id":7,"name":"误报白名单","src_ip":"198.51.100.10","dest_ip":"192.0.2.10","domain":"example.com","url_path":"/login","user_agent":"curl","xff":"203.0.113.20","resp_status_code":"200","resp_body":"ok","type":"SQL注入","sid":"1001","updated_at":"2026-07-17T10:00:00Z","expire":1784277612410,"status":1,"remark":"case closed"}],
 				"total":1
 			}`),
 		})
@@ -148,14 +148,14 @@ func TestPolicyDetectionWhitelistCreateHelpIsAIReadable(t *testing.T) {
 func TestBuildPolicyDetectionWhitelistWriteRequestMapsFields(t *testing.T) {
 	req, err := buildPolicyDetectionWhitelistWriteRequest(policyDetectionWhitelistWriteOptions{
 		name:        "登录误报",
-		srcIP:       "1.1.1.1",
+		srcIP:       "198.51.100.10",
 		srcPort:     "443",
 		destIP:      "192.0.2.10",
 		destPort:    "8443",
 		domain:      "example.com",
 		urlPath:     "login",
 		userAgent:   "curl",
-		xff:         "2.2.2.2",
+		xff:         "203.0.113.20",
 		respCode:    "40X",
 		respBody:    "ok",
 		threat:      "SQL注入",
@@ -171,7 +171,7 @@ func TestBuildPolicyDetectionWhitelistWriteRequestMapsFields(t *testing.T) {
 	if err != nil {
 		t.Fatalf("buildPolicyDetectionWhitelistWriteRequest returned error: %v", err)
 	}
-	if req["name"] != "登录误报" || req["src_ip"] != "1.1.1.1" || req["dest_ip"] != "192.0.2.10" {
+	if req["name"] != "登录误报" || req["src_ip"] != "198.51.100.10" || req["dest_ip"] != "192.0.2.10" {
 		t.Fatalf("request fields = %#v", req)
 	}
 	if req["url_path"] != "/login" || req["resp_status_code"] != "40x" {
@@ -198,7 +198,7 @@ func TestPolicyDetectionWhitelistCreatePreviewDoesNotCallRPC(t *testing.T) {
 		"--api-key", "token-123",
 		"policy", "detection-whitelist-create",
 		"--name", "登录误报",
-		"--src-ip", "1.1.1.1",
+		"--src-ip", "198.51.100.10",
 		"--preview",
 	})
 
@@ -241,7 +241,7 @@ func TestPolicyDetectionWhitelistCreateRequiresExactConfirmBeforeRPC(t *testing.
 		"--api-key", "token-123",
 		"policy", "detection-whitelist-create",
 		"--name", "登录误报",
-		"--src-ip", "1.1.1.1",
+		"--src-ip", "198.51.100.10",
 		"--confirm", "confirm_policy_detection_whitelist_create",
 	})
 
@@ -265,7 +265,7 @@ func TestPolicyDetectionWhitelistCreateConfirmedCallsCreate(t *testing.T) {
 		{
 			method: "AlarmService.CreateWhiteList",
 			check: func(t *testing.T, params map[string]any) {
-				if params["name"] != "登录误报" || params["src_ip"] != "1.1.1.1" || params["default_mode"] != float64(1) {
+				if params["name"] != "登录误报" || params["src_ip"] != "198.51.100.10" || params["default_mode"] != float64(1) {
 					t.Fatalf("params = %#v", params)
 				}
 			},
@@ -282,7 +282,7 @@ func TestPolicyDetectionWhitelistCreateConfirmedCallsCreate(t *testing.T) {
 		"--api-key", "token-123",
 		"policy", "detection-whitelist-create",
 		"--name", "登录误报",
-		"--src-ip", "1.1.1.1",
+		"--src-ip", "198.51.100.10",
 		"--confirm", "CONFIRM_POLICY_DETECTION_WHITELIST_CREATE",
 	})
 
@@ -307,12 +307,12 @@ func TestPolicyDetectionWhitelistUpdateConfirmedReadsBeforeAndCallsUpdate(t *tes
 					t.Fatalf("search params = %#v", params)
 				}
 			},
-			result: `{"data":[{"id":21,"name":"旧白名单","src_ip":"1.1.1.1","status":1,"storage":1,"default_mode":1}],"total":1}`,
+			result: `{"data":[{"id":21,"name":"旧白名单","src_ip":"198.51.100.10","status":1,"storage":1,"default_mode":1}],"total":1}`,
 		},
 		{
 			method: "AlarmService.UpdateWhiteList",
 			check: func(t *testing.T, params map[string]any) {
-				if params["id"] != float64(21) || params["name"] != "新白名单" || params["src_ip"] != "1.1.1.2" {
+				if params["id"] != float64(21) || params["name"] != "新白名单" || params["src_ip"] != "198.51.100.11" {
 					t.Fatalf("update params = %#v", params)
 				}
 			},
@@ -330,7 +330,7 @@ func TestPolicyDetectionWhitelistUpdateConfirmedReadsBeforeAndCallsUpdate(t *tes
 		"policy", "detection-whitelist-update",
 		"--id", "21",
 		"--name", "新白名单",
-		"--src-ip", "1.1.1.2",
+		"--src-ip", "198.51.100.11",
 		"--confirm", "CONFIRM_POLICY_DETECTION_WHITELIST_UPDATE",
 	})
 
@@ -356,7 +356,7 @@ func TestPolicyDetectionWhitelistStatusAndDeleteConfirmedCallRPC(t *testing.T) {
 			server := newPolicyRPCSequenceServer(t, []policyExpectedRPC{
 				{
 					method: "AlarmService.SearchWhiteList",
-					result: `{"data":[{"id":21,"name":"白名单A","src_ip":"1.1.1.1","status":1},{"id":22,"name":"白名单B","src_ip":"1.1.1.2","status":1}],"total":2}`,
+					result: `{"data":[{"id":21,"name":"白名单A","src_ip":"198.51.100.10","status":1},{"id":22,"name":"白名单B","src_ip":"198.51.100.11","status":1}],"total":2}`,
 				},
 				{
 					method: "AlarmService.DeleteWhiteList",
@@ -409,13 +409,13 @@ func TestBuildPolicyDetectionWhitelistFromAlarmRequestMapsAlarmFields(t *testing
 	req, err := buildPolicyDetectionWhitelistFromAlarmRequest(map[string]any{
 		"doc_id":    "doc-1",
 		"name":      "SQL注入",
-		"src_ip":    "1.1.1.1",
+		"src_ip":    "198.51.100.10",
 		"src_port":  float64(12345),
 		"dest_ip":   "192.0.2.10",
 		"dest_port": float64(80),
 		"sid":       "1001",
 		"tag":       "SQL注入",
-		"xff":       "2.2.2.2",
+		"xff":       "203.0.113.20",
 		"appbrief": map[string]any{
 			"http": map[string]any{
 				"hostname":   "example.com",
@@ -433,14 +433,14 @@ func TestBuildPolicyDetectionWhitelistFromAlarmRequestMapsAlarmFields(t *testing
 		t.Fatalf("buildPolicyDetectionWhitelistFromAlarmRequest returned error: %v", err)
 	}
 	for key, want := range map[string]any{
-		"src_ip":     "1.1.1.1",
+		"src_ip":     "198.51.100.10",
 		"src_port":   "12345",
 		"dest_ip":    "192.0.2.10",
 		"dest_port":  "80",
 		"domain":     "example.com",
 		"url_path":   "/login",
 		"user_agent": "curl",
-		"xff":        "2.2.2.2",
+		"xff":        "203.0.113.20",
 		"sid":        "1001",
 		"type":       "SQL注入",
 		"remark":     "confirmed false positive",
@@ -463,7 +463,7 @@ func TestPolicyDetectionWhitelistFromAlarmPreviewReadsAlarmOnly(t *testing.T) {
 					t.Fatalf("doc_id = %#v", params["doc_id"])
 				}
 			},
-			result: `{"data":{"doc_id":"doc-1","name":"SQL注入","src_ip":"1.1.1.1","dest_ip":"192.0.2.10","dest_port":80,"sid":"1001","tag":"SQL注入"}}`,
+			result: `{"data":{"doc_id":"doc-1","name":"SQL注入","src_ip":"198.51.100.10","dest_ip":"192.0.2.10","dest_port":80,"sid":"1001","tag":"SQL注入"}}`,
 		},
 	})
 	defer server.Close()
@@ -506,12 +506,12 @@ func TestPolicyDetectionWhitelistFromAlarmConfirmedCreatesWhitelist(t *testing.T
 	server := newPolicyRPCSequenceServer(t, []policyExpectedRPC{
 		{
 			method: "AlarmService.GetAlarm",
-			result: `{"data":{"doc_id":"doc-1","name":"SQL注入","src_ip":"1.1.1.1","dest_ip":"192.0.2.10","dest_port":80,"sid":"1001","tag":"SQL注入"}}`,
+			result: `{"data":{"doc_id":"doc-1","name":"SQL注入","src_ip":"198.51.100.10","dest_ip":"192.0.2.10","dest_port":80,"sid":"1001","tag":"SQL注入"}}`,
 		},
 		{
 			method: "AlarmService.CreateWhiteList",
 			check: func(t *testing.T, params map[string]any) {
-				if params["src_ip"] != "1.1.1.1" || params["dest_ip"] != "192.0.2.10" || params["sid"] != "1001" || params["type"] != "SQL注入" {
+				if params["src_ip"] != "198.51.100.10" || params["dest_ip"] != "192.0.2.10" || params["sid"] != "1001" || params["type"] != "SQL注入" {
 					t.Fatalf("create params = %#v", params)
 				}
 			},

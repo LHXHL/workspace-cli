@@ -16,7 +16,11 @@ chaitin-cli tanswer response block-policies --page-size 10
 
 ```bash
 chaitin-cli tanswer api POST /rpc --body '{"jsonrpc":"2.0","method":"OpsService.GetBaseInfo","params":{},"id":"1"}'
+chaitin-cli tanswer api GET /api/example --query '{"count":10,"offset":0}'
+chaitin-cli tanswer api POST /rpc --body @./request.json
 ```
+
+`api` 输出 `status_code` 和 `raw`。不要假设 CLI 内置完整 Open API 文档；调用前必须由用户输入或已授权文档确认 method、path、query 和 body。
 
 ## 配置检查
 

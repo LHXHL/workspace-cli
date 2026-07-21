@@ -31,7 +31,7 @@ func TestBuildMetadataListRequestMapsFilters(t *testing.T) {
 		page:          2,
 		pageSize:      20,
 		protocol:      "http",
-		srcIP:         "1.1.1.1",
+		srcIP:         "198.51.100.10",
 		destIP:        "192.0.2.10",
 		srcPort:       "12345",
 		destPort:      "443",
@@ -47,7 +47,7 @@ func TestBuildMetadataListRequestMapsFilters(t *testing.T) {
 	if req["event_type"] != "http" || req["advanced_query"] != "http_method = 'GET'" {
 		t.Fatalf("event/advanced mismatch: %#v", req)
 	}
-	if got := req["src_ip"].([]map[string]any)[0]["target"]; got != "1.1.1.1" {
+	if got := req["src_ip"].([]map[string]any)[0]["target"]; got != "198.51.100.10" {
 		t.Fatalf("src_ip target = %#v", got)
 	}
 	if got := req["dest_port"].([]map[string]any)[0]["target"]; got != 443 {
@@ -76,7 +76,7 @@ func TestMetadataProtocolCommandCallsHTTPLogSearch(t *testing.T) {
 			JSONRPC: "2.0",
 			ID:      req.ID,
 			Result: json.RawMessage(`{
-				"logs":[{"id":"m1","timestamp":1784282400000,"event_type":"http","src_ip":"1.1.1.1","src_port":12345,"dest_ip":"192.0.2.10","dest_port":80,"proto":"tcp","app_proto":"http","http":{"hostname":"example.com","url":"/login","req_line":"GET /login HTTP/1.1","resp_line":"HTTP/1.1 200 OK","user_agent":"curl"}}],
+				"logs":[{"id":"m1","timestamp":1784282400000,"event_type":"http","src_ip":"198.51.100.10","src_port":12345,"dest_ip":"192.0.2.10","dest_port":80,"proto":"tcp","app_proto":"http","http":{"hostname":"example.com","url":"/login","req_line":"GET /login HTTP/1.1","resp_line":"HTTP/1.1 200 OK","user_agent":"curl"}}],
 				"total":1
 			}`),
 		})
@@ -129,7 +129,7 @@ func TestMetadataSearchCommandPassesAdvancedQuery(t *testing.T) {
 		_ = json.NewEncoder(w).Encode(rpcResponse{
 			JSONRPC: "2.0",
 			ID:      req.ID,
-			Result:  json.RawMessage(`{"logs":[{"id":"d1","timestamp":1784282400000,"event_type":"dns","src_ip":"1.1.1.1","dest_ip":"8.8.8.8","app_proto":"dns","dns":{"rrname":"example.com","rrtype":"A","rcode":"NOERROR"}}],"total":1}`),
+			Result:  json.RawMessage(`{"logs":[{"id":"d1","timestamp":1784282400000,"event_type":"dns","src_ip":"198.51.100.10","dest_ip":"203.0.113.53","app_proto":"dns","dns":{"rrname":"example.com","rrtype":"A","rcode":"NOERROR"}}],"total":1}`),
 		})
 	}))
 	defer server.Close()
@@ -187,7 +187,7 @@ func TestMetadataDetailCommandCallsDetailRPC(t *testing.T) {
 		_ = json.NewEncoder(w).Encode(rpcResponse{
 			JSONRPC: "2.0",
 			ID:      req.ID,
-			Result:  json.RawMessage(`{"log":{"id":"m1","event_type":"http","timestamp":1784282400000,"src_ip":"1.1.1.1","http":{"url":"/login"}}}`),
+			Result:  json.RawMessage(`{"log":{"id":"m1","event_type":"http","timestamp":1784282400000,"src_ip":"198.51.100.10","http":{"url":"/login"}}}`),
 		})
 	}))
 	defer server.Close()
@@ -380,13 +380,13 @@ func TestMetadataNearAlarmCombinesAlarmDetailAndMetadataSearch(t *testing.T) {
 			_ = json.NewEncoder(w).Encode(rpcResponse{
 				JSONRPC: "2.0",
 				ID:      req.ID,
-				Result:  json.RawMessage(`{"data":{"doc_id":"alarm-1","timestamp":1784282400000,"src_ip":"1.1.1.1","src_port":12345,"dest_ip":"192.0.2.10","dest_port":80,"app_proto":"http"}}`),
+				Result:  json.RawMessage(`{"data":{"doc_id":"alarm-1","timestamp":1784282400000,"src_ip":"198.51.100.10","src_port":12345,"dest_ip":"192.0.2.10","dest_port":80,"app_proto":"http"}}`),
 			})
 		case "LogSearchService.SearchOrigDataHTTPLog":
 			_ = json.NewEncoder(w).Encode(rpcResponse{
 				JSONRPC: "2.0",
 				ID:      req.ID,
-				Result:  json.RawMessage(`{"logs":[{"id":"m1","timestamp":1784282400001,"event_type":"http","src_ip":"1.1.1.1","src_port":12345,"dest_ip":"192.0.2.10","dest_port":80,"app_proto":"http","http":{"url":"/attack"}}],"total":1}`),
+				Result:  json.RawMessage(`{"logs":[{"id":"m1","timestamp":1784282400001,"event_type":"http","src_ip":"198.51.100.10","src_port":12345,"dest_ip":"192.0.2.10","dest_port":80,"app_proto":"http","http":{"url":"/attack"}}],"total":1}`),
 			})
 		default:
 			t.Fatalf("unexpected method %q", req.Method)

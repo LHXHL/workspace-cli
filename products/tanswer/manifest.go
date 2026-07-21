@@ -133,7 +133,7 @@ func BuildCommandManifest() CommandManifest {
 				Layer:       "openapi_fallback",
 				Summary:     "调用语义快捷层未覆盖、但用户已知且已授权的全悉 Open API。",
 				UseWhen: []string{
-					"目标能力已有 Open API，但没有一期语义快捷命令。",
+					"目标能力已有 Open API，但没有对应语义命令。",
 					"AI Agent 已经从 Open API 文档中确定接口路径、方法和参数。",
 				},
 				DoNotUseWhen: []string{
@@ -358,7 +358,7 @@ func BuildCommandManifest() CommandManifest {
 				RiskLevel:            "read",
 				RequiresConfirmation: false,
 				Examples: []ManifestExample{
-					{Description: "查询攻击源相关告警", Command: "chaitin-cli tanswer alarm by-attacker --attacker 1.1.1.1 --time today"},
+					{Description: "查询攻击源相关告警", Command: "chaitin-cli tanswer alarm by-attacker --attacker 198.51.100.10 --time today"},
 				},
 				Backend: map[string]interface{}{
 					"rpc_methods": []string{"AlarmService.SearchAlarmList"},
@@ -391,7 +391,7 @@ func BuildCommandManifest() CommandManifest {
 				RiskLevel:            "read",
 				RequiresConfirmation: false,
 				Examples: []ManifestExample{
-					{Description: "查询受害对象相关告警", Command: "chaitin-cli tanswer alarm by-victim --victim 2.2.2.2 --time today"},
+					{Description: "查询受害对象相关告警", Command: "chaitin-cli tanswer alarm by-victim --victim 203.0.113.20 --time today"},
 				},
 				Backend: map[string]interface{}{
 					"rpc_methods": []string{"AlarmService.SearchAlarmList"},
@@ -440,7 +440,7 @@ func BuildCommandManifest() CommandManifest {
 					"需要优先处理重点资产相关的成功或失陷告警。",
 				},
 				DoNotUseWhen: []string{
-					"需要资产风险、漏洞风险或风险主机时，一期不纳入资产风险能力。",
+					"需要资产风险、漏洞风险或风险主机时，当前版本不包含资产风险能力。",
 				},
 				Flags:      alarmSubjectManifestFlags(""),
 				OutputType: "alarm_subject_summary",
@@ -533,7 +533,7 @@ func BuildCommandManifest() CommandManifest {
 					"需要从单条告警出发做轻量上下文排查。",
 				},
 				DoNotUseWhen: []string{
-					"需要同时间窗口内全部告警、完整事件链或因果判断时，一期不提供自动工作流。",
+					"需要同时间窗口内全部告警、完整事件链或因果判断时，当前命令不执行自动工作流。",
 					"没有 doc_id 时，先使用 tanswer alarm list 或 high-priority 查询。",
 				},
 				Flags:      alarmRelatedManifestFlags(),
@@ -615,7 +615,7 @@ func BuildCommandManifest() CommandManifest {
 				RequiresConfirmation: false,
 				Examples: []ManifestExample{
 					{Description: "查询今天恶意文件告警", Command: "chaitin-cli tanswer file-alarm malicious --time today --page-size 10"},
-					{Description: "按源和目的 IP 查询恶意文件告警", Command: "chaitin-cli tanswer file-alarm malicious --src-ip 1.1.1.1 --dest-ip 192.0.2.10"},
+					{Description: "按源和目的 IP 查询恶意文件告警", Command: "chaitin-cli tanswer file-alarm malicious --src-ip 198.51.100.10 --dest-ip 192.0.2.10"},
 				},
 				Backend: map[string]interface{}{
 					"rpc_methods": []string{"AlarmService.SearchAlarmFdetectList"},
@@ -760,7 +760,7 @@ func BuildCommandManifest() CommandManifest {
 					"需要获取资产 ID 后继续查看资产详情。",
 				},
 				DoNotUseWhen: []string{
-					"需要资产风险、漏洞或端口风险时，一期暂不纳入资产风险能力。",
+					"需要资产风险、漏洞或端口风险时，当前版本不包含资产风险能力。",
 					"需要创建、编辑、删除、导入或导出资产时，应使用后续带确认保护的资产维护命令。",
 				},
 				Flags:      assetListManifestFlags(),
@@ -793,7 +793,7 @@ func BuildCommandManifest() CommandManifest {
 					"需要资产名称、IP、MAC、资产类型、资产等级、资产组、标签、负责人、位置、备注、来源和更新时间。",
 				},
 				DoNotUseWhen: []string{
-					"需要资产风险、漏洞或端口风险时，一期暂不纳入资产风险能力。",
+					"需要资产风险、漏洞或端口风险时，当前版本不包含资产风险能力。",
 					"没有资产 ID 且需要先查找资产时，使用 tanswer asset list。",
 				},
 				Flags: []ManifestFlag{
@@ -821,7 +821,7 @@ func BuildCommandManifest() CommandManifest {
 				},
 				DoNotUseWhen: []string{
 					"需要创建、重命名、删除或移动资产组时，应使用后续带确认保护的资产组维护命令。",
-					"需要资产风险、漏洞或风险主机信息时，一期暂不纳入资产风险能力。",
+					"需要资产风险、漏洞或风险主机信息时，当前版本不包含资产风险能力。",
 				},
 				Flags: []ManifestFlag{
 					{Name: "--id", Type: "integer", Required: false, Default: "1", Description: "asset group id to use as tree root"},
@@ -898,7 +898,7 @@ func BuildCommandManifest() CommandManifest {
 					"需要按指定资产 ID 导出选中资产。",
 				},
 				DoNotUseWhen: []string{
-					"需要资产风险、漏洞或风险主机信息时，一期暂不纳入资产风险能力。",
+					"需要资产风险、漏洞或风险主机信息时，当前版本不包含资产风险能力。",
 					"需要创建、编辑、删除或导入资产时，应使用后续带预览和确认保护的资产维护命令。",
 				},
 				Flags: []ManifestFlag{
@@ -937,7 +937,7 @@ func BuildCommandManifest() CommandManifest {
 				DoNotUseWhen: []string{
 					"只需要查询资产时，使用 tanswer asset list 或 tanswer asset detail。",
 					"需要批量导入资产时，应使用后续带预览和确认保护的导入命令。",
-					"需要资产风险、漏洞或风险主机信息时，一期暂不纳入资产风险能力。",
+					"需要资产风险、漏洞或风险主机信息时，当前版本不包含资产风险能力。",
 				},
 				Flags: []ManifestFlag{
 					{Name: "--name", Type: "string", Required: true, Description: "asset name"},
@@ -986,7 +986,7 @@ func BuildCommandManifest() CommandManifest {
 				DoNotUseWhen: []string{
 					"只需要查询资产时，使用 tanswer asset list 或 tanswer asset detail。",
 					"需要批量维护资产字段时，应使用后续带预览和确认保护的批量维护命令。",
-					"需要资产风险、漏洞或风险主机信息时，一期暂不纳入资产风险能力。",
+					"需要资产风险、漏洞或风险主机信息时，当前版本不包含资产风险能力。",
 				},
 				Flags: []ManifestFlag{
 					{Name: "--id", Type: "integer", Required: true, Description: "asset id"},
@@ -1038,7 +1038,7 @@ func BuildCommandManifest() CommandManifest {
 				},
 				DoNotUseWhen: []string{
 					"只需要查询资产时，使用 tanswer asset list 或 tanswer asset detail。",
-					"需要资产风险、漏洞或风险主机信息时，一期暂不纳入资产风险能力。",
+					"需要资产风险、漏洞或风险主机信息时，当前版本不包含资产风险能力。",
 					"不确定资产 ID 或删除影响时，先使用 tanswer asset detail 或 tanswer asset group-tree 查询确认。",
 				},
 				Flags: []ManifestFlag{
@@ -1081,7 +1081,7 @@ func BuildCommandManifest() CommandManifest {
 				},
 				DoNotUseWhen: []string{
 					"只需要查询资产时，使用 tanswer asset list 或 tanswer asset detail。",
-					"需要批量修改资产风险、漏洞或风险主机信息时，一期暂不纳入资产风险能力。",
+					"需要批量修改资产风险、漏洞或风险主机信息时，当前版本不包含资产风险能力。",
 					"需要批量新增资产标签时，使用后续带确认保护的资产标签维护命令。",
 				},
 				Flags: []ManifestFlag{
@@ -1129,7 +1129,7 @@ func BuildCommandManifest() CommandManifest {
 				DoNotUseWhen: []string{
 					"需要创建新标签时，不使用该命令；该命令只使用已有 tag ID。",
 					"只需要查询资产时，使用 tanswer asset list 或 tanswer asset detail。",
-					"需要资产风险、漏洞或风险主机信息时，一期暂不纳入资产风险能力。",
+					"需要资产风险、漏洞或风险主机信息时，当前版本不包含资产风险能力。",
 				},
 				Flags: []ManifestFlag{
 					{Name: "--id-list", Type: "csv_integer", Required: true, Description: "asset IDs to maintain"},
@@ -1172,7 +1172,7 @@ func BuildCommandManifest() CommandManifest {
 				},
 				DoNotUseWhen: []string{
 					"只需要查看资产组层级时，使用 tanswer asset group-tree。",
-					"需要自动分组、智能推荐分组或分组规则时，一期不提供。",
+					"需要自动分组、智能推荐分组或分组规则时，当前版本不提供。",
 				},
 				Flags: []ManifestFlag{
 					{Name: "--name", Type: "string", Required: true, Description: "asset group name"},
@@ -1274,7 +1274,7 @@ func BuildCommandManifest() CommandManifest {
 				DoNotUseWhen: []string{
 					"只需要查看资产组层级时，使用 tanswer asset group-tree。",
 					"只需要批量把资产移动到某个资产组时，优先使用 tanswer asset batch-maintain --group-id。",
-					"需要自动分组、智能推荐分组或分组规则时，一期不提供。",
+					"需要自动分组、智能推荐分组或分组规则时，当前版本不提供。",
 				},
 				Flags: []ManifestFlag{
 					{Name: "--id", Type: "integer", Required: true, Description: "source node id"},
@@ -1312,7 +1312,7 @@ func BuildCommandManifest() CommandManifest {
 				DoNotUseWhen: []string{
 					"需要获取导入模板时，使用 tanswer asset download-template。",
 					"需要导出资产时，使用 tanswer asset export。",
-					"需要资产风险、漏洞或风险主机信息时，一期暂不纳入资产风险能力。",
+					"需要资产风险、漏洞或风险主机信息时，当前版本不包含资产风险能力。",
 				},
 				Flags: []ManifestFlag{
 					{Name: "--file", Type: "path", Required: true, Description: "asset import template file path"},
@@ -1359,7 +1359,7 @@ func BuildCommandManifest() CommandManifest {
 				},
 				DoNotUseWhen: []string{
 					"需要查看单条完整元数据详情时，使用 tanswer metadata detail。",
-					"需要调整元数据采集配置时，一期不提供写入命令。",
+					"需要调整元数据采集配置时，当前版本不提供写入命令。",
 				},
 				Flags:      metadataListManifestFlags(false),
 				OutputType: "metadata_list",
@@ -1375,7 +1375,7 @@ func BuildCommandManifest() CommandManifest {
 				RequiresConfirmation: false,
 				Examples: []ManifestExample{
 					{Description: "查询 HTTP 元数据", Command: "chaitin-cli tanswer metadata protocol --protocol http --time today --page-size 10"},
-					{Description: "按源 IP 查询 DNS 元数据", Command: "chaitin-cli tanswer metadata protocol --protocol dns --src-ip 1.1.1.1"},
+					{Description: "按源 IP 查询 DNS 元数据", Command: "chaitin-cli tanswer metadata protocol --protocol dns --src-ip 198.51.100.10"},
 				},
 				Backend: map[string]interface{}{
 					"rpc_methods": []string{"LogSearchService.SearchOrigDataHTTPLog", "LogSearchService.SearchOrigDataDNSLog", "LogSearchService.SearchOrigDataTCPUDPLog", "LogSearchService.SearchOtherOrigDataLog"},
@@ -1570,7 +1570,7 @@ func BuildCommandManifest() CommandManifest {
 				RequiresConfirmation: false,
 				Examples: []ManifestExample{
 					{Description: "查询检测白名单", Command: "chaitin-cli tanswer policy detection-whitelist --page-size 10"},
-					{Description: "按源 IP 和启用状态查询检测白名单", Command: "chaitin-cli tanswer policy detection-whitelist --src-ip 1.1.1.1 --status enabled"},
+					{Description: "按源 IP 和启用状态查询检测白名单", Command: "chaitin-cli tanswer policy detection-whitelist --src-ip 198.51.100.10 --status enabled"},
 				},
 				Backend: map[string]interface{}{
 					"rpc_methods": []string{"AlarmService.SearchWhiteList"},
@@ -1580,15 +1580,15 @@ func BuildCommandManifest() CommandManifest {
 				"需要新增检测白名单来抑制误报或重复告警。",
 				"已经明确白名单名称、匹配条件、处置方式、状态和有效期。",
 			}, policyDetectionWhitelistWriteManifestFlags(false, "CONFIRM_POLICY_DETECTION_WHITELIST_CREATE"), "policy_detection_whitelist_create_result", []ManifestExample{
-				{Description: "预览新增检测白名单", Command: "chaitin-cli tanswer policy detection-whitelist-create --name 登录误报 --src-ip 1.1.1.1 --preview"},
-				{Description: "确认新增检测白名单", Command: "chaitin-cli tanswer policy detection-whitelist-create --name 登录误报 --src-ip 1.1.1.1 --confirm CONFIRM_POLICY_DETECTION_WHITELIST_CREATE"},
+				{Description: "预览新增检测白名单", Command: "chaitin-cli tanswer policy detection-whitelist-create --name 登录误报 --src-ip 198.51.100.10 --preview"},
+				{Description: "确认新增检测白名单", Command: "chaitin-cli tanswer policy detection-whitelist-create --name 登录误报 --src-ip 198.51.100.10 --confirm CONFIRM_POLICY_DETECTION_WHITELIST_CREATE"},
 			}, []string{"AlarmService.CreateWhiteList"}, policyDetectionWhitelistCreateConfirmToken),
 			policyDetectionWhitelistWriteManifestCommand("tanswer policy detection-whitelist-update", "chaitin-cli tanswer policy detection-whitelist-update", "编辑检测白名单。", []string{
 				"需要更新单条检测白名单配置。",
 				"需要执行前查看当前白名单与目标配置差异。",
 			}, policyDetectionWhitelistWriteManifestFlags(true, "CONFIRM_POLICY_DETECTION_WHITELIST_UPDATE"), "policy_detection_whitelist_update_result", []ManifestExample{
-				{Description: "预览编辑检测白名单", Command: "chaitin-cli tanswer policy detection-whitelist-update --id 21 --name 新白名单 --src-ip 1.1.1.2 --preview"},
-				{Description: "确认编辑检测白名单", Command: "chaitin-cli tanswer policy detection-whitelist-update --id 21 --name 新白名单 --src-ip 1.1.1.2 --confirm CONFIRM_POLICY_DETECTION_WHITELIST_UPDATE"},
+				{Description: "预览编辑检测白名单", Command: "chaitin-cli tanswer policy detection-whitelist-update --id 21 --name 新白名单 --src-ip 198.51.100.11 --preview"},
+				{Description: "确认编辑检测白名单", Command: "chaitin-cli tanswer policy detection-whitelist-update --id 21 --name 新白名单 --src-ip 198.51.100.11 --confirm CONFIRM_POLICY_DETECTION_WHITELIST_UPDATE"},
 			}, []string{"AlarmService.SearchWhiteList", "AlarmService.UpdateWhiteList"}, policyDetectionWhitelistUpdateConfirmToken),
 			policyDetectionWhitelistWriteManifestCommand("tanswer policy detection-whitelist-enable", "chaitin-cli tanswer policy detection-whitelist-enable", "启用检测白名单。", []string{
 				"需要启用一条或多条检测白名单。",
@@ -1714,21 +1714,21 @@ func BuildCommandManifest() CommandManifest {
 				"需要新增、编辑、启停、删除或下发阻断策略时，后续使用带确认保护的写入命令。",
 			}, responseBlockPolicyManifestFlags(), "response_block_policy_list", "block_policies", []ManifestExample{
 				{Description: "查询旁路阻断策略", Command: "chaitin-cli tanswer response block-policies --page-size 10"},
-				{Description: "按阻断对象查询策略", Command: "chaitin-cli tanswer response block-policies --object 1.1.1.1 --status enabled"},
+				{Description: "按阻断对象查询策略", Command: "chaitin-cli tanswer response block-policies --object 198.51.100.10 --status enabled"},
 			}, []string{"RulesService.SearchBlockRules"}),
 			responseWriteManifestCommand("tanswer response block-policy-create", "chaitin-cli tanswer response block-policy-create", "新增旁路阻断策略。", []string{
 				"需要对确认恶意对象新增旁路阻断策略。",
 				"已经明确策略名称、阻断对象、对象类型、阻断时长或失效时间。",
 			}, responseBlockPolicyWriteManifestFlags(false, responseBlockPolicyCreateConfirmToken), "response_block_policy_create_result", []ManifestExample{
-				{Description: "预览新增旁路阻断策略", Command: "chaitin-cli tanswer response block-policy-create --name block-bad-ip --object 1.1.1.1 --preview"},
-				{Description: "确认新增旁路阻断策略", Command: "chaitin-cli tanswer response block-policy-create --name block-bad-ip --object 1.1.1.1 --duration 3600 --confirm CONFIRM_RESPONSE_BLOCK_POLICY_CREATE"},
+				{Description: "预览新增旁路阻断策略", Command: "chaitin-cli tanswer response block-policy-create --name block-bad-ip --object 198.51.100.10 --preview"},
+				{Description: "确认新增旁路阻断策略", Command: "chaitin-cli tanswer response block-policy-create --name block-bad-ip --object 198.51.100.10 --duration 3600 --confirm CONFIRM_RESPONSE_BLOCK_POLICY_CREATE"},
 			}, []string{"RulesService.CreateBlockRules"}, responseBlockPolicyCreateConfirmToken),
 			responseWriteManifestCommand("tanswer response block-policy-update", "chaitin-cli tanswer response block-policy-update", "编辑旁路阻断策略。", []string{
 				"需要更新单条旁路阻断策略。",
 				"需要执行前查看当前策略与目标配置差异。",
 			}, responseBlockPolicyWriteManifestFlags(true, responseBlockPolicyUpdateConfirmToken), "response_block_policy_update_result", []ManifestExample{
-				{Description: "预览编辑旁路阻断策略", Command: "chaitin-cli tanswer response block-policy-update --id 7 --name new-block --object 1.1.1.1 --preview"},
-				{Description: "确认编辑旁路阻断策略", Command: "chaitin-cli tanswer response block-policy-update --id 7 --name new-block --object 1.1.1.1 --expire 1784277612410 --confirm CONFIRM_RESPONSE_BLOCK_POLICY_UPDATE"},
+				{Description: "预览编辑旁路阻断策略", Command: "chaitin-cli tanswer response block-policy-update --id 7 --name new-block --object 198.51.100.10 --preview"},
+				{Description: "确认编辑旁路阻断策略", Command: "chaitin-cli tanswer response block-policy-update --id 7 --name new-block --object 198.51.100.10 --expire 1784277612410 --confirm CONFIRM_RESPONSE_BLOCK_POLICY_UPDATE"},
 			}, []string{"RulesService.SearchBlockRules", "RulesService.UpdateBlockRules"}, responseBlockPolicyUpdateConfirmToken),
 			responseWriteManifestCommand("tanswer response block-policy-enable", "chaitin-cli tanswer response block-policy-enable", "启用旁路阻断策略。", []string{
 				"需要启用一条或多条旁路阻断策略。",
@@ -1761,20 +1761,20 @@ func BuildCommandManifest() CommandManifest {
 				"需要查询检测白名单时，使用 tanswer policy detection-whitelist。",
 			}, responseWhitelistManifestFlags(), "response_whitelist_list", "response_whitelists", []ManifestExample{
 				{Description: "查询响应白名单", Command: "chaitin-cli tanswer response whitelist --page-size 10"},
-				{Description: "按对象查询响应白名单", Command: "chaitin-cli tanswer response whitelist --object 1.1.1.1 --type ip"},
+				{Description: "按对象查询响应白名单", Command: "chaitin-cli tanswer response whitelist --object 198.51.100.10 --type ip"},
 			}, []string{"FirewallService.SearchWhiteList"}),
 			responseWriteManifestCommand("tanswer response whitelist-create", "chaitin-cli tanswer response whitelist-create", "新增响应白名单。", []string{
 				"需要将确认可信对象加入响应处置白名单。",
 				"已经明确白名单对象、对象类型、有效期、阻断方式和 IP 方向。",
 			}, responseWhitelistWriteManifestFlags(false, responseWhitelistCreateConfirmToken), "response_whitelist_create_result", []ManifestExample{
-				{Description: "预览新增响应白名单", Command: "chaitin-cli tanswer response whitelist-create --type ip --object 1.1.1.1 --expire 1784277612410 --preview"},
-				{Description: "确认新增响应白名单", Command: "chaitin-cli tanswer response whitelist-create --type ip --object 1.1.1.1 --expire 1784277612410 --confirm CONFIRM_RESPONSE_WHITELIST_CREATE"},
+				{Description: "预览新增响应白名单", Command: "chaitin-cli tanswer response whitelist-create --type ip --object 198.51.100.10 --expire 1784277612410 --preview"},
+				{Description: "确认新增响应白名单", Command: "chaitin-cli tanswer response whitelist-create --type ip --object 198.51.100.10 --expire 1784277612410 --confirm CONFIRM_RESPONSE_WHITELIST_CREATE"},
 			}, []string{"FirewallService.CreateWhiteList"}, responseWhitelistCreateConfirmToken),
 			responseWriteManifestCommand("tanswer response whitelist-update", "chaitin-cli tanswer response whitelist-update", "编辑响应白名单。", []string{
 				"需要更新单条响应处置白名单。",
 				"需要执行前查看当前白名单与目标配置差异。",
 			}, responseWhitelistWriteManifestFlags(true, responseWhitelistUpdateConfirmToken), "response_whitelist_update_result", []ManifestExample{
-				{Description: "预览编辑响应白名单", Command: "chaitin-cli tanswer response whitelist-update --id 3 --type ip --object 1.1.1.1 --expire 1784277612410 --preview"},
+				{Description: "预览编辑响应白名单", Command: "chaitin-cli tanswer response whitelist-update --id 3 --type ip --object 198.51.100.10 --expire 1784277612410 --preview"},
 				{Description: "确认编辑响应白名单", Command: "chaitin-cli tanswer response whitelist-update --id 3 --type url --object http://example.com/a --expire 1784277612410 --confirm CONFIRM_RESPONSE_WHITELIST_UPDATE"},
 			}, []string{"FirewallService.SearchWhiteList", "FirewallService.UpdateWhiteList"}, responseWhitelistUpdateConfirmToken),
 			responseWriteManifestCommand("tanswer response whitelist-enable", "chaitin-cli tanswer response whitelist-enable", "启用响应白名单。", []string{

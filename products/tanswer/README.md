@@ -42,7 +42,11 @@ chaitin-cli tanswer response block-policies --page-size 10
 
 ```bash
 chaitin-cli tanswer api POST /rpc --body '{"jsonrpc":"2.0","method":"OpsService.GetBaseInfo","params":{},"id":"1"}'
+chaitin-cli tanswer api GET /api/example --query '{"count":10,"offset":0}'
+chaitin-cli tanswer api POST /rpc --body @./request.json
 ```
+
+`api <METHOD> <PATH>` 输出 `status_code` 和 `raw` 原始响应；它不提供专属参数解释或业务摘要。
 
 ## 配置和认证
 
@@ -54,7 +58,6 @@ chaitin-cli tanswer api POST /rpc --body '{"jsonrpc":"2.0","method":"OpsService.
 | `tanswer.api_key` / `TANSWER_API_KEY` | OpenAPI Token。不要在脚本、日志或共享文档中暴露真实值。 |
 | `--timeout` | 请求超时时间，默认 `30s`。 |
 | `--insecure` | 是否跳过 TLS 证书校验，默认 `false`。 |
-| `--output` | 输出格式，默认 `json`。 |
 
 常用 flag：
 

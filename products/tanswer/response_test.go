@@ -32,7 +32,7 @@ func TestBuildResponseBlockPoliciesRequestMapsFilters(t *testing.T) {
 		id:         "7",
 		strategyID: "3",
 		name:       "block bad ip",
-		object:     "1.1.1.1",
+		object:     "198.51.100.10",
 		status:     "enabled",
 	})
 
@@ -48,7 +48,7 @@ func TestBuildResponseBlockPoliciesRequestMapsFilters(t *testing.T) {
 	if got := req["name"].([]map[string]any)[0]["target"]; got != "block bad ip" {
 		t.Fatalf("name target = %#v", got)
 	}
-	if req["ip_search"] != "1.1.1.1" {
+	if req["ip_search"] != "198.51.100.10" {
 		t.Fatalf("ip_search = %#v", req["ip_search"])
 	}
 	if got := req["status"].([]map[string]any)[0]["target"]; got != 1 {
@@ -57,7 +57,7 @@ func TestBuildResponseBlockPoliciesRequestMapsFilters(t *testing.T) {
 }
 
 func TestResponseBlockPoliciesCommandCallsSearchBlockRules(t *testing.T) {
-	server := newResponseRPCServer(t, "RulesService.SearchBlockRules", `{"data":[{"id":7,"name":"block bad ip","ips":"1.1.1.1","strategy_id":3,"strategy_name":"auto","status":1,"expire":1784277612410,"created_at":1784277000000,"remark":"manual"}],"total":1}`, func(params map[string]any) {
+	server := newResponseRPCServer(t, "RulesService.SearchBlockRules", `{"data":[{"id":7,"name":"block bad ip","ips":"198.51.100.10","strategy_id":3,"strategy_name":"auto","status":1,"expire":1784277612410,"created_at":1784277000000,"remark":"manual"}],"total":1}`, func(params map[string]any) {
 		if params["count"] != float64(5) || params["offset"] != float64(0) {
 			t.Fatalf("params = %#v", params)
 		}
@@ -72,14 +72,14 @@ func TestResponseBlockPoliciesCommandCallsSearchBlockRules(t *testing.T) {
 }
 
 func TestResponseBlockRecordsCommandCallsTapBlockRecordList(t *testing.T) {
-	server := newResponseRPCServer(t, "RulesService.SearchTapBlockRecordList", `{"records":[{"id":"r1","timestamp":1784277612410,"src_ip":"1.1.1.1","src_port":12345,"dest_ip":"192.0.2.10","dest_port":80,"policy_id":7,"policy_name":"block bad ip","type":1,"block_times":2}],"total":1}`, func(params map[string]any) {
-		if params["count"] != float64(5) || params["offset"] != float64(0) || params["src_ip"] != "1.1.1.1" {
+	server := newResponseRPCServer(t, "RulesService.SearchTapBlockRecordList", `{"records":[{"id":"r1","timestamp":1784277612410,"src_ip":"198.51.100.10","src_port":12345,"dest_ip":"192.0.2.10","dest_port":80,"policy_id":7,"policy_name":"block bad ip","type":1,"block_times":2}],"total":1}`, func(params map[string]any) {
+		if params["count"] != float64(5) || params["offset"] != float64(0) || params["src_ip"] != "198.51.100.10" {
 			t.Fatalf("params = %#v", params)
 		}
 	})
 	defer server.Close()
 
-	env := runResponseCommand(t, server.URL, "response", "block-records", "--time", "24h", "--page-size", "5", "--src-ip", "1.1.1.1")
+	env := runResponseCommand(t, server.URL, "response", "block-records", "--time", "24h", "--page-size", "5", "--src-ip", "198.51.100.10")
 	if env.Task != "查询旁路阻断记录" {
 		t.Fatalf("Task = %q", env.Task)
 	}
@@ -87,10 +87,10 @@ func TestResponseBlockRecordsCommandCallsTapBlockRecordList(t *testing.T) {
 }
 
 func TestResponseWhitelistCommandCallsFirewallWhiteList(t *testing.T) {
-	server := newResponseRPCServer(t, "FirewallService.SearchWhiteList", `{"data":[{"id":3,"type":"ip","values":["1.1.1.1"],"remark":"trusted","status":1,"expire":"2026-07-17T10:00:00Z","updated_at":"2026-07-17T09:00:00Z","block_method":["Bypass"],"ip_type":"src"}],"total":1}`, nil)
+	server := newResponseRPCServer(t, "FirewallService.SearchWhiteList", `{"data":[{"id":3,"type":"ip","values":["198.51.100.10"],"remark":"trusted","status":1,"expire":"2026-07-17T10:00:00Z","updated_at":"2026-07-17T09:00:00Z","block_method":["Bypass"],"ip_type":"src"}],"total":1}`, nil)
 	defer server.Close()
 
-	env := runResponseCommand(t, server.URL, "response", "whitelist", "--page-size", "5", "--object", "1.1.1.1")
+	env := runResponseCommand(t, server.URL, "response", "whitelist", "--page-size", "5", "--object", "198.51.100.10")
 	if env.Task != "查询响应白名单" {
 		t.Fatalf("Task = %q", env.Task)
 	}
@@ -116,7 +116,7 @@ func TestResponseWhitelistCreateHelpIsAIReadable(t *testing.T) {
 func TestBuildResponseWhitelistWriteRequestMapsFields(t *testing.T) {
 	req, err := buildResponseWhitelistWriteRequest(responseWhitelistWriteOptions{
 		objectType:  "ip",
-		objects:     "1.1.1.1,2.2.2.2",
+		objects:     "198.51.100.10,203.0.113.20",
 		status:      "enabled",
 		expire:      "1784277612410",
 		blockMethod: "bypass,third",
@@ -130,7 +130,7 @@ func TestBuildResponseWhitelistWriteRequestMapsFields(t *testing.T) {
 		t.Fatalf("request = %#v", req)
 	}
 	values := req["values"].([]string)
-	if len(values) != 2 || values[0] != "1.1.1.1" || values[1] != "2.2.2.2" {
+	if len(values) != 2 || values[0] != "198.51.100.10" || values[1] != "203.0.113.20" {
 		t.Fatalf("values = %#v", values)
 	}
 	methods := req["block_method"].([]string)
@@ -149,7 +149,7 @@ func TestResponseWhitelistCreatePreviewDoesNotCallRPC(t *testing.T) {
 
 	var out bytes.Buffer
 	cmd := NewRootCommand(RootOptions{Out: &out, ErrOut: &out})
-	cmd.SetArgs([]string{"tanswer", "--url", server.URL, "--api-key", "token-123", "response", "whitelist-create", "--type", "ip", "--object", "1.1.1.1", "--expire", "1784277612410", "--preview"})
+	cmd.SetArgs([]string{"tanswer", "--url", server.URL, "--api-key", "token-123", "response", "whitelist-create", "--type", "ip", "--object", "198.51.100.10", "--expire", "1784277612410", "--preview"})
 
 	if err := cmd.Execute(); err != nil {
 		t.Fatalf("Execute returned error: %v", err)
@@ -182,7 +182,7 @@ func TestResponseWhitelistCreateConfirmedCallsCreate(t *testing.T) {
 				t.Fatalf("create params = %#v", params)
 			}
 			values := params["values"].([]any)
-			if len(values) != 1 || values[0] != "1.1.1.1" {
+			if len(values) != 1 || values[0] != "198.51.100.10" {
 				t.Fatalf("values = %#v", values)
 			}
 			methods := params["block_method"].([]any)
@@ -196,7 +196,7 @@ func TestResponseWhitelistCreateConfirmedCallsCreate(t *testing.T) {
 
 	var out bytes.Buffer
 	cmd := NewRootCommand(RootOptions{Out: &out, ErrOut: &out})
-	cmd.SetArgs([]string{"tanswer", "--url", server.URL, "--api-key", "token-123", "response", "whitelist-create", "--type", "ip", "--object", "1.1.1.1", "--expire", "1784277612410", "--confirm", "CONFIRM_RESPONSE_WHITELIST_CREATE"})
+	cmd.SetArgs([]string{"tanswer", "--url", server.URL, "--api-key", "token-123", "response", "whitelist-create", "--type", "ip", "--object", "198.51.100.10", "--expire", "1784277612410", "--confirm", "CONFIRM_RESPONSE_WHITELIST_CREATE"})
 
 	if err := cmd.Execute(); err != nil {
 		t.Fatalf("Execute returned error: %v", err)
@@ -208,7 +208,7 @@ func TestResponseWhitelistCreateConfirmedCallsCreate(t *testing.T) {
 
 func TestResponseWhitelistUpdateConfirmedReadsBeforeAndCallsUpdate(t *testing.T) {
 	server := newResponseRPCSequenceServer(t, []responseExpectedRPC{
-		{method: "FirewallService.SearchWhiteList", result: `{"data":[{"id":3,"type":"ip","values":["1.1.1.1"],"remark":"old","status":2,"expire":"2026-07-17T10:00:00Z","block_method":["Bypass"],"ip_type":"SRC_OR_DST"}],"total":1}`},
+		{method: "FirewallService.SearchWhiteList", result: `{"data":[{"id":3,"type":"ip","values":["198.51.100.10"],"remark":"old","status":2,"expire":"2026-07-17T10:00:00Z","block_method":["Bypass"],"ip_type":"SRC_OR_DST"}],"total":1}`},
 		{
 			method: "FirewallService.UpdateWhiteList",
 			check: func(t *testing.T, params map[string]any) {
@@ -253,7 +253,7 @@ func TestResponseWhitelistStatusAndDeleteConfirmedCallRPC(t *testing.T) {
 	} {
 		t.Run(tc.task, func(t *testing.T) {
 			server := newResponseRPCSequenceServer(t, []responseExpectedRPC{
-				{method: "FirewallService.SearchWhiteList", result: `{"data":[{"id":3,"type":"ip","values":["1.1.1.1"],"status":2},{"id":4,"type":"url","values":["http://example.com/a"],"status":1}],"total":2}`},
+				{method: "FirewallService.SearchWhiteList", result: `{"data":[{"id":3,"type":"ip","values":["198.51.100.10"],"status":2},{"id":4,"type":"url","values":["http://example.com/a"],"status":1}],"total":2}`},
 				{
 					method: tc.method,
 					check: func(t *testing.T, params map[string]any) {
@@ -304,7 +304,7 @@ func TestBuildResponseBlockPolicyFromAlarmRequestMapsAlarmFields(t *testing.T) {
 	req, err := buildResponseBlockPolicyFromAlarmRequest(map[string]any{
 		"doc_id":    "doc-1",
 		"name":      "SQL注入",
-		"src_ip":    "1.1.1.1",
+		"src_ip":    "198.51.100.10",
 		"src_port":  float64(12345),
 		"dest_ip":   "192.0.2.10",
 		"dest_port": float64(80),
@@ -323,7 +323,7 @@ func TestBuildResponseBlockPolicyFromAlarmRequestMapsAlarmFields(t *testing.T) {
 		t.Fatalf("request = %#v", req)
 	}
 	ips := req["ips"].([]string)
-	if len(ips) != 1 || ips[0] != "1.1.1.1:12345-192.0.2.10:80" {
+	if len(ips) != 1 || ips[0] != "198.51.100.10:12345-192.0.2.10:80" {
 		t.Fatalf("ips = %#v", ips)
 	}
 	if !strings.Contains(req["name"].(string), "SQL注入") {
@@ -339,7 +339,7 @@ func TestResponseBlockPolicyFromAlarmPreviewReadsAlarmOnly(t *testing.T) {
 				t.Fatalf("doc_id = %#v", params["doc_id"])
 			}
 		},
-		result: `{"data":{"doc_id":"doc-1","name":"SQL注入","src_ip":"1.1.1.1","dest_ip":"192.0.2.10","dest_port":80}}`,
+		result: `{"data":{"doc_id":"doc-1","name":"SQL注入","src_ip":"198.51.100.10","dest_ip":"192.0.2.10","dest_port":80}}`,
 	}})
 	defer server.Close()
 
@@ -374,7 +374,7 @@ func TestResponseBlockPolicyFromAlarmConfirmedCreatesBlockPolicy(t *testing.T) {
 	server := newResponseRPCSequenceServer(t, []responseExpectedRPC{
 		{
 			method: "AlarmService.GetAlarm",
-			result: `{"data":{"doc_id":"doc-1","name":"SQL注入","src_ip":"1.1.1.1","dest_ip":"192.0.2.10","dest_port":80}}`,
+			result: `{"data":{"doc_id":"doc-1","name":"SQL注入","src_ip":"198.51.100.10","dest_ip":"192.0.2.10","dest_port":80}}`,
 		},
 		{
 			method: "RulesService.CreateBlockRules",
@@ -383,7 +383,7 @@ func TestResponseBlockPolicyFromAlarmConfirmedCreatesBlockPolicy(t *testing.T) {
 					t.Fatalf("create params = %#v", params)
 				}
 				ips := params["ips"].([]any)
-				if len(ips) != 1 || ips[0] != "1.1.1.1" {
+				if len(ips) != 1 || ips[0] != "198.51.100.10" {
 					t.Fatalf("ips = %#v", ips)
 				}
 			},
@@ -436,7 +436,7 @@ func TestResponseWhitelistFromAlarmConfirmedCreatesWhitelist(t *testing.T) {
 	server := newResponseRPCSequenceServer(t, []responseExpectedRPC{
 		{
 			method: "AlarmService.GetAlarm",
-			result: `{"data":{"doc_id":"doc-1","name":"SQL注入","src_ip":"1.1.1.1","dest_ip":"192.0.2.10"}}`,
+			result: `{"data":{"doc_id":"doc-1","name":"SQL注入","src_ip":"198.51.100.10","dest_ip":"192.0.2.10"}}`,
 		},
 		{
 			method: "FirewallService.CreateWhiteList",
@@ -478,7 +478,7 @@ func TestResponseDevicesCommandCallsFirewallSearch(t *testing.T) {
 }
 
 func TestResponseDeviceRecordsCommandCallsSendRecord(t *testing.T) {
-	server := newResponseRPCServer(t, "FirewallService.SearchSendRecord", `{"data":[{"id":9,"ip":"1.1.1.1","last_try_time":"2026-07-17 09:00:00","last_result":1}],"total":1}`, func(params map[string]any) {
+	server := newResponseRPCServer(t, "FirewallService.SearchSendRecord", `{"data":[{"id":9,"ip":"198.51.100.10","last_try_time":"2026-07-17 09:00:00","last_result":1}],"total":1}`, func(params map[string]any) {
 		if params["firewall_id"] != float64(2) {
 			t.Fatalf("firewall_id = %#v", params["firewall_id"])
 		}
@@ -504,7 +504,7 @@ func TestResponseAutoPoliciesCommandCallsSearchStrategy(t *testing.T) {
 }
 
 func TestResponseAutoListCommandCallsSearchBlackList(t *testing.T) {
-	server := newResponseRPCServer(t, "FirewallService.SearchBlackList", `{"data":[{"id":8,"ip":"1.1.1.1","port":0,"status":1,"block_time_type":1,"block_time_value":3600,"strategy_id":5,"strategy_name":"auto block","update_time":"2026-07-17T09:00:00Z"}],"total":1}`, nil)
+	server := newResponseRPCServer(t, "FirewallService.SearchBlackList", `{"data":[{"id":8,"ip":"198.51.100.10","port":0,"status":1,"block_time_type":1,"block_time_value":3600,"strategy_id":5,"strategy_name":"auto block","update_time":"2026-07-17T09:00:00Z"}],"total":1}`, nil)
 	defer server.Close()
 
 	env := runResponseCommand(t, server.URL, "response", "auto-list", "--time", "7d", "--page-size", "5")
@@ -533,7 +533,7 @@ func TestResponseBlockPolicyCreateHelpIsAIReadable(t *testing.T) {
 func TestBuildResponseBlockPolicyWriteRequestMapsFields(t *testing.T) {
 	req, err := buildResponseBlockPolicyWriteRequest(responseBlockPolicyWriteOptions{
 		name:          "block bad ip",
-		objects:       "1.1.1.1,2.2.2.2",
+		objects:       "198.51.100.10,203.0.113.20",
 		objectType:    "ip",
 		ipType:        "source",
 		status:        "enabled",
@@ -548,7 +548,7 @@ func TestBuildResponseBlockPolicyWriteRequestMapsFields(t *testing.T) {
 		t.Fatalf("request = %#v", req)
 	}
 	ips := req["ips"].([]string)
-	if len(ips) != 2 || ips[0] != "1.1.1.1" || ips[1] != "2.2.2.2" {
+	if len(ips) != 2 || ips[0] != "198.51.100.10" || ips[1] != "203.0.113.20" {
 		t.Fatalf("ips = %#v", ips)
 	}
 	ipType := req["ip_type"].(*uint)
@@ -567,7 +567,7 @@ func TestResponseBlockPolicyCreatePreviewDoesNotCallRPC(t *testing.T) {
 
 	var out bytes.Buffer
 	cmd := NewRootCommand(RootOptions{Out: &out, ErrOut: &out})
-	cmd.SetArgs([]string{"tanswer", "--url", server.URL, "--api-key", "token-123", "response", "block-policy-create", "--name", "block bad ip", "--object", "1.1.1.1", "--preview"})
+	cmd.SetArgs([]string{"tanswer", "--url", server.URL, "--api-key", "token-123", "response", "block-policy-create", "--name", "block bad ip", "--object", "198.51.100.10", "--preview"})
 
 	if err := cmd.Execute(); err != nil {
 		t.Fatalf("Execute returned error: %v", err)
@@ -600,7 +600,7 @@ func TestResponseBlockPolicyCreateConfirmedCallsCreate(t *testing.T) {
 				t.Fatalf("create params = %#v", params)
 			}
 			ips := params["ips"].([]any)
-			if len(ips) != 1 || ips[0] != "1.1.1.1" {
+			if len(ips) != 1 || ips[0] != "198.51.100.10" {
 				t.Fatalf("ips = %#v", ips)
 			}
 		},
@@ -610,7 +610,7 @@ func TestResponseBlockPolicyCreateConfirmedCallsCreate(t *testing.T) {
 
 	var out bytes.Buffer
 	cmd := NewRootCommand(RootOptions{Out: &out, ErrOut: &out})
-	cmd.SetArgs([]string{"tanswer", "--url", server.URL, "--api-key", "token-123", "response", "block-policy-create", "--name", "block bad ip", "--object", "1.1.1.1", "--duration", "3600", "--confirm", "CONFIRM_RESPONSE_BLOCK_POLICY_CREATE"})
+	cmd.SetArgs([]string{"tanswer", "--url", server.URL, "--api-key", "token-123", "response", "block-policy-create", "--name", "block bad ip", "--object", "198.51.100.10", "--duration", "3600", "--confirm", "CONFIRM_RESPONSE_BLOCK_POLICY_CREATE"})
 
 	if err := cmd.Execute(); err != nil {
 		t.Fatalf("Execute returned error: %v", err)
@@ -634,7 +634,7 @@ func TestResponseBlockPolicyUpdateConfirmedReadsBeforeAndCallsUpdate(t *testing.
 					t.Fatalf("id filter = %#v", first)
 				}
 			},
-			result: `{"data":[{"id":7,"name":"old","ips":"1.1.1.1","status":1,"block_type":1,"expire":1784277612410}],"total":1}`,
+			result: `{"data":[{"id":7,"name":"old","ips":"198.51.100.10","status":1,"block_type":1,"expire":1784277612410}],"total":1}`,
 		},
 		{
 			method: "RulesService.UpdateBlockRules",
@@ -650,7 +650,7 @@ func TestResponseBlockPolicyUpdateConfirmedReadsBeforeAndCallsUpdate(t *testing.
 
 	var out bytes.Buffer
 	cmd := NewRootCommand(RootOptions{Out: &out, ErrOut: &out})
-	cmd.SetArgs([]string{"tanswer", "--url", server.URL, "--api-key", "token-123", "response", "block-policy-update", "--id", "7", "--name", "new block", "--object", "1.1.1.1", "--expire", "1784277612410", "--confirm", "CONFIRM_RESPONSE_BLOCK_POLICY_UPDATE"})
+	cmd.SetArgs([]string{"tanswer", "--url", server.URL, "--api-key", "token-123", "response", "block-policy-update", "--id", "7", "--name", "new block", "--object", "198.51.100.10", "--expire", "1784277612410", "--confirm", "CONFIRM_RESPONSE_BLOCK_POLICY_UPDATE"})
 
 	if err := cmd.Execute(); err != nil {
 		t.Fatalf("Execute returned error: %v", err)
@@ -685,7 +685,7 @@ func TestResponseBlockPolicyStatusAndDeleteConfirmedCallRPC(t *testing.T) {
 							t.Fatalf("id filters = %#v", idFilters)
 						}
 					},
-					result: `{"data":[{"id":7,"name":"A","ips":"1.1.1.1","status":1},{"id":8,"name":"B","ips":"2.2.2.2","status":1}],"total":2}`,
+					result: `{"data":[{"id":7,"name":"A","ips":"198.51.100.10","status":1},{"id":8,"name":"B","ips":"203.0.113.20","status":1}],"total":2}`,
 				},
 				{
 					method: "RulesService.UpdateBlockRulesStatus",

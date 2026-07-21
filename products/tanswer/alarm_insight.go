@@ -59,7 +59,7 @@ func newAlarmByAttackerCommand(opts *RootOptions) *cobra.Command {
 		Short: "查询指定攻击源相关告警",
 		Long: "查询指定攻击源相关告警，用于已知攻击源后快速查看攻击范围、威胁类型和最近活动。\n\n" +
 			"输出：攻击源、查询时间范围、相关告警数、最高等级、成功/失陷数量、受害对象 Top、主要威胁类型、告警摘要。",
-		Example: "  chaitin-cli tanswer alarm by-attacker --attacker 1.1.1.1 --time today",
+		Example: "  chaitin-cli tanswer alarm by-attacker --attacker 198.51.100.10 --time today",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			return runAlarmSubjectCommand(cmd, opts, alarmOpts, alarmSubjectAttacker)
 		},
@@ -76,7 +76,7 @@ func newAlarmByVictimCommand(opts *RootOptions) *cobra.Command {
 		Short: "查询指定受害对象相关告警",
 		Long: "查询指定受害对象相关告警，用于已知资产或受害对象后快速判断其被攻击情况。\n\n" +
 			"输出：受害对象、查询时间范围、相关告警数、最高等级、成功/失陷数量、攻击源 Top、主要威胁类型、告警摘要。",
-		Example: "  chaitin-cli tanswer alarm by-victim --victim 2.2.2.2 --time today",
+		Example: "  chaitin-cli tanswer alarm by-victim --victim 203.0.113.20 --time today",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			return runAlarmSubjectCommand(cmd, opts, alarmOpts, alarmSubjectVictim)
 		},

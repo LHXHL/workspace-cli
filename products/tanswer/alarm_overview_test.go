@@ -48,9 +48,9 @@ func TestFetchAlarmOverviewFallsBackToListWhenAggregationsNeedLogin(t *testing.T
 					"total": 3,
 					"page_total": 1,
 					"data": [
-						{"severity": 1, "result": "success", "phase": "lateral", "tag": "WebShell", "attacker": "1.1.1.1", "victim": "192.0.2.10"},
-						{"severity": 2, "result": "success", "phase": "control", "tag": "SQL注入", "attacker": "1.1.1.1", "victim": "192.0.2.11"},
-						{"severity": 2, "result": "control", "phase": "control", "tag": "SQL注入", "attacker": "2.2.2.2", "victim": "192.0.2.11"}
+						{"severity": 1, "result": "success", "phase": "lateral", "tag": "WebShell", "attacker": "198.51.100.10", "victim": "192.0.2.10"},
+						{"severity": 2, "result": "success", "phase": "control", "tag": "SQL注入", "attacker": "198.51.100.10", "victim": "192.0.2.11"},
+						{"severity": 2, "result": "control", "phase": "control", "tag": "SQL注入", "attacker": "203.0.113.20", "victim": "192.0.2.11"}
 					]
 				}`),
 			})
@@ -73,7 +73,7 @@ func TestFetchAlarmOverviewFallsBackToListWhenAggregationsNeedLogin(t *testing.T
 	if summary["alarm_total"] != int64(3) || summary["source"] != "list_fallback" {
 		t.Fatalf("summary = %#v", summary)
 	}
-	if got := data["attacker_top"].([]map[string]any)[0]; got["key"] != "1.1.1.1" || got["count"] != 2 {
+	if got := data["attacker_top"].([]map[string]any)[0]; got["key"] != "198.51.100.10" || got["count"] != 2 {
 		t.Fatalf("attacker_top[0] = %#v", got)
 	}
 	if got := data["threat_type_top"].([]map[string]any)[0]; got["key"] != "SQL注入" || got["count"] != 2 {

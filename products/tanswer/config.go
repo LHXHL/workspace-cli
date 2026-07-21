@@ -31,7 +31,6 @@ type runtimeConfig struct {
 	URL      string `yaml:"url"`
 	APIKey   string `yaml:"api_key"`
 	Timeout  string `yaml:"timeout"`
-	Output   string `yaml:"output"`
 	Insecure bool   `yaml:"insecure"`
 }
 
@@ -43,7 +42,6 @@ func ApplyRuntimeConfig(cmd *cobra.Command, raw config.Raw) {
 	applyFlagString(cmd, "url", productCfg.URL)
 	applyFlagString(cmd, "api-key", productCfg.APIKey)
 	applyFlagString(cmd, "timeout", productCfg.Timeout)
-	applyFlagString(cmd, "output", productCfg.Output)
 	if productCfg.Insecure {
 		applyFlagString(cmd, "insecure", "true")
 	}

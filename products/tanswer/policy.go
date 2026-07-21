@@ -156,7 +156,7 @@ func newPolicyDetectionWhitelistCommand(opts *RootOptions) *cobra.Command {
 		Short: "查询检测白名单",
 		Long:  "查询检测白名单，用于查看当前误报抑制策略。该命令只读取已有规则，返回列表展示字段和分页信息；不新增、编辑、启停或删除白名单。\n\n输出：实际筛选条件、total、page、page_size、current_count、has_more、detection_whitelists。",
 		Example: "  chaitin-cli tanswer policy detection-whitelist --page-size 10\n" +
-			"  chaitin-cli tanswer policy detection-whitelist --src-ip 1.1.1.1 --status enabled",
+			"  chaitin-cli tanswer policy detection-whitelist --src-ip 198.51.100.10 --status enabled",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			if policyOpts.page < 1 {
 				return writePolicyError(cmd, "查询检测白名单", "chaitin-cli tanswer policy detection-whitelist", "INVALID_PAGE", "page must be greater than or equal to 1", false)
@@ -211,8 +211,8 @@ func newPolicyDetectionWhitelistCreateCommand(opts *RootOptions) *cobra.Command 
 		Long: "新增检测白名单，用于维护误报抑制规则。该命令是高影响写操作：默认只返回写入预览，必须使用 --confirm CONFIRM_POLICY_DETECTION_WHITELIST_CREATE 才会调用后端创建接口。\n\n" +
 			"输出预览：requires_confirmation、confirmed、operation_type、target、change_summary、impact、risk_warnings、confirmation_token。\n" +
 			"执行输出：confirmed、result、object、audit。",
-		Example: "  chaitin-cli tanswer policy detection-whitelist-create --name 登录误报 --src-ip 1.1.1.1 --preview\n" +
-			"  chaitin-cli tanswer policy detection-whitelist-create --name 登录误报 --src-ip 1.1.1.1 --confirm CONFIRM_POLICY_DETECTION_WHITELIST_CREATE",
+		Example: "  chaitin-cli tanswer policy detection-whitelist-create --name 登录误报 --src-ip 198.51.100.10 --preview\n" +
+			"  chaitin-cli tanswer policy detection-whitelist-create --name 登录误报 --src-ip 198.51.100.10 --confirm CONFIRM_POLICY_DETECTION_WHITELIST_CREATE",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			req, err := buildPolicyDetectionWhitelistWriteRequest(policyOpts)
 			if err != nil {
@@ -274,8 +274,8 @@ func newPolicyDetectionWhitelistUpdateCommand(opts *RootOptions) *cobra.Command 
 		Long: "编辑检测白名单，用于更新单条误报抑制规则。该命令是高影响写操作：预览阶段会读取当前白名单并返回 before/after；必须使用 --confirm CONFIRM_POLICY_DETECTION_WHITELIST_UPDATE 才会调用后端更新接口。\n\n" +
 			"输出预览：requires_confirmation、confirmed、operation_type、target、change_summary、impact、risk_warnings、confirmation_token。\n" +
 			"执行输出：confirmed、result、object、audit。",
-		Example: "  chaitin-cli tanswer policy detection-whitelist-update --id 21 --name 新白名单 --src-ip 1.1.1.2 --preview\n" +
-			"  chaitin-cli tanswer policy detection-whitelist-update --id 21 --name 新白名单 --src-ip 1.1.1.2 --confirm CONFIRM_POLICY_DETECTION_WHITELIST_UPDATE",
+		Example: "  chaitin-cli tanswer policy detection-whitelist-update --id 21 --name 新白名单 --src-ip 198.51.100.11 --preview\n" +
+			"  chaitin-cli tanswer policy detection-whitelist-update --id 21 --name 新白名单 --src-ip 198.51.100.11 --confirm CONFIRM_POLICY_DETECTION_WHITELIST_UPDATE",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			req, err := buildPolicyDetectionWhitelistUpdateRequest(policyOpts)
 			if err != nil {

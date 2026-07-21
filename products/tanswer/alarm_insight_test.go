@@ -30,7 +30,7 @@ func TestBuildAlarmSubjectRequestMapsAttacker(t *testing.T) {
 	req := buildAlarmSubjectListRequest(rng, alarmSubjectOptions{
 		time:     "today",
 		pageSize: 20,
-		subject:  "1.1.1.1",
+		subject:  "198.51.100.10",
 	}, alarmSubjectAttacker)
 
 	if req["time_range_start"] != int64(1000) || req["time_range_end"] != int64(2000) {
@@ -40,7 +40,7 @@ func TestBuildAlarmSubjectRequestMapsAttacker(t *testing.T) {
 		t.Fatalf("count = %#v", req["count"])
 	}
 	got := req["attacker"].([]map[string]any)
-	if got[0]["target"] != "1.1.1.1" {
+	if got[0]["target"] != "198.51.100.10" {
 		t.Fatalf("attacker filter = %#v", got)
 	}
 }
@@ -63,7 +63,7 @@ func TestAlarmByAttackerCommandCallsSearchAlarmList(t *testing.T) {
 			t.Fatalf("count = %#v", params["count"])
 		}
 		attacker := params["attacker"].([]any)[0].(map[string]any)
-		if attacker["target"] != "1.1.1.1" {
+		if attacker["target"] != "198.51.100.10" {
 			t.Fatalf("attacker filter = %#v", params["attacker"])
 		}
 		_ = json.NewEncoder(w).Encode(rpcResponse{
@@ -71,8 +71,8 @@ func TestAlarmByAttackerCommandCallsSearchAlarmList(t *testing.T) {
 			ID:      req.ID,
 			Result: json.RawMessage(`{
 				"data":[
-					{"doc_id":"a1","name":"SQL注入","severity":2,"attacker":"1.1.1.1","victim":"2.2.2.2","result":"success","phase":"intrustion","tag":"代码执行"},
-					{"doc_id":"a2","name":"弱口令","severity":3,"attacker":"1.1.1.1","victim":"2.2.2.3","result":"control","phase":"lateral","tag":"弱口令"}
+					{"doc_id":"a1","name":"SQL注入","severity":2,"attacker":"198.51.100.10","victim":"203.0.113.20","result":"success","phase":"intrustion","tag":"代码执行"},
+					{"doc_id":"a2","name":"弱口令","severity":3,"attacker":"198.51.100.10","victim":"203.0.113.21","result":"control","phase":"lateral","tag":"弱口令"}
 				],
 				"total": 2,
 				"page_total": 1
@@ -88,7 +88,7 @@ func TestAlarmByAttackerCommandCallsSearchAlarmList(t *testing.T) {
 		"--url", server.URL,
 		"--api-key", "token-123",
 		"alarm", "by-attacker",
-		"--attacker", "1.1.1.1",
+		"--attacker", "198.51.100.10",
 	})
 
 	if err := cmd.Execute(); err != nil {
@@ -134,7 +134,7 @@ func TestAlarmRankCommandCallsSearchAlarmAggTop(t *testing.T) {
 		_ = json.NewEncoder(w).Encode(rpcResponse{
 			JSONRPC: "2.0",
 			ID:      req.ID,
-			Result:  json.RawMessage(`{"data":[{"key":"1.1.1.1","doc_count":7}]}`),
+			Result:  json.RawMessage(`{"data":[{"key":"198.51.100.10","doc_count":7}]}`),
 		})
 	}))
 	defer server.Close()

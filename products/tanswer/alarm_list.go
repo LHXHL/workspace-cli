@@ -41,7 +41,7 @@ func newAlarmListCommand(opts *RootOptions) *cobra.Command {
 			"输出：查询时间范围、实际筛选条件、total、page、page_size、current_count、has_more、alarms。列表项使用产品已有告警列表字段，如 doc_id、name、severity、timestamp、attacker、victim、result、phase、tag、app_proto、url/host 摘要等。",
 		Example: "  chaitin-cli tanswer alarm list --time today --page-size 10\n" +
 			"  chaitin-cli tanswer alarm list --time 24h --severity critical,high --result success,control\n" +
-			"  chaitin-cli tanswer alarm list --asset-ip 192.0.2.10 --attacker 1.1.1.1",
+			"  chaitin-cli tanswer alarm list --asset-ip 192.0.2.10 --attacker 198.51.100.10",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			return runAlarmListCommand(cmd, opts, alarmOpts, "查询威胁告警列表", "chaitin-cli tanswer alarm list")
 		},

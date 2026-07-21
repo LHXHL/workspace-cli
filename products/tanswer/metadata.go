@@ -90,7 +90,7 @@ func newMetadataProtocolCommand(opts *RootOptions) *cobra.Command {
 		Short: "按协议检索元数据",
 		Long:  "按协议检索元数据，用于按 HTTP、DNS、TCP、UDP 或其他协议查看已有流量元数据摘要。该命令只读取元数据索引，返回稳定摘要字段和分页信息。\n\n输出：查询时间范围、实际筛选条件、total、page、page_size、current_count、has_more、metadata。",
 		Example: "  chaitin-cli tanswer metadata protocol --protocol http --time today --page-size 10\n" +
-			"  chaitin-cli tanswer metadata protocol --protocol DNS --src-ip 1.1.1.1 --page-size 20",
+			"  chaitin-cli tanswer metadata protocol --protocol DNS --src-ip 198.51.100.10 --page-size 20",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			return runMetadataListCommand(cmd, opts, metaOpts, "按协议检索元数据", "chaitin-cli tanswer metadata protocol")
 		},

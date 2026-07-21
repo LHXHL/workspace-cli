@@ -29,8 +29,8 @@ func TestBuildAlarmRelatedListRequestUsesWindowAndRelation(t *testing.T) {
 	original := map[string]any{
 		"doc_id":    "doc-1",
 		"timestamp": float64(1000000),
-		"attacker":  "1.1.1.1",
-		"victim":    "2.2.2.2",
+		"attacker":  "198.51.100.10",
+		"victim":    "203.0.113.20",
 	}
 	req, err := buildAlarmRelatedListRequest(original, "attacker", 10*60*1000, 20)
 	if err != nil {
@@ -43,7 +43,7 @@ func TestBuildAlarmRelatedListRequestUsesWindowAndRelation(t *testing.T) {
 		t.Fatalf("count = %#v", req["count"])
 	}
 	attacker := req["attacker"].([]map[string]any)
-	if attacker[0]["target"] != "1.1.1.1" {
+	if attacker[0]["target"] != "198.51.100.10" {
 		t.Fatalf("attacker filter = %#v", attacker)
 	}
 }
@@ -64,7 +64,7 @@ func TestAlarmRelatedCommandFetchesDetailAndRelatedAlarms(t *testing.T) {
 			_ = json.NewEncoder(w).Encode(rpcResponse{
 				JSONRPC: "2.0",
 				ID:      req.ID,
-				Result:  json.RawMessage(`{"data":{"doc_id":"doc-1","timestamp":1000000,"attacker":"1.1.1.1","victim":"2.2.2.2","name":"SQL注入","severity":2}}`),
+				Result:  json.RawMessage(`{"data":{"doc_id":"doc-1","timestamp":1000000,"attacker":"198.51.100.10","victim":"203.0.113.20","name":"SQL注入","severity":2}}`),
 			})
 		case 2:
 			if req.Method != "AlarmService.SearchAlarmList" {
@@ -86,8 +86,8 @@ func TestAlarmRelatedCommandFetchesDetailAndRelatedAlarms(t *testing.T) {
 				ID:      req.ID,
 				Result: json.RawMessage(`{
 					"data":[
-						{"doc_id":"doc-1","timestamp":1000000,"attacker":"1.1.1.1","victim":"2.2.2.2","name":"original"},
-						{"doc_id":"doc-2","timestamp":1100000,"attacker":"1.1.1.1","victim":"2.2.2.3","name":"same attacker"}
+						{"doc_id":"doc-1","timestamp":1000000,"attacker":"198.51.100.10","victim":"203.0.113.20","name":"original"},
+						{"doc_id":"doc-2","timestamp":1100000,"attacker":"198.51.100.10","victim":"203.0.113.21","name":"same attacker"}
 					],
 					"total": 2
 				}`),
@@ -109,8 +109,8 @@ func TestAlarmRelatedCommandFetchesDetailAndRelatedAlarms(t *testing.T) {
 				ID:      req.ID,
 				Result: json.RawMessage(`{
 					"data":[
-						{"doc_id":"doc-2","timestamp":1100000,"attacker":"1.1.1.1","victim":"2.2.2.3","name":"duplicate"},
-						{"doc_id":"doc-3","timestamp":1200000,"attacker":"3.3.3.3","victim":"2.2.2.2","name":"same victim"}
+						{"doc_id":"doc-2","timestamp":1100000,"attacker":"198.51.100.10","victim":"203.0.113.21","name":"duplicate"},
+						{"doc_id":"doc-3","timestamp":1200000,"attacker":"203.0.113.30","victim":"203.0.113.20","name":"same victim"}
 					],
 					"total": 2
 				}`),

@@ -2,6 +2,10 @@ package tanswer
 
 import (
 	"bytes"
+	"encoding/json"
+	"net/http"
+	"net/http/httptest"
+	"os"
 	"strings"
 	"testing"
 )
@@ -19,5 +23,101 @@ func TestRawAPIHelpExplainsFallback(t *testing.T) {
 		if !strings.Contains(text, want) {
 			t.Fatalf("help missing %q:\n%s", want, text)
 		}
+	}
+}
+
+func TestRawAPIGetWithQueryOutputsStatusAndRaw(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodGet {
+			t.Fatalf("method = %s", r.Method)
+		}
+		if r.URL.Path != "/api/example" {
+			t.Fatalf("path = %s", r.URL.Path)
+		}
+		if r.URL.Query().Get("count") != "10" || r.URL.Query().Get("offset") != "0" {
+			t.Fatalf("query = %s", r.URL.RawQuery)
+		}
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusAccepted)
+		_, _ = w.Write([]byte(`{"ok":true}`))
+	}))
+	defer server.Close()
+
+	var out bytes.Buffer
+	cmd := NewRootCommand(RootOptions{Out: &out, ErrOut: &out})
+	cmd.SetArgs([]string{
+		"tanswer", "--url", server.URL, "--api-key", "token-123",
+		"api", "GET", "/api/example",
+		"--query", `{"count":10,"offset":0}`,
+	})
+
+	if err := cmd.Execute(); err != nil {
+		t.Fatalf("Execute returned error: %v", err)
+	}
+	var env SuccessEnvelope
+	if err := json.Unmarshal(out.Bytes(), &env); err != nil {
+		t.Fatalf("decode output: %v\n%s", err, out.String())
+	}
+	if env.Success != true {
+		t.Fatalf("success = %v", env.Success)
+	}
+	data := env.Data.(map[string]any)
+	if data["status_code"] != float64(http.StatusAccepted) {
+		t.Fatalf("status_code = %v", data["status_code"])
+	}
+	raw := data["raw"].(map[string]any)
+	if raw["ok"] != true {
+		t.Fatalf("raw = %#v", raw)
+	}
+}
+
+func TestRawAPIPostBodyFileOutputsNon2xxStatus(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodPost {
+			t.Fatalf("method = %s", r.Method)
+		}
+		var body map[string]any
+		if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
+			t.Fatalf("decode request body: %v", err)
+		}
+		if body["method"] != "OpsService.GetBaseInfo" {
+			t.Fatalf("body = %#v", body)
+		}
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusBadRequest)
+		_, _ = w.Write([]byte(`{"error":"bad request"}`))
+	}))
+	defer server.Close()
+
+	bodyFile := t.TempDir() + "/request.json"
+	if err := os.WriteFile(bodyFile, []byte(`{"method":"OpsService.GetBaseInfo"}`), 0o600); err != nil {
+		t.Fatalf("write body file: %v", err)
+	}
+
+	var out bytes.Buffer
+	cmd := NewRootCommand(RootOptions{Out: &out, ErrOut: &out})
+	cmd.SetArgs([]string{
+		"tanswer", "--url", server.URL, "--api-key", "token-123",
+		"api", "POST", "/rpc",
+		"--body", "@" + bodyFile,
+	})
+
+	if err := cmd.Execute(); err != nil {
+		t.Fatalf("Execute returned error: %v", err)
+	}
+	var env SuccessEnvelope
+	if err := json.Unmarshal(out.Bytes(), &env); err != nil {
+		t.Fatalf("decode output: %v\n%s", err, out.String())
+	}
+	if env.Success != false {
+		t.Fatalf("success = %v", env.Success)
+	}
+	data := env.Data.(map[string]any)
+	if data["status_code"] != float64(http.StatusBadRequest) {
+		t.Fatalf("status_code = %v", data["status_code"])
+	}
+	raw := data["raw"].(map[string]any)
+	if raw["error"] != "bad request" {
+		t.Fatalf("raw = %#v", raw)
 	}
 }

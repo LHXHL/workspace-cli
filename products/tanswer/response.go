@@ -187,7 +187,7 @@ func newResponseBlockPoliciesCommand(opts *RootOptions) *cobra.Command {
 		Short: "查询旁路阻断策略",
 		Long:  "查询旁路阻断策略，用于查看当前阻断策略配置、阻断对象、关联自动响应策略、失效时间和状态。该命令只读取策略列表，不启停、删除或下发阻断。\n\n输出：实际筛选条件、total、page、page_size、current_count、has_more、block_policies。",
 		Example: "  chaitin-cli tanswer response block-policies --page-size 10\n" +
-			"  chaitin-cli tanswer response block-policies --object 1.1.1.1 --status enabled",
+			"  chaitin-cli tanswer response block-policies --object 198.51.100.10 --status enabled",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			return runResponseDataListCommand(cmd, opts, "查询旁路阻断策略", "chaitin-cli tanswer response block-policies", "RulesService.SearchBlockRules", buildResponseBlockPoliciesRequest(responseOpts), responseBlockPoliciesFilters(responseOpts), responseOpts.page, responseOpts.pageSize, "block_policies", summarizeResponseBlockPolicies)
 		},
@@ -205,8 +205,8 @@ func newResponseBlockPolicyCreateCommand(opts *RootOptions) *cobra.Command {
 		Long: "新增旁路阻断策略，用于对确认恶意对象建立旁路阻断策略。该命令是高影响写操作：默认只返回写入预览，必须使用 --confirm CONFIRM_RESPONSE_BLOCK_POLICY_CREATE 才会调用后端创建接口。\n\n" +
 			"输出预览：requires_confirmation、confirmed、operation_type、target、change_summary、impact、risk_warnings、confirmation_token。\n" +
 			"执行输出：confirmed、result、object、audit。",
-		Example: "  chaitin-cli tanswer response block-policy-create --name block-bad-ip --object 1.1.1.1 --preview\n" +
-			"  chaitin-cli tanswer response block-policy-create --name block-bad-ip --object 1.1.1.1 --duration 3600 --confirm CONFIRM_RESPONSE_BLOCK_POLICY_CREATE",
+		Example: "  chaitin-cli tanswer response block-policy-create --name block-bad-ip --object 198.51.100.10 --preview\n" +
+			"  chaitin-cli tanswer response block-policy-create --name block-bad-ip --object 198.51.100.10 --duration 3600 --confirm CONFIRM_RESPONSE_BLOCK_POLICY_CREATE",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			req, err := buildResponseBlockPolicyWriteRequest(responseOpts)
 			if err != nil {
@@ -261,8 +261,8 @@ func newResponseBlockPolicyUpdateCommand(opts *RootOptions) *cobra.Command {
 		Use:   "block-policy-update",
 		Short: "编辑旁路阻断策略",
 		Long:  "编辑旁路阻断策略，用于更新单条旁路阻断策略。该命令是高影响写操作：预览阶段会读取当前策略并返回 before/after；必须使用 --confirm CONFIRM_RESPONSE_BLOCK_POLICY_UPDATE 才会调用后端更新接口。\n\n输出预览：requires_confirmation、confirmed、operation_type、target、change_summary、impact、risk_warnings、confirmation_token。\n执行输出：confirmed、result、object、audit。",
-		Example: "  chaitin-cli tanswer response block-policy-update --id 7 --name new-block --object 1.1.1.1 --preview\n" +
-			"  chaitin-cli tanswer response block-policy-update --id 7 --name new-block --object 1.1.1.1 --expire 1784277612410 --confirm CONFIRM_RESPONSE_BLOCK_POLICY_UPDATE",
+		Example: "  chaitin-cli tanswer response block-policy-update --id 7 --name new-block --object 198.51.100.10 --preview\n" +
+			"  chaitin-cli tanswer response block-policy-update --id 7 --name new-block --object 198.51.100.10 --expire 1784277612410 --confirm CONFIRM_RESPONSE_BLOCK_POLICY_UPDATE",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			req, err := buildResponseBlockPolicyUpdateRequest(responseOpts)
 			if err != nil {
@@ -375,7 +375,7 @@ func newResponseBlockRecordsCommand(opts *RootOptions) *cobra.Command {
 		Short: "查询旁路阻断记录",
 		Long:  "查询旁路阻断记录，用于确认产品记录中的阻断命中情况。该命令只读取已有记录，不验证网络层真实阻断效果。\n\n输出：查询时间范围、实际筛选条件、total、page、page_size、current_count、has_more、block_records。",
 		Example: "  chaitin-cli tanswer response block-records --time 24h --page-size 10\n" +
-			"  chaitin-cli tanswer response block-records --src-ip 1.1.1.1 --dest-ip 192.0.2.10",
+			"  chaitin-cli tanswer response block-records --src-ip 198.51.100.10 --dest-ip 192.0.2.10",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			if err := validateResponsePage(responseOpts.page, responseOpts.pageSize); err != nil {
 				return writeResponseError(cmd, "查询旁路阻断记录", "chaitin-cli tanswer response block-records", "INVALID_PAGE", err.Error(), false)
@@ -408,7 +408,7 @@ func newResponseWhitelistCommand(opts *RootOptions) *cobra.Command {
 		Short: "查询响应白名单",
 		Long:  "查询响应白名单，用于查看不会被响应处置影响的 IP 或 URL 对象、阻断方式、有效期和状态。该命令只读取白名单，不新增、编辑、启停或删除。\n\n输出：查询时间范围、实际筛选条件、total、page、page_size、current_count、has_more、response_whitelists。",
 		Example: "  chaitin-cli tanswer response whitelist --page-size 10\n" +
-			"  chaitin-cli tanswer response whitelist --object 1.1.1.1 --type ip --status enabled",
+			"  chaitin-cli tanswer response whitelist --object 198.51.100.10 --type ip --status enabled",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			rng, req, err := buildResponseWhitelistTimedRequest(responseOpts)
 			if err != nil {
@@ -431,8 +431,8 @@ func newResponseWhitelistCreateCommand(opts *RootOptions) *cobra.Command {
 		Long: "新增响应白名单，用于将确认可信对象加入响应处置白名单，避免被旁路阻断或第三方协同阻断影响。该命令是高影响写操作：默认只返回写入预览，必须使用 --confirm CONFIRM_RESPONSE_WHITELIST_CREATE 才会调用后端创建接口。\n\n" +
 			"输出预览：requires_confirmation、confirmed、operation_type、target、change_summary、impact、risk_warnings、confirmation_token。\n" +
 			"执行输出：confirmed、result、object、audit。",
-		Example: "  chaitin-cli tanswer response whitelist-create --type ip --object 1.1.1.1 --expire 1784277612410 --preview\n" +
-			"  chaitin-cli tanswer response whitelist-create --type ip --object 1.1.1.1 --expire 1784277612410 --confirm CONFIRM_RESPONSE_WHITELIST_CREATE",
+		Example: "  chaitin-cli tanswer response whitelist-create --type ip --object 198.51.100.10 --expire 1784277612410 --preview\n" +
+			"  chaitin-cli tanswer response whitelist-create --type ip --object 198.51.100.10 --expire 1784277612410 --confirm CONFIRM_RESPONSE_WHITELIST_CREATE",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			req, err := buildResponseWhitelistWriteRequest(responseOpts)
 			if err != nil {
@@ -487,7 +487,7 @@ func newResponseWhitelistUpdateCommand(opts *RootOptions) *cobra.Command {
 		Use:   "whitelist-update",
 		Short: "编辑响应白名单",
 		Long:  "编辑响应白名单，用于更新单条响应处置白名单。该命令是高影响写操作：预览阶段会读取当前白名单并返回 before/after；必须使用 --confirm CONFIRM_RESPONSE_WHITELIST_UPDATE 才会调用后端更新接口。\n\n输出预览：requires_confirmation、confirmed、operation_type、target、change_summary、impact、risk_warnings、confirmation_token。\n执行输出：confirmed、result、object、audit。",
-		Example: "  chaitin-cli tanswer response whitelist-update --id 3 --type ip --object 1.1.1.1 --expire 1784277612410 --preview\n" +
+		Example: "  chaitin-cli tanswer response whitelist-update --id 3 --type ip --object 198.51.100.10 --expire 1784277612410 --preview\n" +
 			"  chaitin-cli tanswer response whitelist-update --id 3 --type url --object http://example.com/a --expire 1784277612410 --confirm CONFIRM_RESPONSE_WHITELIST_UPDATE",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			req, err := buildResponseWhitelistUpdateRequest(responseOpts)
@@ -812,7 +812,7 @@ func newResponseAutoListCommand(opts *RootOptions) *cobra.Command {
 		Short: "查询自动响应处置名单",
 		Long:  "查询自动响应处置名单，用于查看自动响应策略生成的待处置或已处置对象。该命令只读取名单，不触发新的自动响应分析或处置。\n\n输出：查询时间范围、实际筛选条件、total、page、page_size、current_count、has_more、auto_list。",
 		Example: "  chaitin-cli tanswer response auto-list --time 7d --page-size 10\n" +
-			"  chaitin-cli tanswer response auto-list --ip 1.1.1.1 --status enabled",
+			"  chaitin-cli tanswer response auto-list --ip 198.51.100.10 --status enabled",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			rng, req, err := buildResponseAutoListTimedRequest(responseOpts)
 			if err != nil {
