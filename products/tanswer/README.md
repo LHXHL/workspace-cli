@@ -7,8 +7,8 @@
 ```bash
 chaitin-cli tanswer --url https://quanxi.example.com --api-key "$TANSWER_API_KEY" auth check
 chaitin-cli tanswer manifest
-chaitin-cli tanswer system +status
-chaitin-cli tanswer alarm +overview --time today
+chaitin-cli tanswer system status
+chaitin-cli tanswer alarm overview --time today
 ```
 
 ## 安全边界

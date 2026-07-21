@@ -6,7 +6,7 @@ import (
 )
 
 func TestSuccessEnvelopeContract(t *testing.T) {
-	out := NewSuccessEnvelope("查看威胁告警概览", "chaitin-cli tanswer alarm +overview", map[string]any{"time": "today"}, map[string]any{"total": 1}, nil)
+	out := NewSuccessEnvelope("查看威胁告警概览", "chaitin-cli tanswer alarm overview", map[string]any{"time": "today"}, map[string]any{"total": 1}, nil)
 	b, err := json.Marshal(out)
 	if err != nil {
 		t.Fatal(err)
