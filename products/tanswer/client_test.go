@@ -32,6 +32,30 @@ func TestClientAddsApiTokenHeader(t *testing.T) {
 	}
 }
 
+func TestClientRejectsNonPathTargetsBeforeRequest(t *testing.T) {
+	calls := 0
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		calls++
+		_ = json.NewEncoder(w).Encode(map[string]any{"ok": true})
+	}))
+	defer server.Close()
+
+	client := NewClient(Config{BaseURL: server.URL, APIToken: "token-123", Timeout: time.Second})
+	for _, target := range []string{
+		server.URL + "/steal",
+		"//example.com/steal",
+		"api/openapi/test",
+	} {
+		_, err := client.DoJSON(context.Background(), http.MethodGet, target, nil, nil)
+		if err == nil {
+			t.Fatalf("DoJSON(%q) returned nil error", target)
+		}
+	}
+	if calls != 0 {
+		t.Fatalf("server received %d unexpected requests", calls)
+	}
+}
+
 func TestClientCanSkipTLSVerification(t *testing.T) {
 	server := httptest.NewTLSServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		_ = json.NewEncoder(w).Encode(map[string]any{"ok": true})

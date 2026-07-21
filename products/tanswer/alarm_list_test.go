@@ -88,6 +88,11 @@ func TestAlarmListCommandCallsSearchAlarmList(t *testing.T) {
 		if params["count"] != float64(5) || params["offset"] != float64(0) {
 			t.Fatalf("pagination params = %#v", params)
 		}
+		urlFilter := params["url"].([]any)
+		firstURLFilter := urlFilter[0].(map[string]any)
+		if firstURLFilter["target"] != "/login" {
+			t.Fatalf("url filter = %#v", urlFilter)
+		}
 		_ = json.NewEncoder(w).Encode(rpcResponse{
 			JSONRPC: "2.0",
 			ID:      req.ID,
@@ -109,6 +114,7 @@ func TestAlarmListCommandCallsSearchAlarmList(t *testing.T) {
 		"alarm", "list",
 		"--time", "24h",
 		"--page-size", "5",
+		"--http-url", "/login",
 	})
 
 	if err := cmd.Execute(); err != nil {

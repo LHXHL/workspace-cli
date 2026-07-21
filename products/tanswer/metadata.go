@@ -69,7 +69,7 @@ func newMetadataCommand(opts *RootOptions) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "metadata",
 		Short: "流量元数据语义命令",
-		Long:  "流量元数据语义命令。用于只读检索 HTTP、DNS、TCP、UDP 和其他协议元数据，查看详情、查询告警附近上下文和读取元数据数据配置；不调整配置，不把元数据直接判定为攻击证据。",
+		Long:  "流量元数据语义命令。用于检索 HTTP、DNS、TCP、UDP 和其他协议元数据，查看详情、查询告警附近上下文和读取元数据数据配置；配置调整使用受保护的 metadata config-update 命令。元数据不应直接判定为攻击证据。",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			return cmd.Help()
 		},

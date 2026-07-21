@@ -42,6 +42,11 @@ func TestAlarmTimelineCommandCallsSearchAlarmListChart(t *testing.T) {
 		if params["interval"] != "1h" || params["range_mode"] != float64(0) {
 			t.Fatalf("timeline params = %#v", params)
 		}
+		urlFilter := params["url"].([]any)
+		firstURLFilter := urlFilter[0].(map[string]any)
+		if firstURLFilter["target"] != "/login" {
+			t.Fatalf("url filter = %#v", urlFilter)
+		}
 		severity := params["severity"].([]any)
 		firstSeverity := severity[0].(map[string]any)
 		if firstSeverity["target"] != float64(1) {
@@ -70,6 +75,7 @@ func TestAlarmTimelineCommandCallsSearchAlarmListChart(t *testing.T) {
 		"--time", "24h",
 		"--interval", "1h",
 		"--severity", "critical,high",
+		"--http-url", "/login",
 	})
 
 	if err := cmd.Execute(); err != nil {

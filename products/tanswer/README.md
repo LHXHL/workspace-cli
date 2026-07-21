@@ -70,7 +70,7 @@ chaitin-cli tanswer --insecure auth check
 
 | 层级 | 命令形态 | 用途 |
 | --- | --- | --- |
-| Foundation | `chaitin-cli tanswer auth status` | 查看当前目标环境、Token 是否已配置和输出设置。 |
+| Foundation | `chaitin-cli tanswer auth status` | 查看当前目标环境、Token 是否已配置、请求超时和 TLS 跳过状态。 |
 | Foundation | `chaitin-cli tanswer auth check` | 校验 OpenAPI Token 能否访问当前全悉环境。 |
 | Manifest | `chaitin-cli tanswer manifest` | 输出 AI 可读命令清单、风险等级、字段和确认要求。 |
 | Semantic shortcut | `chaitin-cli tanswer alarm overview` | 用稳定业务字段回答安全运营问题。 |

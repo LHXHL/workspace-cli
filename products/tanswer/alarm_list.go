@@ -214,7 +214,7 @@ func addAlarmListFlags(cmd *cobra.Command, opts *alarmListOptions) {
 	cmd.Flags().StringVar(&opts.tag, "tag", "", "threat type/tag filter, comma separated")
 	cmd.Flags().StringVar(&opts.direction, "direction", "", "traffic direction filter: in,lateral,out,other")
 	cmd.Flags().StringVar(&opts.appProto, "app-proto", "", "application protocol filter, comma separated")
-	cmd.Flags().StringVar(&opts.url, "url", "", "URL filter, comma separated")
+	cmd.Flags().StringVar(&opts.url, "http-url", "", "HTTP URL filter, comma separated")
 	cmd.Flags().StringVar(&opts.host, "host", "", "Host/hostname filter, comma separated")
 	cmd.Flags().StringVar(&opts.xff, "xff", "", "XFF filter, comma separated")
 	cmd.Flags().StringVar(&opts.srcPort, "src-port", "", "source port filter, comma separated")

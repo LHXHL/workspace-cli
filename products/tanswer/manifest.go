@@ -1359,7 +1359,7 @@ func BuildCommandManifest() CommandManifest {
 				},
 				DoNotUseWhen: []string{
 					"需要查看单条完整元数据详情时，使用 tanswer metadata detail。",
-					"需要调整元数据采集配置时，当前版本不提供写入命令。",
+					"需要调整元数据采集配置时，使用 tanswer metadata config-update。",
 				},
 				Flags:      metadataListManifestFlags(false),
 				OutputType: "metadata_list",
@@ -2476,7 +2476,7 @@ func alarmListManifestFlags(highPriority bool) []ManifestFlag {
 		{Name: "--tag", Type: "csv_string", Required: false, Description: "threat type/tag filter"},
 		{Name: "--direction", Type: "csv_enum", Required: false, Enum: []string{"in", "lateral", "out", "other"}, Description: "traffic direction filter"},
 		{Name: "--app-proto", Type: "csv_string", Required: false, Description: "application protocol filter"},
-		{Name: "--url", Type: "csv_string", Required: false, Description: "URL filter"},
+		{Name: "--http-url", Type: "csv_string", Required: false, Description: "HTTP URL filter"},
 		{Name: "--host", Type: "csv_string", Required: false, Description: "Host/hostname filter"},
 		{Name: "--xff", Type: "csv_string", Required: false, Description: "XFF filter"},
 		{Name: "--src-port", Type: "csv_integer", Required: false, Description: "source port filter"},

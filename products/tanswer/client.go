@@ -6,6 +6,7 @@ import (
 	"crypto/tls"
 	"encoding/base64"
 	"encoding/json"
+	"fmt"
 	"io"
 	"mime"
 	"mime/multipart"
@@ -186,16 +187,25 @@ func filenameFromContentDisposition(value string) string {
 }
 
 func (c *Client) url(path string, query map[string]string) (string, error) {
-	if strings.HasPrefix(path, "http://") || strings.HasPrefix(path, "https://") {
-		return path, nil
-	}
-	if !strings.HasPrefix(path, "/") {
-		path = "/" + path
-	}
-	u, err := url.Parse(c.cfg.BaseURL + path)
+	path = strings.TrimSpace(path)
+	parsedPath, err := url.Parse(path)
 	if err != nil {
 		return "", err
 	}
+	if parsedPath.IsAbs() || parsedPath.Host != "" {
+		return "", fmt.Errorf("api path must be under the configured TAnswer URL, not a full URL")
+	}
+	if !strings.HasPrefix(path, "/") {
+		return "", fmt.Errorf("api path must start with /")
+	}
+	u, err := url.Parse(c.cfg.BaseURL)
+	if err != nil {
+		return "", err
+	}
+	u.Path = strings.TrimRight(u.Path, "/") + parsedPath.Path
+	u.RawPath = ""
+	u.RawQuery = parsedPath.RawQuery
+	u.Fragment = ""
 	values := u.Query()
 	for key, value := range query {
 		values.Set(key, value)
