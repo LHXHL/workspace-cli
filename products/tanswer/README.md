@@ -62,7 +62,7 @@ chaitin-cli tanswer api POST /rpc --body @./request.json
 常用 flag：
 
 ```bash
-chaitin-cli tanswer --url 'https://<全悉 Web 端 IP>' --api-key "$TANSWER_API_KEY" auth check
+chaitin-cli tanswer --url 'https://<全悉 Web 端 IP>' --api-key '<全悉 OpenAPI Token>' auth check
 chaitin-cli tanswer --insecure auth check
 ```
 

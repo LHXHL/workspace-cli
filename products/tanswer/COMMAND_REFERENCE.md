@@ -10,7 +10,7 @@ export TANSWER_API_KEY='<全悉 OpenAPI Token>'
 ```
 
 ```bash
-chaitin-cli tanswer --url 'https://<全悉 Web 端 IP>' --api-key "$TANSWER_API_KEY" auth check
+chaitin-cli tanswer --url 'https://<全悉 Web 端 IP>' --api-key '<全悉 OpenAPI Token>' auth check
 ```
 
 ## Foundation 和 Open API 通用调用
