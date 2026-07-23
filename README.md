@@ -88,7 +88,7 @@ npx skills add chaitin/chaitin-cli
 | `cloudAtlas`  | 资产暴露面运营管理（云图）          | Cloud Atlas 资产、暴露面、风险、情报、策略和任务管理                         |
 | `cloudwalker` | 云工作负载保护平台（牧云-主机安全）     | CloudWalker CWPP 事件、资产、漏洞、防护策略和系统管理                      |
 | `veinmind`    | 云工作负载保护平台（牧云-容器安全）     | CloudWalker CNAPP 容器、镜像、逃逸防护管理                           |
-| `tanswer`     | 流量威胁检测响应系统（全悉）         | T-Answer 流量检测、白名单和阻断规则管理                                 |
+| `tanswer`     | 流量威胁检测响应系统（全悉）         | 全悉威胁告警、文件告警、资产配置、安全策略、响应处置和 Open API fallback       |
 | `ddr`         | 终端统一管控与安全检测响应平台（长亭DDR） | DDR API Token 和连接配置辅助能力                                  |
 | `apisec`      | 高级API安全系统（APISEC）      | APISec API 资产、站点、应用、访问者、数据安全和风险事件管理                      |
 | `dsensor`     | 主动威胁欺骗防御系统（谛听）         | D-Sensor 谛听安全监控、探针、蜜罐、告警和威胁日志管理                          |
@@ -116,8 +116,8 @@ cloudwalker:
   api_key: YOUR_API_KEY
 
 tanswer:
-  url: https://tanswer.example.com
-  api_key: YOUR_API_KEY
+  url: 'https://<全悉 Web 端 IP>'
+  api_key: '<全悉 OpenAPI Token>'
 
 # chaitin-cli ddr get-api-token --url https://ddr.example.com:8443 --jwt-token "YOUR_JWT_TOKEN" 可以直接获取 url & api_key & company_id
 ddr:
