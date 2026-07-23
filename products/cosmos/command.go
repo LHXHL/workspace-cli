@@ -4,7 +4,7 @@ import (
 	"embed"
 	"encoding/json"
 	"fmt"
-	"path/filepath"
+	"path"
 	"strings"
 
 	"github.com/spf13/cobra"
@@ -35,7 +35,7 @@ func NewCommand() *cobra.Command {
 			continue
 		}
 
-		data, err := apiSpecs.ReadFile(filepath.Join("apis", entry.Name()))
+		data, err := apiSpecs.ReadFile(path.Join("apis", entry.Name()))
 		if err != nil {
 			fmt.Printf("warning: failed to read %s: %v\n", entry.Name(), err)
 			continue
@@ -49,7 +49,7 @@ func NewCommand() *cobra.Command {
 
 		var ops []APIOperation
 		if err := json.Unmarshal(data, &ops); err != nil {
-			name := strings.TrimSuffix(filepath.Base(entry.Name()), ".json")
+			name := strings.TrimSuffix(path.Base(entry.Name()), ".json")
 			fmt.Printf("warning: failed to parse %s: %v\n", name, err)
 			continue
 		}
