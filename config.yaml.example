@@ -58,3 +58,8 @@ cosmos:
 monkeyscan:
   url: ""
   api_key: ""
+
+# TODO: Replace with real insight API key and URL
+insight:
+  url: "http://192.168.1.100"
+  api_key: "your-token-xyz"
