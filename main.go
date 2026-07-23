@@ -1,12 +1,16 @@
 package main
 
 import (
-	"log"
+	"context"
+	"fmt"
+	"io"
 	"os"
+	"os/signal"
 	"path/filepath"
 	"strings"
 
 	"github.com/chaitin/chaitin-cli/config"
+	"github.com/chaitin/chaitin-cli/products/agentcompose"
 	"github.com/chaitin/chaitin-cli/products/apisec"
 	"github.com/chaitin/chaitin-cli/products/chaitin"
 	"github.com/chaitin/chaitin-cli/products/cloudatlas"
@@ -61,6 +65,7 @@ func newApp() (*app, error) {
 	root.PersistentFlags().BoolVar(&a.dryRun, "dry-run", false, "Do not send requests; commands that support dry-run print a request summary")
 
 	a.registerProductCommand(chaitin.NewCommand())
+	a.registerProductCommand(agentcompose.NewCommand())
 	a.registerProductCommand(cloudatlas.NewCommand())
 	a.registerProductCommand(apisec.NewCommand())
 	a.registerProductCommand(safelinece.NewCommand())
@@ -127,10 +132,15 @@ func (a *app) wrapProductCommand(cmd *cobra.Command) {
 
 	cmd.PersistentPreRunE = func(command *cobra.Command, args []string) error {
 		if err := a.ensureRuntimeConfigLoaded(); err != nil {
+			if cmd.Name() == "agent-compose" {
+				return agentcompose.RuntimeConfigError(command, err)
+			}
 			return err
 		}
 
 		switch cmd.Name() {
+		case "agent-compose":
+			agentcompose.ApplyRuntimeConfig(command, a.config, a.writeConfigPath(), a.dryRun)
 		case "cloudAtlas":
 			cloudatlas.ApplyRuntimeConfig(command, a.config, a.dryRun)
 		case "apisec":
@@ -273,13 +283,27 @@ func defaultConfigPath() string {
 	return filepath.Join(homeDir, defaultConfigDir, defaultConfigFile)
 }
 
-func main() {
+func runMain() int {
 	app, err := newApp()
 	if err != nil {
-		log.Fatal(err)
+		fmt.Fprintln(os.Stderr, "Error:", err)
+		return 1
 	}
-
+	ctx, cancel := signal.NotifyContext(context.Background(), os.Interrupt)
+	defer cancel()
+	app.root.SetContext(ctx)
 	if err := app.execute(); err != nil {
-		log.Fatal(err)
+		if renderer, ok := err.(interface{ RenderError(io.Writer) error }); ok {
+			_ = renderer.RenderError(app.root.ErrOrStderr())
+		} else {
+			fmt.Fprintln(app.root.ErrOrStderr(), "Error:", err)
+		}
+		if coder, ok := err.(interface{ ExitCode() int }); ok {
+			return coder.ExitCode()
+		}
+		return 1
 	}
+	return 0
 }
+
+func main() { os.Exit(runMain()) }
