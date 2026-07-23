@@ -97,8 +97,6 @@ npx skills add chaitin/chaitin-cli
 | `cosmos`      | 安全分析与运营管理平台（万象）        | Cosmos / AISOC 告警、日志、情报、封禁、资产、通知、运维、SOAR 和漏洞管理           |
 | `monkeyscan`  | AI 代码安全平台 MonkeyScan      | 本地目录、源码压缩包与 GitHub 仓库全量安全扫描                                 |
 
-
-
 根命令负责配置加载、产品命令注册和 BusyBox 风格调用分发；各产品目录负责自己的命令、参数、配置解析和 API 调用逻辑。
 
 ## 配置
@@ -199,6 +197,23 @@ safeline.api_key     -> SAFELINE_API_KEY
 monkeyscan.url       -> MONKEYSCAN_URL
 monkeyscan.api_key   -> MONKEYSCAN_API_KEY
 ```
+
+### T-Answer
+
+全悉 CLI 使用 OpenAPI Token。请在全悉 Web 控制台的 `系统管理` -> `Open API` 中新增 API Token，并在配置中填写 `tanswer.api_key`，或设置 `TANSWER_API_KEY`。
+
+全悉 CLI 的安装、Token 获取、权限要求、最小可用性验证和常见问题见 [`products/tanswer/README.md`](products/tanswer/README.md)；完整命令参考见 [`products/tanswer/COMMAND_REFERENCE.md`](products/tanswer/COMMAND_REFERENCE.md)；AI Agent 使用规则见 [`products/tanswer/agent-skill.md`](products/tanswer/agent-skill.md)。
+
+```bash
+chaitin-cli tanswer manifest
+chaitin-cli tanswer auth check
+chaitin-cli tanswer system status
+chaitin-cli tanswer alarm overview --time today
+chaitin-cli tanswer asset list --page-size 10
+chaitin-cli tanswer response block-policies --page-size 10
+```
+
+优先使用 `alarm`、`file-alarm`、`asset`、`metadata`、`policy` 和 `response` 语义命令。`tanswer api <METHOD> <PATH>` 仅用于用户已知、已授权且语义命令未覆盖的 Open API。
 
 ### MonkeyScan
 

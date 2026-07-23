@@ -775,6 +775,39 @@ chaitin-cli tanswer response block-policies --page-size 10
 
 Use semantic commands first. Use `chaitin-cli tanswer api <METHOD> <PATH>` only for user-known and authorized Open API endpoints that do not have a semantic command.
 
+### Fast Agent Workflow (T-Answer)
+
+Before autonomous T-Answer work, run `chaitin-cli tanswer auth check` and `chaitin-cli tanswer manifest` unless the current session already verified the environment. For create, update, delete, import, enable, disable, or response actions, run the command with `--preview` first and do not fill `--confirm` unless the user or upstream system explicitly provides the exact confirmation token.
+
+For routine read-only tasks, this section is enough. Use `products/tanswer/agent-skill.md` only for complex routing, write-operation planning, or ambiguous policy/response decisions. Use `products/tanswer/COMMAND_REFERENCE.md` when a specific command's full flags, output fields, long examples, or boundaries are needed. Onboarding, Token setup, permission requirements, smoke tests, and troubleshooting live in `products/tanswer/README.md`.
+
+### Quick Routing (T-Answer)
+
+| User intent | Prefer |
+| --- | --- |
+| Verify connection, local config, or Token availability | `tanswer auth status`, `tanswer auth check` |
+| Discover supported commands, flags, risk levels, output fields | `tanswer manifest` |
+| System version, License, node status, health summary | `tanswer system status` |
+| Overall threat posture, alarm distribution, attacker/victim top lists | `tanswer alarm overview` |
+| Critical/high successful or compromised alarms for duty handling | `tanswer alarm high-priority` |
+| Original threat alarm rows or one alarm detail | `tanswer alarm list`, then `tanswer alarm detail --id <doc_id>` |
+| Related alarms around one source alarm | `tanswer alarm related --id <doc_id>` |
+| Malicious file, Webshell, or sandbox-result investigation | `tanswer file-alarm overview`, `malicious`, `webshell`, `sandbox`, `detail` |
+| Configured asset inventory, group tree, import/export, asset maintenance | `tanswer asset ...` |
+| Traffic metadata by protocol, advanced query, detail, or alarm context | `tanswer metadata ...` |
+| Detection whitelist or custom IOC intelligence | `tanswer policy ...` |
+| Bypass block policies, block records, response whitelist, linkage devices, automatic response | `tanswer response ...` |
+
+Use `alarm detail`, `file-alarm detail`, `asset detail`, `metadata detail`, `metadata near-alarm`, and alarm-derived policy/response commands only after the required IDs are available from list/detail commands or the user.
+
+### Safety Rules (T-Answer)
+
+- Do not bypass `chaitin-cli tanswer` with `curl` for state-changing operations.
+- Do not guess RPC methods or request bodies. Use semantic commands, `manifest`, command `--help`, or user-provided authorized Open API documentation.
+- Do not use `file-alarm` to download samples, submit samples, or trigger new sandbox analysis.
+- Treat `metadata near-alarm` as investigation context, not standalone proof of an attack.
+- Do not treat T-Answer response records as proof that a third-party device completed enforcement without separate validation.
+
 ---
 
 ## SafeLine-CE (雷池社区版)
