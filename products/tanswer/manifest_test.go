@@ -36,6 +36,7 @@ func TestManifestCommandOutputsAIReadableCommandMetadata(t *testing.T) {
 	if manifest.Product != "tanswer" {
 		t.Fatalf("Product = %q", manifest.Product)
 	}
+	requireManifestCommand(t, manifest, "tanswer manifest", "foundation", "read")
 	requireManifestCommand(t, manifest, "tanswer alarm overview", "semantic_shortcut", "read")
 	requireManifestCommand(t, manifest, "tanswer alarm timeline", "semantic_shortcut", "read")
 	requireManifestCommand(t, manifest, "tanswer alarm list", "semantic_shortcut", "read")
@@ -130,6 +131,63 @@ func TestManifestHelpExplainsPurpose(t *testing.T) {
 			t.Fatalf("help missing %q:\n%s", want, text)
 		}
 	}
+}
+
+func TestManifestIncludesRuntimeBootstrapGuidance(t *testing.T) {
+	manifest := BuildCommandManifest()
+	raw, err := json.Marshal(manifest)
+	if err != nil {
+		t.Fatalf("marshal manifest: %v", err)
+	}
+
+	var payload struct {
+		Bootstrap struct {
+			Authentication struct {
+				URL struct {
+					Flag       string `json:"flag"`
+					Env        string `json:"env"`
+					ConfigPath string `json:"config_path"`
+				} `json:"url"`
+				APIKey struct {
+					Flag   string `json:"flag"`
+					Env    string `json:"env"`
+					Secret bool   `json:"secret"`
+				} `json:"api_key"`
+				VerifyCommand string   `json:"verify_command"`
+				Precedence    []string `json:"precedence"`
+			} `json:"authentication"`
+			AgentProtocol []string `json:"agent_protocol"`
+		} `json:"bootstrap"`
+	}
+	if err := json.Unmarshal(raw, &payload); err != nil {
+		t.Fatalf("unmarshal bootstrap: %v", err)
+	}
+
+	auth := payload.Bootstrap.Authentication
+	if auth.URL.Flag != "--url" || auth.URL.Env != "TANSWER_URL" || auth.URL.ConfigPath != "tanswer.url" {
+		t.Fatalf("URL bootstrap = %#v", auth.URL)
+	}
+	if auth.APIKey.Flag != "--api-key" || auth.APIKey.Env != "TANSWER_API_KEY" || !auth.APIKey.Secret {
+		t.Fatalf("API key bootstrap = %#v", auth.APIKey)
+	}
+	if auth.VerifyCommand != "chaitin-cli tanswer auth check" {
+		t.Fatalf("verify command = %q", auth.VerifyCommand)
+	}
+	if len(auth.Precedence) != 4 || auth.Precedence[0] != "command flag" {
+		t.Fatalf("configuration precedence = %#v", auth.Precedence)
+	}
+	if !containsString(payload.Bootstrap.AgentProtocol, "discover commands and unknown flags with --help") {
+		t.Fatalf("agent protocol = %#v", payload.Bootstrap.AgentProtocol)
+	}
+}
+
+func containsString(values []string, want string) bool {
+	for _, value := range values {
+		if value == want {
+			return true
+		}
+	}
+	return false
 }
 
 func requireManifestCommand(t *testing.T, manifest CommandManifest, name string, layer string, risk string) {

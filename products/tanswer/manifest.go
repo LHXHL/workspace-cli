@@ -12,7 +12,30 @@ type CommandManifest struct {
 	Binary        string            `json:"binary"`
 	Namespace     string            `json:"namespace"`
 	Env           map[string]string `json:"env"`
+	Bootstrap     BootstrapManifest `json:"bootstrap"`
 	Commands      []ManifestCommand `json:"commands"`
+}
+
+type ConfigSource struct {
+	Flag       string `json:"flag,omitempty"`
+	Env        string `json:"env,omitempty"`
+	ConfigPath string `json:"config_path,omitempty"`
+	Secret     bool   `json:"secret,omitempty"`
+}
+
+type AuthenticationManifest struct {
+	URL           ConfigSource `json:"url"`
+	APIKey        ConfigSource `json:"api_key"`
+	Timeout       ConfigSource `json:"timeout"`
+	Insecure      ConfigSource `json:"insecure"`
+	Precedence    []string     `json:"precedence"`
+	StatusCommand string       `json:"status_command"`
+	VerifyCommand string       `json:"verify_command"`
+}
+
+type BootstrapManifest struct {
+	Authentication AuthenticationManifest `json:"authentication"`
+	AgentProtocol  []string               `json:"agent_protocol"`
 }
 
 type ManifestCommand struct {
@@ -86,7 +109,41 @@ func BuildCommandManifest() CommandManifest {
 			"TANSWER_TIMEOUT":  "request timeout, default 30s",
 			"TANSWER_INSECURE": "skip TLS certificate verification when certificate validation must be bypassed, default false",
 		},
+		Bootstrap: BootstrapManifest{
+			Authentication: AuthenticationManifest{
+				URL:           ConfigSource{Flag: "--url", Env: "TANSWER_URL", ConfigPath: "tanswer.url"},
+				APIKey:        ConfigSource{Flag: "--api-key", Env: "TANSWER_API_KEY", ConfigPath: "tanswer.api_key", Secret: true},
+				Timeout:       ConfigSource{Flag: "--timeout", Env: "TANSWER_TIMEOUT", ConfigPath: "tanswer.timeout"},
+				Insecure:      ConfigSource{Flag: "--insecure", Env: "TANSWER_INSECURE", ConfigPath: "tanswer.insecure"},
+				Precedence:    []string{"command flag", "environment variable", "config.yaml", "default"},
+				StatusCommand: "chaitin-cli tanswer auth status",
+				VerifyCommand: "chaitin-cli tanswer auth check",
+			},
+			AgentProtocol: []string{
+				"discover commands and unknown flags with --help",
+				"prefer semantic commands; use api only for known authorized endpoints not covered by semantic commands",
+				"run preview before protected writes and require the documented confirmation token",
+				"do not guess unsupported commands or direct API endpoints",
+			},
+		},
 		Commands: []ManifestCommand{
+			{
+				Name:        "tanswer manifest",
+				FullCommand: "chaitin-cli tanswer manifest",
+				Layer:       "foundation",
+				Summary:     "输出全悉 CLI 的机器可读命令、配置和安全契约。",
+				UseWhen: []string{
+					"需要枚举当前版本支持的命令、参数、输出字段、风险和确认要求。",
+					"AI Agent 需要在读取 help 后结构化确认命令契约。",
+				},
+				OutputType:           "command_manifest",
+				OutputFields:         []string{"schema_version", "bootstrap", "commands"},
+				RiskLevel:            "read",
+				RequiresConfirmation: false,
+				Examples: []ManifestExample{
+					{Description: "输出当前版本命令清单", Command: "chaitin-cli tanswer manifest"},
+				},
+			},
 			{
 				Name:        "tanswer auth status",
 				FullCommand: "chaitin-cli tanswer auth status",

@@ -2,6 +2,7 @@ package tanswer
 
 import (
 	"bytes"
+	"strings"
 	"testing"
 )
 
@@ -21,6 +22,27 @@ func TestRootCommandRegistersAgentReadableCommands(t *testing.T) {
 		}
 		if !found {
 			t.Fatalf("expected child command %q", name)
+		}
+	}
+}
+
+func TestTAnswerHelpGuidesUsersWithoutProductDocuments(t *testing.T) {
+	var out bytes.Buffer
+	cmd := NewCommand()
+	cmd.SetOut(&out)
+	cmd.SetErr(&out)
+	cmd.SetArgs([]string{"--help"})
+
+	if err := cmd.Execute(); err != nil {
+		t.Fatalf("Execute returned error: %v", err)
+	}
+
+	for _, want := range []string{
+		"TANSWER_URL", "TANSWER_API_KEY", "auth check", "manifest",
+		"--help", "preview", "confirm", "semantic commands",
+	} {
+		if !strings.Contains(strings.ToLower(out.String()), strings.ToLower(want)) {
+			t.Fatalf("help missing %q:\n%s", want, out.String())
 		}
 	}
 }

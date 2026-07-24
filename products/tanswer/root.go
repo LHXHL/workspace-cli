@@ -53,7 +53,14 @@ func newTAnswerCommand(opts *RootOptions, registerFlags bool) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "tanswer",
 		Short: "全悉 AI 可读 CLI",
-		Long:  "全悉面向人类操作者和 AI Agent 的语义命令入口。优先使用语义命令；仅在目标能力已开放且已授权时使用 api fallback。",
+		Long: `全悉面向人类操作者和 AI Agent 的语义命令入口。
+
+开始使用：通过 --url/--api-key、TANSWER_URL/TANSWER_API_KEY，或 config.yaml 的 tanswer.url/tanswer.api_key 配置连接；随后运行 "chaitin-cli tanswer auth check"。
+发现命令：先运行本命令或领域命令的 --help；需要机器可读的完整参数、输出和风险契约时运行 "chaitin-cli tanswer manifest"。
+操作规则：优先使用 semantic commands；仅在目标能力未被语义命令覆盖且调用者已知并获授权时使用 api fallback。受保护写操作先使用 --preview，再使用命令 help 或 manifest 指定的 --confirm token。`,
+		Example: `  chaitin-cli tanswer auth check --url 'https://<全悉 Web 端 IP>' --api-key '<全悉 OpenAPI Token>'
+  chaitin-cli tanswer alarm --help
+  chaitin-cli tanswer manifest`,
 		PersistentPreRun: func(cmd *cobra.Command, args []string) {
 			syncOptionsFromFlags(cmd, opts)
 		},
