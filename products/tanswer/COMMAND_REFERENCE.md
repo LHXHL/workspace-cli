@@ -12,6 +12,38 @@ chaitin-cli tanswer manifest
 
 尤其是参数、枚举、输出字段、风险等级和 `--confirm` token，只能以运行时 help 与 manifest 为准。
 
+## 常用任务快捷示例
+
+以下示例可作为人工操作者的起点。前三类为只读查询；后三类均带有 `--preview`，不会提交产品变更。示例中的文档保留地址仅用于演示，执行前请替换成受控环境中的实际值。
+
+```bash
+# 1. 首次配置后，检查连接和 Token 权限。
+chaitin-cli tanswer auth check
+
+# 2. 确认系统、License 和节点状态。
+chaitin-cli tanswer system status
+
+# 3. 查看最近 24 小时的高优先级威胁告警。
+chaitin-cli tanswer alarm high-priority --time 24h --page-size 10
+
+# 4. 查看最近 7 天的恶意文件告警。
+chaitin-cli tanswer file-alarm malicious --time 7d --page-size 10
+
+# 5. 查询资产清单。
+chaitin-cli tanswer asset list --page-size 10
+
+# 6. 预览创建资产，不会写入后端。
+chaitin-cli tanswer asset create --name core-db --ip 192.0.2.10 --preview
+
+# 7. 预览创建检测白名单，不会写入后端。
+chaitin-cli tanswer policy detection-whitelist-create --name trusted-source --src-ip 192.0.2.20 --preview
+
+# 8. 预览创建响应封禁策略，不会写入后端。
+chaitin-cli tanswer response block-policy-create --name block-malicious-ip --object 192.0.2.30 --preview
+```
+
+如需实际执行第 6 至 8 类操作，先阅读该命令的 `--help` 或 manifest 中的确认要求，检查 preview 输出后，再使用指定的精确 `--confirm` token。
+
 ## Foundation
 
 ```text
