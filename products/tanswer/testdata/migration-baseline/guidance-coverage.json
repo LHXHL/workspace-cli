@@ -1,0 +1,75 @@
+{
+  "schema_version": 1,
+  "rules": [
+    {
+      "id": "shared",
+      "source": ["products/tanswer/README.md", "products/tanswer/agent-skill.md", "skills/tanswer-shared/**"],
+      "runtime_surfaces": ["README.md#全悉快速开始", "chaitin-cli tanswer --help", "chaitin-cli tanswer manifest.bootstrap"],
+      "automated_test": "TestTAnswerHelpGuidesUsersWithoutProductDocuments",
+      "scenario": "discover-product"
+    },
+    {
+      "id": "auth",
+      "source": ["skills/tanswer-auth/**"],
+      "runtime_surfaces": ["chaitin-cli tanswer auth --help", "manifest.bootstrap.authentication"],
+      "automated_test": "TestManifestIncludesRuntimeBootstrapGuidance",
+      "scenario": "configure-and-auth-check"
+    },
+    {
+      "id": "alarm",
+      "source": ["skills/tanswer-alarm/**"],
+      "runtime_surfaces": ["chaitin-cli tanswer alarm --help", "manifest.commands[tanswer alarm *]"],
+      "automated_test": "TestManifestCommandsAreDiscoverableFromHelp",
+      "scenario": "alarm-overview"
+    },
+    {
+      "id": "file-alarm",
+      "source": ["skills/tanswer-file-alarm/**"],
+      "runtime_surfaces": ["chaitin-cli tanswer file-alarm --help", "manifest.commands[tanswer file-alarm *]"],
+      "automated_test": "TestManifestCommandsAreDiscoverableFromHelp",
+      "scenario": "file-alarm"
+    },
+    {
+      "id": "asset",
+      "source": ["skills/tanswer-asset/**"],
+      "runtime_surfaces": ["chaitin-cli tanswer asset --help", "manifest.commands[tanswer asset *]"],
+      "automated_test": "TestManifestCommandsAreDiscoverableFromHelp",
+      "scenario": "asset-and-metadata"
+    },
+    {
+      "id": "system",
+      "source": ["skills/tanswer-system/**"],
+      "runtime_surfaces": ["chaitin-cli tanswer system --help", "manifest.commands[tanswer system *]"],
+      "automated_test": "TestManifestCommandsAreDiscoverableFromHelp",
+      "scenario": "configure-and-auth-check"
+    },
+    {
+      "id": "metadata",
+      "source": ["skills/tanswer-metadata/**"],
+      "runtime_surfaces": ["chaitin-cli tanswer metadata --help", "manifest.commands[tanswer metadata *]"],
+      "automated_test": "TestManifestCommandsAreDiscoverableFromHelp",
+      "scenario": "asset-and-metadata"
+    },
+    {
+      "id": "policy",
+      "source": ["skills/tanswer-policy/**"],
+      "runtime_surfaces": ["chaitin-cli tanswer policy --help", "manifest.commands[tanswer policy *]"],
+      "automated_test": "TestManifestCommandsAreDiscoverableFromHelp",
+      "scenario": "policy-write"
+    },
+    {
+      "id": "response",
+      "source": ["skills/tanswer-response/**"],
+      "runtime_surfaces": ["chaitin-cli tanswer response --help", "manifest.commands[tanswer response *]"],
+      "automated_test": "TestManifestCommandsAreDiscoverableFromHelp",
+      "scenario": "response-write"
+    },
+    {
+      "id": "api-fallback",
+      "source": ["products/tanswer/COMMAND_REFERENCE.md#OpenAPI", "products/tanswer/agent-skill.md#api"],
+      "runtime_surfaces": ["chaitin-cli tanswer api --help", "manifest.commands[tanswer api]", "manifest.bootstrap.agent_protocol"],
+      "automated_test": "TestManifestCommandsAreDiscoverableFromHelp",
+      "scenario": "api-fallback"
+    }
+  ]
+}
