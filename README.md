@@ -200,6 +200,18 @@ monkeyscan.url       -> MONKEYSCAN_URL
 monkeyscan.api_key   -> MONKEYSCAN_API_KEY
 ```
 
+### 全悉快速开始
+
+在 `config.yaml` 设置 `tanswer.url` 和 `tanswer.api_key`，或设置 `TANSWER_URL`、`TANSWER_API_KEY`。不要将 Token 提交到仓库。
+
+```bash
+chaitin-cli tanswer auth check
+chaitin-cli tanswer --help
+chaitin-cli tanswer manifest
+```
+
+全悉产品的命令、参数、示例、输出字段和写操作确认要求以安装后二进制的 `--help` 与 `chaitin-cli tanswer manifest` 为准。
+
 ### MonkeyScan
 
 MonkeyScan 支持对本地目录、源码压缩包或 GitHub 仓库发起全量安全扫描。首次使用时，先设置 MonkeyScan CLI API Key，再确认授权状态：

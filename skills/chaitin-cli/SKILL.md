@@ -751,29 +751,7 @@ Do not invent VeinMind request bodies. Confirm the leaf command with `--help`, i
 
 ## T-Answer (全悉 Traffic Threat Detection)
 
-### Global Flags (T-Answer)
-
-| Flag | Env Var | Description |
-|------|---------|-------------|
-| `--url` | `TANSWER_URL` | T-Answer console URL, for example `https://<全悉 Web 端 IP>` |
-| `--api-key` | `TANSWER_API_KEY` | T-Answer OpenAPI Token |
-| `--timeout` | `TANSWER_TIMEOUT` | Request timeout, default `30s` |
-| `--insecure` | `TANSWER_INSECURE` | Skip TLS certificate verification |
-
-### Commands
-
-```bash
-chaitin-cli tanswer manifest
-chaitin-cli tanswer auth check
-chaitin-cli tanswer system status
-chaitin-cli tanswer alarm overview --time today
-chaitin-cli tanswer file-alarm malicious --time 24h --page-size 10
-chaitin-cli tanswer asset list --page-size 10
-chaitin-cli tanswer policy detection-whitelist --page-size 10
-chaitin-cli tanswer response block-policies --page-size 10
-```
-
-Use semantic commands first. Use `chaitin-cli tanswer api <METHOD> <PATH>` only for user-known and authorized Open API endpoints that do not have a semantic command.
+For T-Answer tasks, first run `chaitin-cli tanswer --help`, then use domain and leaf-command `--help`. Discover unknown commands, flags, output fields, and protected-write confirmation requirements from help or `chaitin-cli tanswer manifest`; do not depend on repository product documents, guess commands, or issue direct API requests.
 
 ---
 
