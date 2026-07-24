@@ -124,3 +124,80 @@ func TestSetProductWriteErrorMentionsConfigFlag(t *testing.T) {
 		t.Fatalf("SetProduct() error = %q, want -c/--config hint", err)
 	}
 }
+
+func TestSetProductTightensExistingPermissions(t *testing.T) {
+	dir := filepath.Join(t.TempDir(), "config")
+	if err := os.Mkdir(dir, 0o777); err != nil {
+		t.Fatal(err)
+	}
+	path := filepath.Join(dir, "config.yaml")
+	if err := os.WriteFile(path, []byte("other:\n  value: preserved\n"), 0o666); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.Chmod(dir, 0o777); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.Chmod(path, 0o666); err != nil {
+		t.Fatal(err)
+	}
+	if err := SetProduct(path, "agent-compose", map[string]string{"api_token": "secret"}); err != nil {
+		t.Fatal(err)
+	}
+	dirInfo, err := os.Stat(dir)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got := dirInfo.Mode().Perm(); got != 0o700 {
+		t.Fatalf("dir mode = %o, want 700", got)
+	}
+	fileInfo, err := os.Stat(path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got := fileInfo.Mode().Perm(); got != 0o600 {
+		t.Fatalf("file mode = %o, want 600", got)
+	}
+	cfg, err := Load(path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, ok := cfg["other"]; !ok {
+		t.Fatal("other product was not preserved")
+	}
+}
+
+func TestSetProductRejectsSymbolicLinkTargets(t *testing.T) {
+	dir := t.TempDir()
+	target := filepath.Join(dir, "target.yaml")
+	if err := os.WriteFile(target, []byte("safe: true\n"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	link := filepath.Join(dir, "config.yaml")
+	if err := os.Symlink(target, link); err != nil {
+		t.Fatal(err)
+	}
+	err := SetProduct(link, "agent-compose", map[string]string{"api_token": "secret"})
+	if err == nil || !strings.Contains(err.Error(), "symbolic link") {
+		t.Fatalf("error = %v", err)
+	}
+	data, err := os.ReadFile(target)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if string(data) != "safe: true\n" {
+		t.Fatalf("target was modified: %q", data)
+	}
+}
+
+func TestSetProductRejectsSymbolicLinkDirectory(t *testing.T) {
+	realDir := t.TempDir()
+	parent := t.TempDir()
+	linkDir := filepath.Join(parent, "config")
+	if err := os.Symlink(realDir, linkDir); err != nil {
+		t.Fatal(err)
+	}
+	err := SetProduct(filepath.Join(linkDir, "config.yaml"), "agent-compose", map[string]string{"api_token": "secret"})
+	if err == nil || !strings.Contains(err.Error(), "symbolic link") {
+		t.Fatalf("error = %v", err)
+	}
+}
