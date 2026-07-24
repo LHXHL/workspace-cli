@@ -212,6 +212,18 @@ chaitin-cli tanswer manifest
 
 全悉产品的命令、参数、示例、输出字段和写操作确认要求以安装后二进制的 `--help` 与 `chaitin-cli tanswer manifest` 为准。
 
+#### AI Agent 使用规则
+
+当任务涉及全悉时，使用 `chaitin-cli tanswer`，并遵循以下流程：
+
+1. 首次连接先执行 `chaitin-cli tanswer auth check`。
+2. 先执行 `chaitin-cli tanswer --help`；进入具体领域或不确定参数时，继续执行相应的 `--help`。
+3. 需要机器可读的完整命令、参数、输出、风险和确认契约时，执行 `chaitin-cli tanswer manifest`。
+4. 优先使用语义命令；只有当前版本没有对应语义命令、且调用者已知并获授权时，才使用 `tanswer api`。
+5. 写操作必须先使用 `--preview`，检查影响后再使用命令 help 或 manifest 指定的精确 `--confirm` token。
+
+AI 使用已安装的全悉 CLI 时不依赖产品专属 README 或 skill；运行时 `--help` 和 `manifest` 是唯一的命令事实来源。
+
 ### MonkeyScan
 
 MonkeyScan 支持对本地目录、源码压缩包或 GitHub 仓库发起全量安全扫描。首次使用时，先设置 MonkeyScan CLI API Key，再确认授权状态：
