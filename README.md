@@ -212,6 +212,12 @@ chaitin-cli tanswer manifest
 
 全悉产品的命令、参数、示例、输出字段和写操作确认要求以安装后二进制的 `--help` 与 `chaitin-cli tanswer manifest` 为准。
 
+#### 人工使用指引
+
+- 使用本仓库源码时，可先阅读 [全悉 CLI 入门](./products/tanswer/README.md) 和 [全悉 CLI 命令索引](./products/tanswer/COMMAND_REFERENCE.md)，了解常见任务和安全示例。
+- 仅安装了二进制时，先执行 `chaitin-cli tanswer --help`，再按领域或具体命令继续执行 `--help`；需要完整结构化契约时执行 `chaitin-cli tanswer manifest`。
+- 查询命令可在确认目标环境后直接执行。写操作必须先使用 `--preview`，核对目标、影响和风险，再按运行时要求使用精确的 `--confirm` token。
+
 #### AI Agent 使用规则
 
 当任务涉及全悉时，使用 `chaitin-cli tanswer`，并遵循以下流程：
@@ -220,7 +226,7 @@ chaitin-cli tanswer manifest
 2. 先执行 `chaitin-cli tanswer --help`；进入具体领域或不确定参数时，继续执行相应的 `--help`。
 3. 需要机器可读的完整命令、参数、输出、风险和确认契约时，执行 `chaitin-cli tanswer manifest`。
 4. 优先使用语义命令；只有当前版本没有对应语义命令、且调用者已知并获授权时，才使用 `tanswer api`。
-5. 写操作必须先使用 `--preview`，检查影响后再使用命令 help 或 manifest 指定的精确 `--confirm` token。
+5. 写操作必须先使用 `--preview`；向用户说明目标、影响和风险，并等待用户对该次变更的明确确认后，才能使用命令 help 或 manifest 指定的精确 `--confirm` token。不能仅因已知 token 就自行执行。
 
 AI 使用已安装的全悉 CLI 时不依赖产品专属 README 或 skill；运行时 `--help` 和 `manifest` 是唯一的命令事实来源。
 

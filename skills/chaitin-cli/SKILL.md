@@ -751,7 +751,13 @@ Do not invent VeinMind request bodies. Confirm the leaf command with `--help`, i
 
 ## T-Answer (全悉 Traffic Threat Detection)
 
-For T-Answer tasks, first run `chaitin-cli tanswer --help`, then use domain and leaf-command `--help`. Discover unknown commands, flags, output fields, and protected-write confirmation requirements from help or `chaitin-cli tanswer manifest`; do not depend on repository product documents, guess commands, or issue direct API requests.
+For T-Answer tasks, use the following protocol:
+
+1. **Connect and authenticate.** Configure `TANSWER_URL` and `TANSWER_API_KEY` (or the `tanswer` config section). Run `chaitin-cli tanswer auth status` to inspect local configuration and `chaitin-cli tanswer auth check` before accessing the product. If configuration or authorization is unavailable, ask the user; do not invent values.
+2. **Discover before operating.** First run `chaitin-cli tanswer --help`, then domain and leaf-command `--help`. Discover unknown commands, flags, output fields, and protected-write requirements from help or `chaitin-cli tanswer manifest`; do not depend on repository product documents or guess commands.
+3. **Read operations.** Prefer semantic commands over `api`, execute read-only operations after authentication, and summarize the returned JSON for the user.
+4. **Protected writes require user authorization.** First run the target command with `--preview`. Present the target, change summary, impact, and risk warnings to the user, then wait for explicit confirmation for that specific change. Only after the user confirms may you invoke the command with its exact documented `--confirm` token. A token discoverable from help or manifest is a mechanical CLI requirement, not user authorization; never use it to execute a write on your own.
+5. **Open API fallback.** Use `chaitin-cli tanswer api` only when no semantic command covers the requested capability and the user has supplied a known, authorized endpoint. Do not guess RPC methods, paths, or request bodies.
 
 ---
 
