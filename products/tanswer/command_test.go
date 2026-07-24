@@ -46,3 +46,31 @@ func TestTAnswerHelpGuidesUsersWithoutProductDocuments(t *testing.T) {
 		}
 	}
 }
+
+func TestManifestCommandsAreDiscoverableFromHelp(t *testing.T) {
+	for _, entry := range BuildCommandManifest().Commands {
+		var out bytes.Buffer
+		root := NewRootCommand(RootOptions{Out: &out, ErrOut: &out})
+		args := strings.Fields(strings.TrimPrefix(entry.FullCommand, "chaitin-cli "))
+		command, _, err := root.Find(args)
+		if err != nil || command == nil {
+			t.Fatalf("manifest command %s is not registered: %v", entry.FullCommand, err)
+		}
+		if strings.TrimSpace(command.Long) == "" {
+			t.Fatalf("manifest command %s has no detailed help", entry.FullCommand)
+		}
+		args = append(args, "--help")
+		root.SetArgs(args)
+
+		if err := root.Execute(); err != nil {
+			t.Fatalf("%s help returned error: %v", entry.FullCommand, err)
+		}
+		help := out.String()
+		if !strings.Contains(help, command.Long) {
+			t.Fatalf("%s did not render detailed help:\n%s", entry.FullCommand, help)
+		}
+		if entry.RequiresConfirmation && (!strings.Contains(strings.ToLower(help), "preview") || !strings.Contains(strings.ToLower(help), "confirm")) {
+			t.Fatalf("protected command %s help must mention preview and confirm:\n%s", entry.FullCommand, help)
+		}
+	}
+}

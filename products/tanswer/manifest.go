@@ -79,7 +79,7 @@ func newManifestCommand(opts *RootOptions) *cobra.Command {
 	return &cobra.Command{
 		Use:     "manifest",
 		Short:   "查看 CLI 命令清单",
-		Long:    "查看 CLI 命令清单。面向 AI Agent 和集成方返回机器可读的命令元数据，包括命令层级、参数、默认值、枚举、output 类型、risk 等级、确认要求和示例。",
+		Long:    "查看 CLI 命令清单，并输出全悉 CLI 的机器可读命令、配置和安全契约。面向 AI Agent 和集成方返回机器可读的命令元数据，包括命令层级、参数、默认值、枚举、output 类型、risk 等级、确认要求和示例。",
 		Example: "  chaitin-cli tanswer manifest",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			raw, err := RenderJSON(SuccessEnvelope{
