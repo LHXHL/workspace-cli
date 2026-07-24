@@ -173,6 +173,23 @@ safeline.url         -> SAFELINE_URL
 safeline.api_key     -> SAFELINE_API_KEY
 ```
 
+### T-Answer
+
+T-Answer commands use an OpenAPI Token. Create an API Token in the T-Answer web console under `System Management` -> `Open API`, then configure `tanswer.api_key` or set `TANSWER_API_KEY`.
+
+For T-Answer installation, Token setup, permission requirements, smoke tests, and troubleshooting, see [`products/tanswer/README.md`](products/tanswer/README.md). For the full command reference, see [`products/tanswer/COMMAND_REFERENCE.md`](products/tanswer/COMMAND_REFERENCE.md). For AI Agent rules, see [`products/tanswer/agent-skill.md`](products/tanswer/agent-skill.md).
+
+```bash
+chaitin-cli tanswer manifest
+chaitin-cli tanswer auth check
+chaitin-cli tanswer system status
+chaitin-cli tanswer alarm overview --time today
+chaitin-cli tanswer asset list --page-size 10
+chaitin-cli tanswer response block-policies --page-size 10
+```
+
+Prefer semantic commands such as `alarm`, `file-alarm`, `asset`, `metadata`, `policy`, and `response`. Use `tanswer api <METHOD> <PATH>` only for user-known, authorized Open API endpoints that do not have a semantic command.
+
 ### SafeLine-3
 
 SafeLine-3 commands use an OpenAPI token. Configure `safeline-3.api_token` or set `SAFELINE_3_API_TOKEN`.

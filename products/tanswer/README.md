@@ -11,6 +11,8 @@
 
 ## 快速开始
 
+先按仓库根目录 [README](../../README.md) 安装 `chaitin-cli`，或从 [GitHub Releases](https://github.com/chaitin/chaitin-cli/releases) 下载对应平台的二进制。
+
 ```bash
 export TANSWER_URL='https://<全悉 Web 端 IP>'
 export TANSWER_API_KEY='<全悉 OpenAPI Token>'
@@ -26,6 +28,21 @@ chaitin-cli tanswer alarm overview --time today
 ```bash
 chaitin-cli tanswer --insecure auth check
 ```
+
+## 最小可用性验证
+
+首次接入或发布新版本后，建议按下面顺序做 smoke test，确认二进制版本、连接配置、Token 权限和核心只读能力可用：
+
+```bash
+chaitin-cli tanswer manifest
+chaitin-cli tanswer auth check
+chaitin-cli tanswer system status
+chaitin-cli tanswer alarm overview --time today
+chaitin-cli tanswer asset list --page-size 5
+chaitin-cli tanswer response block-policies --page-size 5
+```
+
+如果 `manifest` 不存在，通常表示当前安装的 `chaitin-cli` 版本不包含全悉语义 CLI。请先升级到包含 `tanswer` 语义命令的 Release。
 
 ## 快速开始：AI Agent
 
@@ -52,6 +69,17 @@ chaitin-cli tanswer api POST /rpc --body @./request.json
 
 `chaitin-cli tanswer` 支持通过配置文件、环境变量和全局 flag 配置连接信息。
 
+### 获取 OpenAPI Token
+
+在全悉 Web 控制台中生成 OpenAPI Token：
+
+1. 登录全悉 Web 控制台。
+2. 进入 `系统管理` -> `Open API`。
+3. 点击 `新增 API Token`，选择用于 Open API 调用的 Token 类型。
+4. 保存生成出的 Token，并配置到 `TANSWER_API_KEY` 或 `tanswer.api_key`。
+
+API Token 生成后不会持续明文展示，请妥善保存。不要把真实 Token 写入脚本、日志、共享文档、commit message 或 MR 描述。
+
 | 配置 | 说明 |
 | --- | --- |
 | `tanswer.url` / `TANSWER_URL` | 全悉控制台地址，例如 `https://<全悉 Web 端 IP>`。 |
@@ -65,6 +93,23 @@ chaitin-cli tanswer api POST /rpc --body @./request.json
 chaitin-cli tanswer --url 'https://<全悉 Web 端 IP>' --api-key '<全悉 OpenAPI Token>' auth check
 chaitin-cli tanswer --insecure auth check
 ```
+
+### 权限要求
+
+CLI 调用继承全悉现有 OpenAPI Token 的权限、有效期、频率限制和 IP 访问策略。建议按实际自动化范围分配最小权限：
+
+| 使用范围 | 需要的能力 |
+| --- | --- |
+| 只读巡检 | 系统状态、威胁告警、文件告警、资产、元数据、策略和响应记录查询。 |
+| 资产维护 | 资产创建、更新、删除、导入、导出、批量维护和资产组维护。 |
+| 策略维护 | 检测白名单、自定义 IOC 情报的创建、更新、启停、删除、导入和导出。 |
+| 响应处置 | 阻断策略、响应白名单、告警生成处置对象、联动设备配置和自动响应记录查询。 |
+
+如果查询命令可用但写操作失败，优先检查 Token 绑定角色是否包含对应写权限；如果所有命令都失败，先运行 `chaitin-cli tanswer auth check` 排查地址、Token、证书、有效期、IP 策略和频率限制。
+
+### 版本和兼容性
+
+客户端需要使用包含全悉语义命令的 `chaitin-cli` Release。服务端需要开放全悉 OpenAPI TokenAuth 和对应 RPC/Open API 能力。不同全悉版本开放的后端接口可能不同；以 `chaitin-cli tanswer manifest`、本文件和 [COMMAND_REFERENCE.md](./COMMAND_REFERENCE.md) 记录的命令为准。
 
 ## 命令层级
 
@@ -157,6 +202,17 @@ chaitin-cli tanswer response block-policy-create --name block-bad-ip --object 19
 - `file-alarm` 命令只读取文件告警，不下载样本，也不触发新的沙箱分析。
 - `metadata near-alarm` 只提供上下文，不能单独作为攻击证据。
 - `response` 产品记录不能替代第三方联动设备执行证明。
+
+## 常见问题
+
+| 现象 | 处理方式 |
+| --- | --- |
+| `missing Quanxi address` | 设置 `TANSWER_URL`，或在命令中传入 `--url`。 |
+| `missing OpenAPI token` | 设置 `TANSWER_API_KEY`，或在命令中传入 `--api-key`。 |
+| `TOKEN_CHECK_FAILED` | 检查全悉地址、Token 是否正确、Token 是否过期/禁用、IP 访问策略和频率限制。 |
+| TLS 证书校验失败 | 在确需跳过证书校验的环境中使用 `chaitin-cli tanswer --insecure auth check`。 |
+| 命令不存在 | 升级到包含全悉语义 CLI 的 `chaitin-cli` Release，并重新运行 `chaitin-cli tanswer --help`。 |
+| 读命令成功但写命令失败 | 检查 Token 绑定角色是否具备资产维护、策略维护或响应处置写权限。 |
 
 ## 文档索引
 
