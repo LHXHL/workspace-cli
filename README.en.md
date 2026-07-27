@@ -175,7 +175,7 @@ safeline.api_key     -> SAFELINE_API_KEY
 
 ### T-Answer Quick Start
 
-Configure `tanswer.url` and `tanswer.api_key` in `config.yaml`, or set `TANSWER_URL` and `TANSWER_API_KEY`. Never commit a real token.
+Configure T-Answer with `--url`, `--api-key`, `--timeout`, and `--insecure`; environment variables `TANSWER_URL`, `TANSWER_API_KEY`, `TANSWER_TIMEOUT`, and `TANSWER_INSECURE`; or `tanswer.url`, `tanswer.api_key`, `tanswer.timeout`, and `tanswer.insecure` in `config.yaml`. Never commit a real token.
 
 ```bash
 chaitin-cli tanswer auth check
@@ -183,9 +183,9 @@ chaitin-cli tanswer --help
 chaitin-cli tanswer manifest
 ```
 
-For human operators using this repository, see [the T-Answer guide](./products/tanswer/README.md) and [command reference](./products/tanswer/COMMAND_REFERENCE.md). Users who only have the installed binary should start with `chaitin-cli tanswer --help`, then use domain or leaf-command help and `manifest` for the current contract.
+For human operators using this repository, see [the T-Answer guide (Chinese)](./products/tanswer/README.md) and [command reference (Chinese)](./products/tanswer/COMMAND_REFERENCE.md). Users who only have the installed binary should start with `chaitin-cli tanswer --help`, then use domain or leaf-command help and `manifest` for the current contract. The root-level `--dry-run` flag does not apply to `tanswer`.
 
-AI agents must use `chaitin-cli tanswer`, discover commands with help, and use `manifest` for machine-readable parameters, output fields, risks, and confirmation requirements. Prefer semantic commands. Use `tanswer api` only for a known, authorized endpoint not covered by a semantic command. For every protected write, run `--preview`, present the target, impact, and risk to the user, and wait for explicit confirmation of that specific change before using the exact `--confirm` token. A confirmation token is a mechanical CLI requirement, not user authorization.
+AI agents must use `chaitin-cli tanswer`, discover commands with help, and use `manifest` for machine-readable parameters, output fields, risks, and confirmation requirements. Prefer semantic commands. Use `tanswer api` only for a known, authorized endpoint, method, and request body not covered by a semantic command; never guess RPC methods, paths, or request bodies. For every semantic protected write, run `--preview`, present the target, impact, and risk to the user, and wait for explicit confirmation of that specific change before using the exact `--confirm` token. `tanswer api` GET/HEAD requests may run directly; every other method returns a preview by default and must receive explicit confirmation for that exact method, path, query, and body before `--confirm CONFIRM_TANSWER_RAW_API_WRITE` sends it. A confirmation token is a mechanical CLI requirement, not user authorization.
 
 ### SafeLine-3
 

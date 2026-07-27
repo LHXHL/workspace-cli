@@ -11,14 +11,18 @@ import (
 	"github.com/spf13/cobra"
 )
 
+const rawAPIWriteConfirmToken = "CONFIRM_TANSWER_RAW_API_WRITE"
+
 func newRawAPICommand(opts *RootOptions) *cobra.Command {
 	var queryText string
 	var bodyText string
+	var preview bool
+	var confirm string
 	cmd := &cobra.Command{
 		Use:   "api <METHOD> <PATH>",
 		Short: "调用用户已知且已授权的 Open API",
-		Long:  "Open API 兜底调用。用于访问语义快捷层未覆盖、但用户已知且已授权的全悉 Open API。该命令不提供专属参数说明或专属摘要，只结构化返回状态码和原始响应。",
-		Example: "  chaitin-cli tanswer api POST /rpc --body '{\"jsonrpc\":\"2.0\",\"method\":\"OpsService.GetBaseInfo\",\"params\":{},\"id\":\"1\"}'\n" +
+		Long:  "Open API 兜底调用。用于访问语义快捷层未覆盖、但用户已知且已授权的全悉 Open API。该命令不提供专属参数说明或专属摘要，只结构化返回状态码和原始响应。\n\nGET 和 HEAD 可直接执行；其他方法可能改变状态，默认仅返回请求预览且不会发送请求。审阅 preview 并取得用户对本次请求的明确确认后，才可使用 --confirm CONFIRM_TANSWER_RAW_API_WRITE 执行。确认 token 是技术校验，不等同于用户授权。根级 --dry-run 不适用于 tanswer。",
+		Example: "  chaitin-cli tanswer api POST '/<known-unwrapped-openapi-path>' --body '{\"<known_parameter>\":\"<value>\"}' --preview\n" +
 			"  chaitin-cli tanswer api GET /api/openapi/rpc/openapi.json",
 		Args: cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -43,8 +47,33 @@ func newRawAPICommand(opts *RootOptions) *cobra.Command {
 			if err != nil {
 				return err
 			}
+			method := strings.ToUpper(strings.TrimSpace(args[0]))
+			if rawAPIRequiresConfirmation(method) {
+				request := map[string]any{"method": method, "path": path, "query": query, "body": body}
+				writePreview := BuildWritePreview(WriteOperationSpec{
+					Task:          "Open API 兜底写操作预览",
+					Command:       "chaitin-cli tanswer api",
+					OperationType: "tanswer_raw_api_request",
+					RiskLevel:     "write_high",
+					Target:        map[string]any{"method": method, "path": path},
+					ChangeSummary: request,
+					Impact:        map[string]any{"request_will_be_sent": true},
+					RiskWarnings: []string{
+						"Raw Open API requests do not have product-specific change summaries and may change T-Answer state.",
+						"Confirm the HTTP method, path, query, and body are the intended authorized request before executing.",
+					},
+					ConfirmToken: rawAPIWriteConfirmToken,
+				})
+				if preview || strings.TrimSpace(confirm) == "" {
+					return writeRawAPIResult(cmd, true, "Open API 兜底写操作预览", request, writePreview)
+				}
+				if err := ValidateWriteConfirmation(confirm, rawAPIWriteConfirmToken); err != nil {
+					return writeRawAPIConfirmationError(cmd, err)
+				}
+			}
+
 			client := NewClient(cfg)
-			resp, err := client.DoJSON(cmd.Context(), strings.ToUpper(args[0]), path, query, body)
+			resp, err := client.DoJSON(cmd.Context(), method, path, query, body)
 			if err != nil {
 				return err
 			}
@@ -66,7 +95,47 @@ func newRawAPICommand(opts *RootOptions) *cobra.Command {
 	}
 	cmd.Flags().StringVar(&queryText, "query", "", "query parameters as JSON object")
 	cmd.Flags().StringVar(&bodyText, "body", "", "request body as JSON object or @file path")
+	cmd.Flags().BoolVar(&preview, "preview", false, "return request preview without sending a potentially mutating request")
+	cmd.Flags().StringVar(&confirm, "confirm", "", "exact confirmation token required for potentially mutating requests")
 	return cmd
+}
+
+func rawAPIRequiresConfirmation(method string) bool {
+	switch strings.ToUpper(strings.TrimSpace(method)) {
+	case "GET", "HEAD":
+		return false
+	default:
+		return true
+	}
+}
+
+func writeRawAPIResult(cmd *cobra.Command, success bool, task string, query any, data any) error {
+	raw, err := RenderJSON(SuccessEnvelope{
+		Success: success,
+		Task:    task,
+		Command: "chaitin-cli tanswer api",
+		Query:   query,
+		Data:    data,
+	})
+	if err != nil {
+		return err
+	}
+	fmt.Fprintln(cmd.OutOrStdout(), string(raw))
+	return nil
+}
+
+func writeRawAPIConfirmationError(cmd *cobra.Command, err error) error {
+	raw, renderErr := RenderJSON(ErrorEnvelope{
+		Success: false,
+		Task:    "Open API 兜底写操作",
+		Command: "chaitin-cli tanswer api",
+		Error:   CLIError{Code: "RAW_API_CONFIRMATION_REQUIRED", Message: err.Error(), Retryable: false},
+	})
+	if renderErr != nil {
+		return renderErr
+	}
+	fmt.Fprintln(cmd.OutOrStdout(), string(raw))
+	return nil
 }
 
 func validateRawAPIPath(path string) (string, error) {

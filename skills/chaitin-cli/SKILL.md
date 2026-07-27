@@ -71,7 +71,9 @@ Before running any `chaitin-cli` command:
 
 ## Configuration
 
-Create `config.yaml` in the working directory:
+For a project-specific setup, create a recognized `./config.yaml` in the working directory (it must contain at least one chaitin-cli product name such as `tanswer`). Otherwise, place the same configuration in `~/.chaitin-cli/config.yaml`, which is the default configuration path:
+For T-Answer, use `--url`, `--api-key`, `--timeout`, and `--insecure`; `TANSWER_URL`, `TANSWER_API_KEY`, `TANSWER_TIMEOUT`, and `TANSWER_INSECURE`; or `tanswer.url`, `tanswer.api_key`, `tanswer.timeout`, and `tanswer.insecure` in the shared configuration file.
+
 
 ```yaml
 safeline:
@@ -97,6 +99,8 @@ veinmind:
 tanswer:
   url: 'https://<全悉 Web 端 IP>'
   api_key: '<全悉 OpenAPI Token>'
+  timeout: 30s
+  insecure: false
 
 codeinsight:
   url: https://your-codeinsight-server
@@ -116,9 +120,11 @@ CODEINSIGHT_URL=https://your-codeinsight-server
 CODEINSIGHT_TOKEN=YOUR_ACCESS_TOKEN
 TANSWER_URL='https://<全悉 Web 端 IP>'
 TANSWER_API_KEY='<全悉 OpenAPI Token>'
+TANSWER_TIMEOUT=30s
+TANSWER_INSECURE=false
 ```
 
-Priority: `flags > environment/.env > config.yaml`
+Priority: `flags > environment/.env > recognized ./config.yaml > ~/.chaitin-cli/config.yaml`. A local `./config.yaml` that does not contain a recognized chaitin-cli product is ignored, so it will not accidentally override another project's configuration.
 
 Use `-c` to switch between config files (e.g., multiple environments):
 
@@ -131,7 +137,7 @@ chaitin-cli -c ./configs/staging.yaml safeline stats overview
 
 | Flag | Description |
 |------|-------------|
-| `-c, --config` | Config file path (default: `./config.yaml`) |
+| `-c, --config` | Explicit config file path. Without this flag, CLI tries recognized `./config.yaml` first, then `~/.chaitin-cli/config.yaml`. |
 | `--dry-run` | Print the API request without executing when the product honors it. Applied by the root command to `xray`, `cloudwalker`, and `veinmind`. `safeline` registers its own `--dry-run` and forwards it to subcommands. `safeline-ce` inherits the root flag, but the current codebase stores the value without using it; `tanswer` ignores it. |
 
 ### Discovering Commands
@@ -756,8 +762,8 @@ For T-Answer tasks, use the following protocol:
 1. **Connect and authenticate.** Configure `TANSWER_URL` and `TANSWER_API_KEY` (or the `tanswer` config section). Run `chaitin-cli tanswer auth status` to inspect local configuration and `chaitin-cli tanswer auth check` before accessing the product. If configuration or authorization is unavailable, ask the user; do not invent values.
 2. **Discover before operating.** First run `chaitin-cli tanswer --help`, then domain and leaf-command `--help`. Discover unknown commands, flags, output fields, and protected-write requirements from help or `chaitin-cli tanswer manifest`; do not depend on repository product documents or guess commands.
 3. **Read operations.** Prefer semantic commands over `api`, execute read-only operations after authentication, and summarize the returned JSON for the user.
-4. **Protected writes require user authorization.** First run the target command with `--preview`. Present the target, change summary, impact, and risk warnings to the user, then wait for explicit confirmation for that specific change. Only after the user confirms may you invoke the command with its exact documented `--confirm` token. A token discoverable from help or manifest is a mechanical CLI requirement, not user authorization; never use it to execute a write on your own.
-5. **Open API fallback.** Use `chaitin-cli tanswer api` only when no semantic command covers the requested capability and the user has supplied a known, authorized endpoint. Do not guess RPC methods, paths, or request bodies.
+4. **Protected semantic writes require user authorization.** First run the target command with `--preview`. Present the target, change summary, impact, and risk warnings to the user, then wait for explicit confirmation for that specific change. Only after the user confirms may you invoke the command with its exact documented `--confirm` token. A token discoverable from help or manifest is a mechanical CLI requirement, not user authorization; never use it to execute a write on your own.
+5. **Open API fallback.** Use `chaitin-cli tanswer api` only when no semantic command covers the requested capability and the user has supplied a known, authorized endpoint, method, and request body. Do not guess RPC methods, paths, or request bodies. GET/HEAD requests may run directly. For every other HTTP method, first run the command without `--confirm` or with `--preview`; present its method, path, query, body, and risks; wait for explicit confirmation for that exact request; then use `--confirm CONFIRM_TANSWER_RAW_API_WRITE`. The root-level `--dry-run` flag does not apply to `tanswer`.
 
 ---
 

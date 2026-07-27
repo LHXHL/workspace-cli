@@ -114,7 +114,98 @@ func TestManifestCommandOutputsAIReadableCommandMetadata(t *testing.T) {
 	requireManifestCommand(t, manifest, "tanswer response auto-policies", "semantic_shortcut", "read")
 	requireManifestCommand(t, manifest, "tanswer response auto-list", "semantic_shortcut", "read")
 	requireManifestCommand(t, manifest, "tanswer api", "openapi_fallback", "read_write")
+	api := findManifestCommand(t, manifest, "tanswer api")
+	if !api.RequiresConfirmation {
+		t.Fatal("raw API fallback must require confirmation for potentially mutating requests")
+	}
+	rawAPI, err := json.Marshal(api)
+	if err != nil {
+		t.Fatalf("marshal raw API manifest command: %v", err)
+	}
+	var rawAPIContract struct {
+		ConfirmationCondition string   `json:"confirmation_condition"`
+		PreviewOutputFields   []string `json:"preview_output_fields"`
+	}
+	if err := json.Unmarshal(rawAPI, &rawAPIContract); err != nil {
+		t.Fatalf("unmarshal raw API manifest contract: %v", err)
+	}
+	if rawAPIContract.ConfirmationCondition != "required for non-GET/HEAD requests" {
+		t.Fatalf("raw API confirmation condition = %q", rawAPIContract.ConfirmationCondition)
+	}
+	for _, field := range []string{"requires_confirmation", "confirmation_token", "target", "change_summary", "impact", "risk_warnings"} {
+		if !containsString(rawAPIContract.PreviewOutputFields, field) {
+			t.Fatalf("raw API preview output fields = %#v, missing %q", rawAPIContract.PreviewOutputFields, field)
+		}
+	}
+	for _, example := range api.Examples {
+		var previewFlag, confirmFlag *ManifestFlag
+		for index := range api.Flags {
+			flag := &api.Flags[index]
+			switch flag.Name {
+			case "--preview":
+				previewFlag = flag
+			case "--confirm":
+				confirmFlag = flag
+			}
+		}
+		if previewFlag == nil || !strings.Contains(previewFlag.Description, "non-GET/HEAD") {
+			t.Fatalf("raw API preview flag contract = %#v", previewFlag)
+		}
+		if confirmFlag == nil || !strings.Contains(confirmFlag.Description, "CONFIRM_TANSWER_RAW_API_WRITE") {
+			t.Fatalf("raw API confirm flag contract = %#v", confirmFlag)
+		}
+
+		if strings.Contains(example.Command, "OpsService.GetBaseInfo") {
+			t.Fatalf("raw API example must not bypass the system status semantic command: %q", example.Command)
+		}
+	}
 	requireManifestCommand(t, manifest, "tanswer auth check", "foundation", "read")
+}
+
+func TestSemanticProtectedWritesDeclareCompletePreviewContract(t *testing.T) {
+	manifest := BuildCommandManifest()
+	requiredFields := []string{
+		"requires_confirmation",
+		"confirmed",
+		"operation_type",
+		"risk_level",
+		"target",
+		"change_summary",
+		"impact",
+		"risk_warnings",
+		"confirmation_token",
+		"confirmation_note",
+	}
+
+	protectedCount := 0
+	for _, command := range manifest.Commands {
+		if command.Layer != "semantic_shortcut" || !command.RequiresConfirmation {
+			continue
+		}
+		protectedCount++
+		if command.ConfirmationCondition != "required after preview and explicit user confirmation" {
+			t.Errorf("%s confirmation condition = %q", command.Name, command.ConfirmationCondition)
+		}
+		for _, field := range requiredFields {
+			if !containsString(command.PreviewOutputFields, field) {
+				t.Errorf("%s preview output fields = %#v, missing %q", command.Name, command.PreviewOutputFields, field)
+			}
+		}
+	}
+	if protectedCount == 0 {
+		t.Fatal("manifest has no protected semantic write commands")
+	}
+}
+
+func findManifestCommand(t *testing.T, manifest CommandManifest, name string) ManifestCommand {
+	t.Helper()
+	for _, cmd := range manifest.Commands {
+		if cmd.Name == name {
+			return cmd
+		}
+	}
+	t.Fatalf("manifest missing command %q", name)
+	return ManifestCommand{}
 }
 
 func TestManifestHelpExplainsPurpose(t *testing.T) {

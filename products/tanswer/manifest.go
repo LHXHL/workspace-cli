@@ -39,20 +39,22 @@ type BootstrapManifest struct {
 }
 
 type ManifestCommand struct {
-	Name                 string                 `json:"name"`
-	FullCommand          string                 `json:"full_command"`
-	Layer                string                 `json:"layer"`
-	Summary              string                 `json:"summary"`
-	UseWhen              []string               `json:"use_when"`
-	DoNotUseWhen         []string               `json:"do_not_use_when,omitempty"`
-	Arguments            []ManifestArgument     `json:"arguments,omitempty"`
-	Flags                []ManifestFlag         `json:"flags,omitempty"`
-	OutputType           string                 `json:"output_type"`
-	OutputFields         []string               `json:"output_fields"`
-	RiskLevel            string                 `json:"risk_level"`
-	RequiresConfirmation bool                   `json:"requires_confirmation"`
-	Examples             []ManifestExample      `json:"examples"`
-	Backend              map[string]interface{} `json:"backend,omitempty"`
+	Name                  string                 `json:"name"`
+	FullCommand           string                 `json:"full_command"`
+	Layer                 string                 `json:"layer"`
+	Summary               string                 `json:"summary"`
+	UseWhen               []string               `json:"use_when"`
+	DoNotUseWhen          []string               `json:"do_not_use_when,omitempty"`
+	Arguments             []ManifestArgument     `json:"arguments,omitempty"`
+	Flags                 []ManifestFlag         `json:"flags,omitempty"`
+	OutputType            string                 `json:"output_type"`
+	OutputFields          []string               `json:"output_fields"`
+	PreviewOutputFields   []string               `json:"preview_output_fields,omitempty"`
+	RiskLevel             string                 `json:"risk_level"`
+	RequiresConfirmation  bool                   `json:"requires_confirmation"`
+	ConfirmationCondition string                 `json:"confirmation_condition,omitempty"`
+	Examples              []ManifestExample      `json:"examples"`
+	Backend               map[string]interface{} `json:"backend,omitempty"`
 }
 
 type ManifestArgument struct {
@@ -98,7 +100,7 @@ func newManifestCommand(opts *RootOptions) *cobra.Command {
 }
 
 func BuildCommandManifest() CommandManifest {
-	return CommandManifest{
+	manifest := CommandManifest{
 		SchemaVersion: "2026-07-27",
 		Product:       "tanswer",
 		Binary:        "chaitin-cli",
@@ -124,6 +126,7 @@ func BuildCommandManifest() CommandManifest {
 				"prefer semantic commands; use api only for known authorized endpoints not covered by semantic commands",
 				"run preview before protected writes and require the documented confirmation token",
 				"wait for explicit user confirmation after preview before executing a protected write",
+				"for api fallback, execute non-GET/HEAD requests only after preview, explicit user confirmation, and CONFIRM_TANSWER_RAW_API_WRITE",
 				"do not guess unsupported commands or direct API endpoints",
 			},
 		},
@@ -197,6 +200,7 @@ func BuildCommandManifest() CommandManifest {
 				DoNotUseWhen: []string{
 					"已有语义快捷命令可以满足目标任务时，优先使用语义快捷命令。",
 					"需要 CLI 提供专属参数解释、字段摘要或业务口径时，不应依赖该兜底入口。",
+					"尚未取得用户对具体请求的明确确认时，不得执行非 GET/HEAD 请求。",
 				},
 				Arguments: []ManifestArgument{
 					{Name: "METHOD", Required: true, Description: "HTTP method, for example GET or POST"},
@@ -205,13 +209,18 @@ func BuildCommandManifest() CommandManifest {
 				Flags: []ManifestFlag{
 					{Name: "--query", Type: "json_object", Required: false, Description: "query parameters as JSON object"},
 					{Name: "--body", Type: "json_object_or_file", Required: false, Description: "request body as JSON object or @file path"},
+					{Name: "--preview", Type: "boolean", Required: false, Description: "return the non-GET/HEAD request preview without sending it"},
+					{Name: "--confirm", Type: "string", Required: false, Description: "required with CONFIRM_TANSWER_RAW_API_WRITE to execute a non-GET/HEAD request after explicit user confirmation"},
 				},
-				OutputType:           "raw_openapi_response",
-				OutputFields:         []string{"status_code", "raw"},
-				RiskLevel:            "read_write",
-				RequiresConfirmation: false,
+				OutputType:            "raw_openapi_response",
+				OutputFields:          []string{"status_code", "raw"},
+				PreviewOutputFields:   []string{"requires_confirmation", "confirmed", "operation_type", "risk_level", "target", "change_summary", "impact", "risk_warnings", "confirmation_token", "confirmation_note"},
+				RiskLevel:             "read_write",
+				RequiresConfirmation:  true,
+				ConfirmationCondition: "required for non-GET/HEAD requests",
 				Examples: []ManifestExample{
-					{Description: "调用 JSON-RPC Open API", Command: "chaitin-cli tanswer api POST /rpc --body '{\"jsonrpc\":\"2.0\",\"method\":\"OpsService.GetBaseInfo\",\"params\":{},\"id\":\"1\"}'"},
+					{Description: "预览已知但未封装的非 GET/HEAD Open API 请求；占位符必须按官方 OpenAPI 文档替换", Command: "chaitin-cli tanswer api POST '/<known-unwrapped-openapi-path>' --body '{\"<known_parameter>\":\"<value>\"}' --preview"},
+					{Description: "查看 Open API 文档", Command: "chaitin-cli tanswer api GET /api/openapi/rpc/openapi.json"},
 				},
 			},
 			{
@@ -1899,6 +1908,36 @@ func BuildCommandManifest() CommandManifest {
 				{Description: "查询自动响应处置名单", Command: "chaitin-cli tanswer response auto-list --time 7d --page-size 10"},
 			}, []string{"FirewallService.SearchBlackList"}),
 		},
+	}
+	applySemanticProtectedWriteContract(&manifest)
+	return manifest
+}
+
+var semanticProtectedWritePreviewFields = []string{
+	"requires_confirmation",
+	"confirmed",
+	"operation_type",
+	"risk_level",
+	"target",
+	"change_summary",
+	"impact",
+	"risk_warnings",
+	"confirmation_token",
+	"confirmation_note",
+}
+
+func applySemanticProtectedWriteContract(manifest *CommandManifest) {
+	for index := range manifest.Commands {
+		command := &manifest.Commands[index]
+		if command.Layer != "semantic_shortcut" || !command.RequiresConfirmation {
+			continue
+		}
+		if len(command.PreviewOutputFields) == 0 {
+			command.PreviewOutputFields = append([]string(nil), semanticProtectedWritePreviewFields...)
+		}
+		if command.ConfirmationCondition == "" {
+			command.ConfirmationCondition = "required after preview and explicit user confirmation"
+		}
 	}
 }
 

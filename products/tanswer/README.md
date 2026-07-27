@@ -17,10 +17,22 @@ AI Agent 必须先通过 `--help` 发现命令；需要完整的机器可读参�
 
 ## 快速使用
 
-连接信息可通过 flag、环境变量或 `config.yaml` 的 `tanswer` 节配置；优先级为 flag、环境变量、配置文件、默认值。
+连接信息可通过 `--url`、`--api-key`、`--timeout`、`--insecure`；环境变量 `TANSWER_URL`、`TANSWER_API_KEY`、`TANSWER_TIMEOUT`、`TANSWER_INSECURE`；或 `config.yaml` 的 `tanswer.url`、`tanswer.api_key`、`tanswer.timeout`、`tanswer.insecure` 配置。优先级为 flag、环境变量、配置文件、默认值。默认配置文件是 `~/.chaitin-cli/config.yaml`；当前目录存在被识别的 `./config.yaml` 时会优先使用它。
+
+最小配置文件示例：
+
+```yaml
+tanswer:
+  url: 'https://<全悉控制台地址>'
+  api_key: '<OpenAPI Token>'
+  timeout: 30s
+  insecure: false
+```
 
 ```bash
 export TANSWER_URL='https://<全悉控制台地址>'
+export TANSWER_TIMEOUT=30s
+export TANSWER_INSECURE=false
 export TANSWER_API_KEY='<OpenAPI Token>'
 
 chaitin-cli tanswer auth check
@@ -34,8 +46,9 @@ chaitin-cli tanswer alarm overview --time 24h
 
 1. 优先使用按业务领域组织的语义命令。
 2. 先通过根命令或领域命令的 `--help` 了解可用操作和必填参数。
-3. 对受保护写操作，先执行 `--preview`，核对目标、影响和风险。人工操作者确认本次变更后才能使用该命令 help 或 manifest 指定的 `--confirm` token；AI Agent 还必须等待用户对此次变更的明确确认。确认 token 是技术校验，不等同于用户授权。
-4. 仅在目标能力没有语义命令覆盖，且调用者已知并获授权访问对应端点时，才使用 `tanswer api <METHOD> <PATH>`。
+3. 对受保护语义写操作，先执行 `--preview`，核对目标、影响和风险。人工操作者确认本次变更后才能使用该命令 help 或 manifest 指定的 `--confirm` token；AI Agent 还必须等待用户对此次变更的明确确认。确认 token 是技术校验，不等同于用户授权。
+4. 仅在目标能力没有语义命令覆盖，且调用者已知并获授权访问对应 endpoint、方法和请求体时，才使用 `tanswer api <METHOD> <PATH>`；不得猜测 RPC 方法、路径或请求体。GET/HEAD 可直接执行；其他方法默认只返回 preview，必须在人工审阅并取得 AI 用户对该次请求的明确确认后，使用 `--confirm CONFIRM_TANSWER_RAW_API_WRITE` 执行。
+5. 根级 `--dry-run` 不适用于 `tanswer`。语义写操作与 raw API 的保护规则以当前安装版本的 help 和 manifest 为准。
 
 常见领域入口：
 

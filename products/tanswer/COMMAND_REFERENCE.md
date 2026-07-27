@@ -10,7 +10,9 @@ chaitin-cli tanswer <领域或命令> --help
 chaitin-cli tanswer manifest
 ```
 
-本文档提供稳定的操作入口和安全示例。当前版本的准确参数、枚举、输出字段、风险等级和 `--confirm` token，以运行时 help 与 manifest 为准。
+首次使用请先按 [全悉 CLI 入门的配置说明](./README.md#快速使用) 设置连接信息，并运行 `chaitin-cli tanswer auth check`。可使用 `--url`、`--api-key`、`--timeout`、`--insecure`；环境变量 `TANSWER_URL`、`TANSWER_API_KEY`、`TANSWER_TIMEOUT`、`TANSWER_INSECURE`；或 `config.yaml` 的 `tanswer.url`、`tanswer.api_key`、`tanswer.timeout`、`tanswer.insecure`。
+
+本文档提供稳定的操作入口和安全示例；当前版本的准确参数、枚举、输出字段、风险等级和 `--confirm` token，以运行时 help 与 manifest 为准。
 
 ## 常用任务快捷示例
 
@@ -54,7 +56,7 @@ tanswer manifest
 tanswer api <METHOD> <PATH>
 ```
 
-`api` 仅用于已知且已授权、又没有语义命令覆盖的 Open API；不要据此猜测 RPC 方法或路径。
+`api` 仅用于已知且已授权、又没有语义命令覆盖的 Open API；不要据此猜测 RPC 方法、路径或请求体。GET/HEAD 可直接执行；其他 HTTP 方法默认只输出请求 preview、不会发送请求。人工审阅方法、路径、query 和 body 后，AI Agent 还必须取得用户对该次请求的明确确认，才能使用 `--confirm CONFIRM_TANSWER_RAW_API_WRITE` 执行。根级 `--dry-run` 不适用于 `tanswer`。
 
 ## Threat alarm
 
@@ -172,7 +174,7 @@ tanswer response auto-list
 
 ## 受保护写操作
 
-统一流程如下：
+统一流程如下（适用于各领域的受保护语义写操作；raw API 非 GET/HEAD 请求按上文的专用确认流程执行）：
 
 ```bash
 # 1. 用实际命令及参数查看影响；该步骤不执行产品变更。
