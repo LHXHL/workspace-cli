@@ -34,7 +34,7 @@ chaitin-cli tanswer alarm overview --time 24h
 
 1. 优先使用按业务领域组织的语义命令。
 2. 先通过根命令或领域命令的 `--help` 了解可用操作和必填参数。
-3. 对受保护写操作，先执行 `--preview`，确认影响后再使用该命令 help 或 manifest 指定的 `--confirm` token。
+3. 对受保护写操作，先执行 `--preview`，核对目标、影响和风险。人工操作者确认本次变更后才能使用该命令 help 或 manifest 指定的 `--confirm` token；AI Agent 还必须等待用户对此次变更的明确确认。确认 token 是技术校验，不等同于用户授权。
 4. 仅在目标能力没有语义命令覆盖，且调用者已知并获授权访问对应端点时，才使用 `tanswer api <METHOD> <PATH>`。
 
 常见领域入口：

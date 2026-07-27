@@ -2,6 +2,7 @@ package tanswer
 
 import (
 	"bytes"
+	"os"
 	"strings"
 	"testing"
 )
@@ -39,10 +40,51 @@ func TestTAnswerHelpGuidesUsersWithoutProductDocuments(t *testing.T) {
 
 	for _, want := range []string{
 		"TANSWER_URL", "TANSWER_API_KEY", "auth check", "manifest",
-		"--help", "preview", "confirm", "semantic commands",
+		"--help", "preview", "confirm", "semantic commands", "明确确认",
 	} {
 		if !strings.Contains(strings.ToLower(out.String()), strings.ToLower(want)) {
 			t.Fatalf("help missing %q:\n%s", want, out.String())
+		}
+	}
+}
+
+func TestTAnswerRootHelpDirectsUsersToProductHelp(t *testing.T) {
+	cmd := NewCommand()
+	if !strings.Contains(cmd.Short, "tanswer --help") {
+		t.Fatalf("root command short help does not direct users to product help: %q", cmd.Short)
+	}
+}
+
+func TestHumanCommandReferenceMatchesRuntimeManifest(t *testing.T) {
+	raw, err := os.ReadFile("COMMAND_REFERENCE.md")
+	if err != nil {
+		t.Fatalf("read command reference: %v", err)
+	}
+	reference := string(raw)
+	for _, entry := range BuildCommandManifest().Commands {
+		if !strings.Contains(reference, entry.Name) {
+			t.Fatalf("command reference missing runtime command %q", entry.Name)
+		}
+	}
+	if !strings.Contains(reference, "前五类为只读查询；后三类均带有 `--preview`") {
+		t.Fatalf("command reference must accurately describe the read-only and preview examples")
+	}
+}
+
+func TestEnglishRepositoryGuideIncludesTAnswerOnboarding(t *testing.T) {
+	raw, err := os.ReadFile("../../README.en.md")
+	if err != nil {
+		t.Fatalf("read English README: %v", err)
+	}
+	english := string(raw)
+	for _, want := range []string{
+		"### T-Answer Quick Start",
+		"chaitin-cli tanswer auth check",
+		"chaitin-cli tanswer manifest",
+		"explicit confirmation",
+	} {
+		if !strings.Contains(english, want) {
+			t.Fatalf("English README missing %q", want)
 		}
 	}
 }

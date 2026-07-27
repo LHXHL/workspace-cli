@@ -99,7 +99,7 @@ func newManifestCommand(opts *RootOptions) *cobra.Command {
 
 func BuildCommandManifest() CommandManifest {
 	return CommandManifest{
-		SchemaVersion: "2026-06-26",
+		SchemaVersion: "2026-07-27",
 		Product:       "tanswer",
 		Binary:        "chaitin-cli",
 		Namespace:     "tanswer",
@@ -123,6 +123,7 @@ func BuildCommandManifest() CommandManifest {
 				"discover commands and unknown flags with --help",
 				"prefer semantic commands; use api only for known authorized endpoints not covered by semantic commands",
 				"run preview before protected writes and require the documented confirmation token",
+				"wait for explicit user confirmation after preview before executing a protected write",
 				"do not guess unsupported commands or direct API endpoints",
 			},
 		},

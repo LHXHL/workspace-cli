@@ -173,6 +173,20 @@ safeline.url         -> SAFELINE_URL
 safeline.api_key     -> SAFELINE_API_KEY
 ```
 
+### T-Answer Quick Start
+
+Configure `tanswer.url` and `tanswer.api_key` in `config.yaml`, or set `TANSWER_URL` and `TANSWER_API_KEY`. Never commit a real token.
+
+```bash
+chaitin-cli tanswer auth check
+chaitin-cli tanswer --help
+chaitin-cli tanswer manifest
+```
+
+For human operators using this repository, see [the T-Answer guide](./products/tanswer/README.md) and [command reference](./products/tanswer/COMMAND_REFERENCE.md). Users who only have the installed binary should start with `chaitin-cli tanswer --help`, then use domain or leaf-command help and `manifest` for the current contract.
+
+AI agents must use `chaitin-cli tanswer`, discover commands with help, and use `manifest` for machine-readable parameters, output fields, risks, and confirmation requirements. Prefer semantic commands. Use `tanswer api` only for a known, authorized endpoint not covered by a semantic command. For every protected write, run `--preview`, present the target, impact, and risk to the user, and wait for explicit confirmation of that specific change before using the exact `--confirm` token. A confirmation token is a mechanical CLI requirement, not user authorization.
+
 ### SafeLine-3
 
 SafeLine-3 commands use an OpenAPI token. Configure `safeline-3.api_token` or set `SAFELINE_3_API_TOKEN`.

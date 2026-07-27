@@ -14,7 +14,7 @@ chaitin-cli tanswer manifest
 
 ## 常用任务快捷示例
 
-以下示例可作为人工操作者的起点。前三类为只读查询；后三类均带有 `--preview`，不会提交产品变更。示例中的文档保留地址仅用于演示，执行前请替换成受控环境中的实际值。
+以下示例可作为人工操作者的起点。前五类为只读查询；后三类均带有 `--preview`，不会提交产品变更。示例中的文档保留地址仅用于演示，执行前请替换成受控环境中的实际值。
 
 ```bash
 # 1. 首次配置后，检查连接和 Token 权限。
@@ -42,7 +42,7 @@ chaitin-cli tanswer policy detection-whitelist-create --name trusted-source --sr
 chaitin-cli tanswer response block-policy-create --name block-malicious-ip --object 192.0.2.30 --preview
 ```
 
-如需实际执行第 6 至 8 类操作，先阅读该命令的 `--help` 或 manifest 中的确认要求，检查 preview 输出后，再使用指定的精确 `--confirm` token。
+如需实际执行第 6 至 8 类操作，先阅读该命令的 `--help` 或 manifest 中的确认要求，检查 preview 输出并确认本次变更后，再使用指定的精确 `--confirm` token。对 AI Agent，还必须先取得用户的明确确认；token 本身不等同于用户授权。
 
 ## Foundation
 

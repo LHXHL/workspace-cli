@@ -179,6 +179,9 @@ func TestManifestIncludesRuntimeBootstrapGuidance(t *testing.T) {
 	if !containsString(payload.Bootstrap.AgentProtocol, "discover commands and unknown flags with --help") {
 		t.Fatalf("agent protocol = %#v", payload.Bootstrap.AgentProtocol)
 	}
+	if !containsString(payload.Bootstrap.AgentProtocol, "wait for explicit user confirmation after preview before executing a protected write") {
+		t.Fatalf("agent protocol must require explicit user confirmation: %#v", payload.Bootstrap.AgentProtocol)
+	}
 }
 
 func containsString(values []string, want string) bool {
