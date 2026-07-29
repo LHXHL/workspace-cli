@@ -2103,6 +2103,42 @@ func TestAssetDetailCommandCallsGetAssetInfo(t *testing.T) {
 	}
 }
 
+func TestAssetDetailRejectsEmptyBackendDetailAsNotFound(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		var req rpcRequest
+		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+			t.Fatalf("decode request: %v", err)
+		}
+		if req.Method != "AssetService.GetAssetInfo" {
+			t.Fatalf("method = %q", req.Method)
+		}
+		_ = json.NewEncoder(w).Encode(rpcResponse{
+			JSONRPC: "2.0",
+			ID:      req.ID,
+			Result:  json.RawMessage(`{"data":{"id":0}}`),
+		})
+	}))
+	defer server.Close()
+
+	var out bytes.Buffer
+	cmd := NewRootCommand(RootOptions{Out: &out, ErrOut: &out})
+	cmd.SetArgs([]string{
+		"tanswer", "--url", server.URL, "--api-key", "token-123",
+		"asset", "detail", "--id", "999999",
+	})
+
+	if err := cmd.Execute(); err != nil {
+		t.Fatalf("Execute returned error: %v", err)
+	}
+	var env ErrorEnvelope
+	if err := json.Unmarshal(out.Bytes(), &env); err != nil {
+		t.Fatalf("decode output: %v\n%s", err, out.String())
+	}
+	if env.Success || env.Error.Code != "ASSET_NOT_FOUND" || env.Error.Retryable {
+		t.Fatalf("not-found error = %#v", env)
+	}
+}
+
 func assertAssetDownloadRequest(t *testing.T, r *http.Request, withData bool, withExample bool, wantIDs []int64) {
 	t.Helper()
 	if r.URL.Path != "/api/download" {

@@ -285,6 +285,9 @@ func newAssetDetailCommand(opts *RootOptions) *cobra.Command {
 			if err := client.CallRPC(cmd.Context(), "AssetService.GetAssetInfo", map[string]any{"id": id}, &result); err != nil {
 				return writeAssetError(cmd, "查看资产详情", "chaitin-cli tanswer asset detail", "ASSET_DETAIL_FAILED", err.Error(), true)
 			}
+			if assetDetailIsMissing(result.Data) {
+				return writeAssetError(cmd, "查看资产详情", "chaitin-cli tanswer asset detail", "ASSET_NOT_FOUND", fmt.Sprintf("asset %d was not found", id), false)
+			}
 			raw, err := RenderJSON(SuccessEnvelope{
 				Success: true,
 				Task:    "查看资产详情",
@@ -1634,7 +1637,38 @@ func fetchAssetDetail(cmd *cobra.Command, client *Client, id uint) (map[string]a
 	if err := client.CallRPC(cmd.Context(), "AssetService.GetAssetInfo", map[string]any{"id": id}, &result); err != nil {
 		return nil, err
 	}
+	if assetDetailIsMissing(result.Data) {
+		return nil, fmt.Errorf("asset %d was not found", id)
+	}
 	return result.Data, nil
+}
+
+func assetDetailIsMissing(detail map[string]any) bool {
+	if len(detail) == 0 {
+		return true
+	}
+	value, ok := detail["id"]
+	if !ok {
+		return false
+	}
+	switch id := value.(type) {
+	case float64:
+		return id == 0
+	case float32:
+		return id == 0
+	case int:
+		return id == 0
+	case int64:
+		return id == 0
+	case uint:
+		return id == 0
+	case uint64:
+		return id == 0
+	case string:
+		return strings.TrimSpace(id) == "0"
+	default:
+		return false
+	}
 }
 
 func fetchAssetDetails(cmd *cobra.Command, client *Client, ids []uint) ([]map[string]any, error) {

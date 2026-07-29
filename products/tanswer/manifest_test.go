@@ -197,6 +197,20 @@ func TestSemanticProtectedWritesDeclareCompletePreviewContract(t *testing.T) {
 	}
 }
 
+func TestAlarmByThreatManifestDeclaresAtLeastOneThreatSelector(t *testing.T) {
+	command := findManifestCommand(t, BuildCommandManifest(), "tanswer alarm by-threat")
+	if len(command.InputConstraints) != 1 {
+		t.Fatalf("input constraints = %#v", command.InputConstraints)
+	}
+	constraint := command.InputConstraints[0]
+	if constraint.Rule != "at_least_one" {
+		t.Fatalf("constraint rule = %q", constraint.Rule)
+	}
+	if len(constraint.Flags) != 3 || !containsString(constraint.Flags, "--name") || !containsString(constraint.Flags, "--tag") || !containsString(constraint.Flags, "--phase") {
+		t.Fatalf("constraint flags = %#v", constraint.Flags)
+	}
+}
+
 func findManifestCommand(t *testing.T, manifest CommandManifest, name string) ManifestCommand {
 	t.Helper()
 	for _, cmd := range manifest.Commands {

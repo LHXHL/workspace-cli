@@ -268,6 +268,40 @@ func TestRuntimeConfigFallsBackToGlobalWhenLocalConfigParseFails(t *testing.T) {
 	}
 }
 
+func TestTAnswerGlobalConfigFallbackAtCLIEntry(t *testing.T) {
+	homeDir := t.TempDir()
+	workDir := t.TempDir()
+	setTestHome(t, homeDir)
+	withWorkingDir(t, workDir)
+	t.Setenv("TANSWER_URL", "")
+	t.Setenv("TANSWER_API_KEY", "")
+	t.Setenv("TANSWER_TIMEOUT", "")
+	t.Setenv("TANSWER_INSECURE", "")
+
+	globalPath := filepath.Join(homeDir, defaultConfigDir, defaultConfigFile)
+	if err := os.MkdirAll(filepath.Dir(globalPath), 0o700); err != nil {
+		t.Fatalf("MkdirAll() error = %v", err)
+	}
+	if err := os.WriteFile(globalPath, []byte("tanswer:\n  url: https://global-tanswer.example\n  api_key: placeholder\n"), 0o600); err != nil {
+		t.Fatalf("WriteFile(global) error = %v", err)
+	}
+
+	app, err := newApp()
+	if err != nil {
+		t.Fatalf("newApp() error = %v", err)
+	}
+	var out strings.Builder
+	app.root.SetOut(&out)
+	app.root.SetErr(&out)
+	app.root.SetArgs([]string{"tanswer", "auth", "status"})
+	if err := app.execute(); err != nil {
+		t.Fatalf("execute() error = %v\\n%s", err, out.String())
+	}
+	if !strings.Contains(out.String(), `"environment": "https://global-tanswer.example"`) || !strings.Contains(out.String(), `"token_set": true`) {
+		t.Fatalf("auth status did not use global T-Answer configuration:\n%s", out.String())
+	}
+}
+
 func TestWriteConfigPathUsesRecognizedLocalConfig(t *testing.T) {
 	homeDir := t.TempDir()
 	workDir := t.TempDir()

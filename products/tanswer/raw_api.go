@@ -28,7 +28,7 @@ func newRawAPICommand(opts *RootOptions) *cobra.Command {
 		RunE: func(cmd *cobra.Command, args []string) error {
 			path, err := validateRawAPIPath(args[1])
 			if err != nil {
-				return err
+				return writeRawAPIInputError(cmd, "INVALID_API_PATH", err)
 			}
 			cfg, err := LoadConfig(ConfigOptions{
 				Address:            opts.Address,
@@ -41,11 +41,11 @@ func newRawAPICommand(opts *RootOptions) *cobra.Command {
 			}
 			query, err := parseQueryJSON(queryText)
 			if err != nil {
-				return err
+				return writeRawAPIInputError(cmd, "INVALID_API_QUERY", err)
 			}
 			body, err := parseBodyJSON(bodyText)
 			if err != nil {
-				return err
+				return writeRawAPIInputError(cmd, "INVALID_API_BODY", err)
 			}
 			method := strings.ToUpper(strings.TrimSpace(args[0]))
 			if rawAPIRequiresConfirmation(method) {
@@ -130,6 +130,20 @@ func writeRawAPIConfirmationError(cmd *cobra.Command, err error) error {
 		Task:    "Open API 兜底写操作",
 		Command: "chaitin-cli tanswer api",
 		Error:   CLIError{Code: "RAW_API_CONFIRMATION_REQUIRED", Message: err.Error(), Retryable: false},
+	})
+	if renderErr != nil {
+		return renderErr
+	}
+	fmt.Fprintln(cmd.OutOrStdout(), string(raw))
+	return nil
+}
+
+func writeRawAPIInputError(cmd *cobra.Command, code string, err error) error {
+	raw, renderErr := RenderJSON(ErrorEnvelope{
+		Success: false,
+		Task:    "Open API 兜底调用",
+		Command: "chaitin-cli tanswer api",
+		Error:   CLIError{Code: code, Message: err.Error(), Retryable: false},
 	})
 	if renderErr != nil {
 		return renderErr

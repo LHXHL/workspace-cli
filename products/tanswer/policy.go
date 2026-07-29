@@ -1012,7 +1012,7 @@ func addPolicyDetectionWhitelistWriteFlags(cmd *cobra.Command, opts *policyDetec
 	cmd.Flags().StringVar(&opts.storage, "storage", "drop", "handling mode: drop, ignore, 1, or 2")
 	cmd.Flags().StringVar(&opts.defaultMode, "mode", "default", "match mode: default, advanced, 1, or 2")
 	cmd.Flags().StringVar(&opts.expire, "expire", "", "expire timestamp in milliseconds")
-	cmd.Flags().StringVar(&opts.validTime, "valid-time", "", "valid duration in seconds")
+	cmd.Flags().StringVar(&opts.validTime, "valid-time", "", "optional valid duration in seconds, must be greater than 0")
 	cmd.Flags().BoolVar(&opts.ignore, "ignore-history", false, "ignore matched historical alarms")
 	cmd.Flags().StringVar(&opts.remark, "remark", "", "remark")
 	cmd.Flags().StringVar(&opts.srcAdvanced, "src-advanced", "", "advanced source IP:port rules, comma separated")
@@ -1148,6 +1148,9 @@ func buildPolicyDetectionWhitelistWriteRequest(opts policyDetectionWhitelistWrit
 	validTime, err := optionalInt64(opts.validTime, "valid-time")
 	if err != nil {
 		return nil, err
+	}
+	if strings.TrimSpace(opts.validTime) != "" && validTime <= 0 {
+		return nil, fmt.Errorf("valid-time must be greater than 0")
 	}
 	req := map[string]any{
 		"name":             name,

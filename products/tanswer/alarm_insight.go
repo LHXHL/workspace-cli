@@ -91,7 +91,7 @@ func newAlarmByThreatCommand(opts *RootOptions) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "by-threat",
 		Short: "查询指定威胁相关告警",
-		Long: "查询指定威胁相关告警，用于围绕威胁名称、威胁类型或攻击阶段查看当前影响范围。\n\n" +
+		Long: "查询指定威胁相关告警，用于围绕威胁名称、威胁类型或攻击阶段查看当前影响范围。必须至少提供 --name、--tag 或 --phase 中的一项。\n\n" +
 			"输出：威胁筛选条件、查询时间范围、相关告警数、最高等级、成功/失陷数量、攻击源 Top、受害对象 Top、告警摘要。",
 		Example: "  chaitin-cli tanswer alarm by-threat --name SQL注入 --time today\n" +
 			"  chaitin-cli tanswer alarm by-threat --tag Webshell --phase intrustion",

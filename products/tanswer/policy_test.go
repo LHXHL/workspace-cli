@@ -182,6 +182,21 @@ func TestBuildPolicyDetectionWhitelistWriteRequestMapsFields(t *testing.T) {
 	}
 }
 
+func TestBuildPolicyDetectionWhitelistWriteRequestRejectsNonPositiveValidTime(t *testing.T) {
+	for _, validTime := range []string{"0", "-1"} {
+		t.Run(validTime, func(t *testing.T) {
+			_, err := buildPolicyDetectionWhitelistWriteRequest(policyDetectionWhitelistWriteOptions{
+				name:      "登录误报",
+				srcIP:     "198.51.100.10",
+				validTime: validTime,
+			})
+			if err == nil || !strings.Contains(err.Error(), "valid-time") {
+				t.Fatalf("valid-time %q error = %v", validTime, err)
+			}
+		})
+	}
+}
+
 func TestPolicyDetectionWhitelistCreatePreviewDoesNotCallRPC(t *testing.T) {
 	serverCalled := false
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {

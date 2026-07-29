@@ -39,22 +39,29 @@ type BootstrapManifest struct {
 }
 
 type ManifestCommand struct {
-	Name                  string                 `json:"name"`
-	FullCommand           string                 `json:"full_command"`
-	Layer                 string                 `json:"layer"`
-	Summary               string                 `json:"summary"`
-	UseWhen               []string               `json:"use_when"`
-	DoNotUseWhen          []string               `json:"do_not_use_when,omitempty"`
-	Arguments             []ManifestArgument     `json:"arguments,omitempty"`
-	Flags                 []ManifestFlag         `json:"flags,omitempty"`
-	OutputType            string                 `json:"output_type"`
-	OutputFields          []string               `json:"output_fields"`
-	PreviewOutputFields   []string               `json:"preview_output_fields,omitempty"`
-	RiskLevel             string                 `json:"risk_level"`
-	RequiresConfirmation  bool                   `json:"requires_confirmation"`
-	ConfirmationCondition string                 `json:"confirmation_condition,omitempty"`
-	Examples              []ManifestExample      `json:"examples"`
-	Backend               map[string]interface{} `json:"backend,omitempty"`
+	Name                  string                    `json:"name"`
+	FullCommand           string                    `json:"full_command"`
+	Layer                 string                    `json:"layer"`
+	Summary               string                    `json:"summary"`
+	UseWhen               []string                  `json:"use_when"`
+	DoNotUseWhen          []string                  `json:"do_not_use_when,omitempty"`
+	Arguments             []ManifestArgument        `json:"arguments,omitempty"`
+	Flags                 []ManifestFlag            `json:"flags,omitempty"`
+	InputConstraints      []ManifestInputConstraint `json:"input_constraints,omitempty"`
+	OutputType            string                    `json:"output_type"`
+	OutputFields          []string                  `json:"output_fields"`
+	PreviewOutputFields   []string                  `json:"preview_output_fields,omitempty"`
+	RiskLevel             string                    `json:"risk_level"`
+	RequiresConfirmation  bool                      `json:"requires_confirmation"`
+	ConfirmationCondition string                    `json:"confirmation_condition,omitempty"`
+	Examples              []ManifestExample         `json:"examples"`
+	Backend               map[string]interface{}    `json:"backend,omitempty"`
+}
+
+type ManifestInputConstraint struct {
+	Rule        string   `json:"rule"`
+	Flags       []string `json:"flags"`
+	Description string   `json:"description"`
 }
 
 type ManifestArgument struct {
@@ -101,7 +108,7 @@ func newManifestCommand(opts *RootOptions) *cobra.Command {
 
 func BuildCommandManifest() CommandManifest {
 	manifest := CommandManifest{
-		SchemaVersion: "2026-07-27",
+		SchemaVersion: "2026-07-29",
 		Product:       "tanswer",
 		Binary:        "chaitin-cli",
 		Namespace:     "tanswer",
@@ -476,7 +483,14 @@ func BuildCommandManifest() CommandManifest {
 				DoNotUseWhen: []string{
 					"没有指定威胁名称、威胁类型或攻击阶段时，使用 tanswer alarm overview 或 list。",
 				},
-				Flags:      alarmThreatManifestFlags(),
+				Flags: alarmThreatManifestFlags(),
+				InputConstraints: []ManifestInputConstraint{
+					{
+						Rule:        "at_least_one",
+						Flags:       []string{"--name", "--tag", "--phase"},
+						Description: "provide at least one threat selector",
+					},
+				},
 				OutputType: "alarm_subject_summary",
 				OutputFields: []string{
 					"threat",
@@ -2176,7 +2190,7 @@ func policyDetectionWhitelistWriteManifestFlags(includeID bool, confirmToken str
 		ManifestFlag{Name: "--status", Type: "enum", Required: false, Default: "enabled", Enum: []string{"enabled", "disabled", "1", "0"}, Description: "status"},
 		ManifestFlag{Name: "--mode", Type: "enum", Required: false, Default: "default", Enum: []string{"default", "advanced", "1", "2"}, Description: "match mode"},
 		ManifestFlag{Name: "--expire", Type: "integer", Required: false, Description: "expire timestamp in milliseconds"},
-		ManifestFlag{Name: "--valid-time", Type: "integer", Required: false, Description: "valid duration in seconds"},
+		ManifestFlag{Name: "--valid-time", Type: "integer", Required: false, Description: "optional valid duration in seconds; when set, must be greater than 0"},
 		ManifestFlag{Name: "--ignore-history", Type: "boolean", Required: false, Description: "ignore matched historical alarms"},
 		ManifestFlag{Name: "--preview", Type: "boolean", Required: false, Description: "return write preview without executing"},
 		ManifestFlag{Name: "--confirm", Type: "string", Required: false, Description: "must equal " + confirmToken + " to execute"},
