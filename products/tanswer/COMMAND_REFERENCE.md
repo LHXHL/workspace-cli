@@ -37,8 +37,8 @@ chaitin-cli tanswer asset list --page-size 10
 # 6. 预览创建资产，不会写入后端。
 chaitin-cli tanswer asset create --name core-db --ip 192.0.2.10 --preview
 
-# 7. 预览创建检测白名单，不会写入后端。
-chaitin-cli tanswer policy detection-whitelist-create --name trusted-source --src-ip 192.0.2.20 --preview
+# 7. 预览创建检测白名单，不会写入后端。必须提供过期时间或有效时长。
+chaitin-cli tanswer policy detection-whitelist-create --name trusted-source --src-ip 192.0.2.20 --valid-time 3600 --preview
 
 # 8. 预览创建响应封禁策略，不会写入后端。
 chaitin-cli tanswer response block-policy-create --name block-malicious-ip --object 192.0.2.30 --preview

@@ -211,6 +211,25 @@ func TestAlarmByThreatManifestDeclaresAtLeastOneThreatSelector(t *testing.T) {
 	}
 }
 
+func TestPolicyDetectionWhitelistWriteManifestRequiresExpiry(t *testing.T) {
+	for _, name := range []string{
+		"tanswer policy detection-whitelist-create",
+		"tanswer policy detection-whitelist-update",
+		"tanswer policy detection-whitelist-from-alarm",
+	} {
+		command := findManifestCommand(t, BuildCommandManifest(), name)
+		found := false
+		for _, constraint := range command.InputConstraints {
+			if constraint.Rule == "at_least_one" && containsString(constraint.Flags, "--expire") && containsString(constraint.Flags, "--valid-time") {
+				found = true
+			}
+		}
+		if !found {
+			t.Errorf("%s input constraints = %#v, want expiry constraint", name, command.InputConstraints)
+		}
+	}
+}
+
 func findManifestCommand(t *testing.T, manifest CommandManifest, name string) ManifestCommand {
 	t.Helper()
 	for _, cmd := range manifest.Commands {

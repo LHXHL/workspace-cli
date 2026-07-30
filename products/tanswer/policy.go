@@ -209,10 +209,11 @@ func newPolicyDetectionWhitelistCreateCommand(opts *RootOptions) *cobra.Command 
 		Use:   "detection-whitelist-create",
 		Short: "新增检测白名单",
 		Long: "新增检测白名单，用于维护误报抑制规则。该命令是高影响写操作：默认只返回写入预览，必须使用 --confirm CONFIRM_POLICY_DETECTION_WHITELIST_CREATE 才会调用后端创建接口。\n\n" +
+			"有效期必须提供 --expire（毫秒时间戳）或 --valid-time（正整数秒）中的至少一项。\n" +
 			"输出预览：requires_confirmation、confirmed、operation_type、target、change_summary、impact、risk_warnings、confirmation_token。\n" +
 			"执行输出：confirmed、result、object、audit。",
-		Example: "  chaitin-cli tanswer policy detection-whitelist-create --name 登录误报 --src-ip 198.51.100.10 --preview\n" +
-			"  chaitin-cli tanswer policy detection-whitelist-create --name 登录误报 --src-ip 198.51.100.10 --confirm CONFIRM_POLICY_DETECTION_WHITELIST_CREATE",
+		Example: "  chaitin-cli tanswer policy detection-whitelist-create --name 登录误报 --src-ip 198.51.100.10 --valid-time 3600 --preview\n" +
+			"  chaitin-cli tanswer policy detection-whitelist-create --name 登录误报 --src-ip 198.51.100.10 --valid-time 3600 --confirm CONFIRM_POLICY_DETECTION_WHITELIST_CREATE",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			req, err := buildPolicyDetectionWhitelistWriteRequest(policyOpts)
 			if err != nil {
@@ -272,10 +273,11 @@ func newPolicyDetectionWhitelistUpdateCommand(opts *RootOptions) *cobra.Command 
 		Use:   "detection-whitelist-update",
 		Short: "编辑检测白名单",
 		Long: "编辑检测白名单，用于更新单条误报抑制规则。该命令是高影响写操作：预览阶段会读取当前白名单并返回 before/after；必须使用 --confirm CONFIRM_POLICY_DETECTION_WHITELIST_UPDATE 才会调用后端更新接口。\n\n" +
+			"有效期必须提供 --expire（毫秒时间戳）或 --valid-time（正整数秒）中的至少一项。\n" +
 			"输出预览：requires_confirmation、confirmed、operation_type、target、change_summary、impact、risk_warnings、confirmation_token。\n" +
 			"执行输出：confirmed、result、object、audit。",
-		Example: "  chaitin-cli tanswer policy detection-whitelist-update --id 21 --name 新白名单 --src-ip 198.51.100.11 --preview\n" +
-			"  chaitin-cli tanswer policy detection-whitelist-update --id 21 --name 新白名单 --src-ip 198.51.100.11 --confirm CONFIRM_POLICY_DETECTION_WHITELIST_UPDATE",
+		Example: "  chaitin-cli tanswer policy detection-whitelist-update --id 21 --name 新白名单 --src-ip 198.51.100.11 --valid-time 3600 --preview\n" +
+			"  chaitin-cli tanswer policy detection-whitelist-update --id 21 --name 新白名单 --src-ip 198.51.100.11 --valid-time 3600 --confirm CONFIRM_POLICY_DETECTION_WHITELIST_UPDATE",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			req, err := buildPolicyDetectionWhitelistUpdateRequest(policyOpts)
 			if err != nil {
@@ -355,13 +357,17 @@ func newPolicyDetectionWhitelistFromAlarmCommand(opts *RootOptions) *cobra.Comma
 		Use:   "detection-whitelist-from-alarm",
 		Short: "从告警对象生成检测白名单",
 		Long: "从告警对象生成检测白名单，用于把已确认误报的威胁告警转换为候选误报抑制规则。该命令是高影响写操作：预览阶段会读取告警详情并生成候选白名单；必须使用 --confirm CONFIRM_POLICY_DETECTION_WHITELIST_FROM_ALARM 才会调用后端创建接口。\n\n" +
+			"有效期必须提供 --expire（毫秒时间戳）或 --valid-time（正整数秒）中的至少一项。\n" +
 			"输出预览：source_alarm、suggested_whitelist、requires_confirmation、confirmation_token、risk_warnings。\n" +
 			"执行输出：confirmed、result、object、audit。",
-		Example: "  chaitin-cli tanswer policy detection-whitelist-from-alarm --id '<doc_id>' --preview\n" +
-			"  chaitin-cli tanswer policy detection-whitelist-from-alarm --id '<doc_id>' --remark 已确认误报 --confirm CONFIRM_POLICY_DETECTION_WHITELIST_FROM_ALARM",
+		Example: "  chaitin-cli tanswer policy detection-whitelist-from-alarm --id '<doc_id>' --valid-time 3600 --preview\n" +
+			"  chaitin-cli tanswer policy detection-whitelist-from-alarm --id '<doc_id>' --remark 已确认误报 --valid-time 3600 --confirm CONFIRM_POLICY_DETECTION_WHITELIST_FROM_ALARM",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			if strings.TrimSpace(policyOpts.id) == "" {
 				return writePolicyError(cmd, "从告警对象生成检测白名单", commandText, "MISSING_ALARM_ID", "missing alarm doc_id: set --id", false)
+			}
+			if _, _, err := policyDetectionWhitelistExpiry(policyOpts.write); err != nil {
+				return writePolicyError(cmd, "从告警对象生成检测白名单", commandText, "INVALID_POLICY_DETECTION_WHITELIST_FROM_ALARM_REQUEST", err.Error(), false)
 			}
 			if strings.TrimSpace(policyOpts.write.confirm) != "" {
 				if err := ValidateWriteConfirmation(policyOpts.write.confirm, policyDetectionWhitelistFromAlarmConfirmToken); err != nil {
@@ -1011,8 +1017,8 @@ func addPolicyDetectionWhitelistWriteFlags(cmd *cobra.Command, opts *policyDetec
 	cmd.Flags().StringVar(&opts.status, "status", "enabled", "status: enabled, disabled, 1, or 0")
 	cmd.Flags().StringVar(&opts.storage, "storage", "drop", "handling mode: drop, ignore, 1, or 2")
 	cmd.Flags().StringVar(&opts.defaultMode, "mode", "default", "match mode: default, advanced, 1, or 2")
-	cmd.Flags().StringVar(&opts.expire, "expire", "", "expire timestamp in milliseconds")
-	cmd.Flags().StringVar(&opts.validTime, "valid-time", "", "optional valid duration in seconds, must be greater than 0")
+	cmd.Flags().StringVar(&opts.expire, "expire", "", "expire timestamp in milliseconds; provide this or --valid-time")
+	cmd.Flags().StringVar(&opts.validTime, "valid-time", "", "valid duration in seconds; must be greater than 0; provide this or --expire")
 	cmd.Flags().BoolVar(&opts.ignore, "ignore-history", false, "ignore matched historical alarms")
 	cmd.Flags().StringVar(&opts.remark, "remark", "", "remark")
 	cmd.Flags().StringVar(&opts.srcAdvanced, "src-advanced", "", "advanced source IP:port rules, comma separated")
@@ -1141,16 +1147,9 @@ func buildPolicyDetectionWhitelistWriteRequest(opts policyDetectionWhitelistWrit
 	if err != nil {
 		return nil, err
 	}
-	expire, err := optionalInt64(opts.expire, "expire")
+	expire, validTime, err := policyDetectionWhitelistExpiry(opts)
 	if err != nil {
 		return nil, err
-	}
-	validTime, err := optionalInt64(opts.validTime, "valid-time")
-	if err != nil {
-		return nil, err
-	}
-	if strings.TrimSpace(opts.validTime) != "" && validTime <= 0 {
-		return nil, fmt.Errorf("valid-time must be greater than 0")
 	}
 	req := map[string]any{
 		"name":             name,
@@ -1182,6 +1181,27 @@ func buildPolicyDetectionWhitelistWriteRequest(opts policyDetectionWhitelistWrit
 		return nil, fmt.Errorf("missing detection whitelist match condition: set at least one simple or advanced match field")
 	}
 	return req, nil
+}
+
+func policyDetectionWhitelistExpiry(opts policyDetectionWhitelistWriteOptions) (int64, int64, error) {
+	expire, err := optionalInt64(opts.expire, "expire")
+	if err != nil {
+		return 0, 0, err
+	}
+	if strings.TrimSpace(opts.expire) != "" && expire <= 0 {
+		return 0, 0, fmt.Errorf("expire must be greater than 0")
+	}
+	validTime, err := optionalInt64(opts.validTime, "valid-time")
+	if err != nil {
+		return 0, 0, err
+	}
+	if strings.TrimSpace(opts.validTime) != "" && validTime <= 0 {
+		return 0, 0, fmt.Errorf("valid-time must be greater than 0")
+	}
+	if expire <= 0 && validTime <= 0 {
+		return 0, 0, fmt.Errorf("missing detection whitelist expiry: set --expire or --valid-time")
+	}
+	return expire, validTime, nil
 }
 
 func buildPolicyDetectionWhitelistUpdateRequest(opts policyDetectionWhitelistWriteOptions) (map[string]any, error) {

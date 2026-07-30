@@ -1661,15 +1661,15 @@ func BuildCommandManifest() CommandManifest {
 				"需要新增检测白名单来抑制误报或重复告警。",
 				"已经明确白名单名称、匹配条件、处置方式、状态和有效期。",
 			}, policyDetectionWhitelistWriteManifestFlags(false, "CONFIRM_POLICY_DETECTION_WHITELIST_CREATE"), "policy_detection_whitelist_create_result", []ManifestExample{
-				{Description: "预览新增检测白名单", Command: "chaitin-cli tanswer policy detection-whitelist-create --name 登录误报 --src-ip 198.51.100.10 --preview"},
-				{Description: "确认新增检测白名单", Command: "chaitin-cli tanswer policy detection-whitelist-create --name 登录误报 --src-ip 198.51.100.10 --confirm CONFIRM_POLICY_DETECTION_WHITELIST_CREATE"},
+				{Description: "预览新增检测白名单", Command: "chaitin-cli tanswer policy detection-whitelist-create --name 登录误报 --src-ip 198.51.100.10 --valid-time 3600 --preview"},
+				{Description: "确认新增检测白名单", Command: "chaitin-cli tanswer policy detection-whitelist-create --name 登录误报 --src-ip 198.51.100.10 --valid-time 3600 --confirm CONFIRM_POLICY_DETECTION_WHITELIST_CREATE"},
 			}, []string{"AlarmService.CreateWhiteList"}, policyDetectionWhitelistCreateConfirmToken),
 			policyDetectionWhitelistWriteManifestCommand("tanswer policy detection-whitelist-update", "chaitin-cli tanswer policy detection-whitelist-update", "编辑检测白名单。", []string{
 				"需要更新单条检测白名单配置。",
 				"需要执行前查看当前白名单与目标配置差异。",
 			}, policyDetectionWhitelistWriteManifestFlags(true, "CONFIRM_POLICY_DETECTION_WHITELIST_UPDATE"), "policy_detection_whitelist_update_result", []ManifestExample{
-				{Description: "预览编辑检测白名单", Command: "chaitin-cli tanswer policy detection-whitelist-update --id 21 --name 新白名单 --src-ip 198.51.100.11 --preview"},
-				{Description: "确认编辑检测白名单", Command: "chaitin-cli tanswer policy detection-whitelist-update --id 21 --name 新白名单 --src-ip 198.51.100.11 --confirm CONFIRM_POLICY_DETECTION_WHITELIST_UPDATE"},
+				{Description: "预览编辑检测白名单", Command: "chaitin-cli tanswer policy detection-whitelist-update --id 21 --name 新白名单 --src-ip 198.51.100.11 --valid-time 3600 --preview"},
+				{Description: "确认编辑检测白名单", Command: "chaitin-cli tanswer policy detection-whitelist-update --id 21 --name 新白名单 --src-ip 198.51.100.11 --valid-time 3600 --confirm CONFIRM_POLICY_DETECTION_WHITELIST_UPDATE"},
 			}, []string{"AlarmService.SearchWhiteList", "AlarmService.UpdateWhiteList"}, policyDetectionWhitelistUpdateConfirmToken),
 			policyDetectionWhitelistWriteManifestCommand("tanswer policy detection-whitelist-enable", "chaitin-cli tanswer policy detection-whitelist-enable", "启用检测白名单。", []string{
 				"需要启用一条或多条检测白名单。",
@@ -1690,8 +1690,8 @@ func BuildCommandManifest() CommandManifest {
 				"已经确认一条威胁告警为误报，需要基于告警字段生成候选检测白名单。",
 				"需要执行前查看告警对象、建议白名单匹配范围和风险提示。",
 			}, policyDetectionWhitelistFromAlarmManifestFlags(), "policy_detection_whitelist_from_alarm_result", []ManifestExample{
-				{Description: "预览从告警生成检测白名单", Command: "chaitin-cli tanswer policy detection-whitelist-from-alarm --id '<doc_id>' --preview"},
-				{Description: "确认从告警生成检测白名单", Command: "chaitin-cli tanswer policy detection-whitelist-from-alarm --id '<doc_id>' --remark 已确认误报 --confirm CONFIRM_POLICY_DETECTION_WHITELIST_FROM_ALARM"},
+				{Description: "预览从告警生成检测白名单", Command: "chaitin-cli tanswer policy detection-whitelist-from-alarm --id '<doc_id>' --valid-time 3600 --preview"},
+				{Description: "确认从告警生成检测白名单", Command: "chaitin-cli tanswer policy detection-whitelist-from-alarm --id '<doc_id>' --remark 已确认误报 --valid-time 3600 --confirm CONFIRM_POLICY_DETECTION_WHITELIST_FROM_ALARM"},
 			}, []string{"AlarmService.GetAlarm", "AlarmService.CreateWhiteList"}, policyDetectionWhitelistFromAlarmConfirmToken),
 			policyFileExportManifestCommand("tanswer policy detection-whitelist-export", "chaitin-cli tanswer policy detection-whitelist-export", "导出检测白名单文件。", "detection_whitelist_export_file", []ManifestExample{
 				{Description: "导出全部检测白名单", Command: "chaitin-cli tanswer policy detection-whitelist-export --output ./detection-whitelist.xlsx"},
@@ -2144,7 +2144,14 @@ func policyDetectionWhitelistWriteManifestCommand(name string, fullCommand strin
 			"需要响应白名单或旁路阻断策略时，使用 response 域命令。",
 			"需要导入或导出检测白名单文件时，使用后续文件型命令。",
 		},
-		Flags:      flags,
+		Flags: flags,
+		InputConstraints: []ManifestInputConstraint{
+			{
+				Rule:        "at_least_one",
+				Flags:       []string{"--expire", "--valid-time"},
+				Description: "provide an expiry timestamp in milliseconds or a positive valid duration in seconds",
+			},
+		},
 		OutputType: outputType,
 		OutputFields: []string{
 			"preview.requires_confirmation",
@@ -2189,8 +2196,8 @@ func policyDetectionWhitelistWriteManifestFlags(includeID bool, confirmToken str
 		ManifestFlag{Name: "--storage", Type: "enum", Required: false, Default: "drop", Enum: []string{"drop", "ignore", "1", "2"}, Description: "handling mode"},
 		ManifestFlag{Name: "--status", Type: "enum", Required: false, Default: "enabled", Enum: []string{"enabled", "disabled", "1", "0"}, Description: "status"},
 		ManifestFlag{Name: "--mode", Type: "enum", Required: false, Default: "default", Enum: []string{"default", "advanced", "1", "2"}, Description: "match mode"},
-		ManifestFlag{Name: "--expire", Type: "integer", Required: false, Description: "expire timestamp in milliseconds"},
-		ManifestFlag{Name: "--valid-time", Type: "integer", Required: false, Description: "optional valid duration in seconds; when set, must be greater than 0"},
+		ManifestFlag{Name: "--expire", Type: "integer", Required: false, Description: "expiry timestamp in milliseconds; provide this or --valid-time; when set, must be greater than 0"},
+		ManifestFlag{Name: "--valid-time", Type: "integer", Required: false, Description: "valid duration in seconds; provide this or --expire; must be greater than 0"},
 		ManifestFlag{Name: "--ignore-history", Type: "boolean", Required: false, Description: "ignore matched historical alarms"},
 		ManifestFlag{Name: "--preview", Type: "boolean", Required: false, Description: "return write preview without executing"},
 		ManifestFlag{Name: "--confirm", Type: "string", Required: false, Description: "must equal " + confirmToken + " to execute"},
