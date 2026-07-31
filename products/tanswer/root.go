@@ -3,17 +3,19 @@ package tanswer
 import (
 	"fmt"
 	"io"
+	"strconv"
 
 	"github.com/spf13/cobra"
 )
 
 type RootOptions struct {
-	Address            string
-	Token              string
-	Timeout            string
-	InsecureSkipVerify bool
-	Out                io.Writer
-	ErrOut             io.Writer
+	Address               string
+	Token                 string
+	Timeout               string
+	InsecureSkipVerify    bool
+	InsecureSkipVerifySet bool
+	Out                   io.Writer
+	ErrOut                io.Writer
 }
 
 // NewCommand creates the T-Answer product command for chaitin-cli.
@@ -100,8 +102,11 @@ func syncOptionsFromFlags(cmd *cobra.Command, opts *RootOptions) {
 	if value := inheritedFlagValue(cmd, "timeout"); value != "" {
 		opts.Timeout = value
 	}
-	if flag := cmd.Flags().Lookup("insecure"); flag != nil && flag.Value.String() == "true" {
-		opts.InsecureSkipVerify = true
+	if flag := cmd.Flags().Lookup("insecure"); flag != nil && flag.Changed {
+		if insecure, err := strconv.ParseBool(flag.Value.String()); err == nil {
+			opts.InsecureSkipVerify = insecure
+			opts.InsecureSkipVerifySet = true
+		}
 	}
 }
 

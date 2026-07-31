@@ -164,7 +164,7 @@ func newPolicyDetectionWhitelistCommand(opts *RootOptions) *cobra.Command {
 			if policyOpts.pageSize < 1 || policyOpts.pageSize > 100 {
 				return writePolicyError(cmd, "查询检测白名单", "chaitin-cli tanswer policy detection-whitelist", "INVALID_PAGE_SIZE", "page-size must be between 1 and 100", false)
 			}
-			cfg, err := LoadConfig(ConfigOptions{Address: opts.Address, Token: opts.Token, Timeout: opts.Timeout, InsecureSkipVerify: opts.InsecureSkipVerify})
+			cfg, err := LoadConfig(ConfigOptions{Address: opts.Address, Token: opts.Token, Timeout: opts.Timeout, InsecureSkipVerify: opts.InsecureSkipVerify, InsecureSkipVerifySet: opts.InsecureSkipVerifySet})
 			if err != nil {
 				return err
 			}
@@ -239,7 +239,7 @@ func newPolicyDetectionWhitelistCreateCommand(opts *RootOptions) *cobra.Command 
 			if err := ValidateWriteConfirmation(policyOpts.confirm, policyDetectionWhitelistCreateConfirmToken); err != nil {
 				return writePolicyError(cmd, "新增检测白名单", "chaitin-cli tanswer policy detection-whitelist-create", "POLICY_DETECTION_WHITELIST_CREATE_CONFIRMATION_REQUIRED", err.Error(), false)
 			}
-			cfg, err := LoadConfig(ConfigOptions{Address: opts.Address, Token: opts.Token, Timeout: opts.Timeout, InsecureSkipVerify: opts.InsecureSkipVerify})
+			cfg, err := LoadConfig(ConfigOptions{Address: opts.Address, Token: opts.Token, Timeout: opts.Timeout, InsecureSkipVerify: opts.InsecureSkipVerify, InsecureSkipVerifySet: opts.InsecureSkipVerifySet})
 			if err != nil {
 				return err
 			}
@@ -288,7 +288,7 @@ func newPolicyDetectionWhitelistUpdateCommand(opts *RootOptions) *cobra.Command 
 					return writePolicyError(cmd, "编辑检测白名单", "chaitin-cli tanswer policy detection-whitelist-update", "POLICY_DETECTION_WHITELIST_UPDATE_CONFIRMATION_REQUIRED", err.Error(), false)
 				}
 			}
-			cfg, err := LoadConfig(ConfigOptions{Address: opts.Address, Token: opts.Token, Timeout: opts.Timeout, InsecureSkipVerify: opts.InsecureSkipVerify})
+			cfg, err := LoadConfig(ConfigOptions{Address: opts.Address, Token: opts.Token, Timeout: opts.Timeout, InsecureSkipVerify: opts.InsecureSkipVerify, InsecureSkipVerifySet: opts.InsecureSkipVerifySet})
 			if err != nil {
 				return err
 			}
@@ -374,7 +374,7 @@ func newPolicyDetectionWhitelistFromAlarmCommand(opts *RootOptions) *cobra.Comma
 					return writePolicyError(cmd, "从告警对象生成检测白名单", commandText, "POLICY_DETECTION_WHITELIST_FROM_ALARM_CONFIRMATION_REQUIRED", err.Error(), false)
 				}
 			}
-			cfg, err := LoadConfig(ConfigOptions{Address: opts.Address, Token: opts.Token, Timeout: opts.Timeout, InsecureSkipVerify: opts.InsecureSkipVerify})
+			cfg, err := LoadConfig(ConfigOptions{Address: opts.Address, Token: opts.Token, Timeout: opts.Timeout, InsecureSkipVerify: opts.InsecureSkipVerify, InsecureSkipVerifySet: opts.InsecureSkipVerifySet})
 			if err != nil {
 				return err
 			}
@@ -453,7 +453,7 @@ func newPolicyFileExportCommand(opts *RootOptions, use string, task string, meth
 		Long:    fmt.Sprintf("%s，用于批量备份或离线审计安全策略文件。未指定 --id-list 时导出全部；指定 --id-list 时只导出选中对象。该命令只下载文件，不修改策略。\n\n输出：file_name、file_path、size_bytes、status_code、method、download_query、export_scope。", task),
 		Example: fmt.Sprintf("  %s --output ./%s\n  %s --id-list 21,22 --output ./selected-%s", commandText, defaultName, commandText, defaultName),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			cfg, err := LoadConfig(ConfigOptions{Address: opts.Address, Token: opts.Token, Timeout: opts.Timeout, InsecureSkipVerify: opts.InsecureSkipVerify})
+			cfg, err := LoadConfig(ConfigOptions{Address: opts.Address, Token: opts.Token, Timeout: opts.Timeout, InsecureSkipVerify: opts.InsecureSkipVerify, InsecureSkipVerifySet: opts.InsecureSkipVerifySet})
 			if err != nil {
 				return err
 			}
@@ -510,7 +510,7 @@ func newPolicyFileImportCommand(opts *RootOptions, use string, task string, meth
 			if err := ValidateWriteConfirmation(policyOpts.confirm, confirmToken); err != nil {
 				return writePolicyError(cmd, task, commandText, "POLICY_IMPORT_CONFIRMATION_REQUIRED", err.Error(), false)
 			}
-			cfg, err := LoadConfig(ConfigOptions{Address: opts.Address, Token: opts.Token, Timeout: opts.Timeout, InsecureSkipVerify: opts.InsecureSkipVerify})
+			cfg, err := LoadConfig(ConfigOptions{Address: opts.Address, Token: opts.Token, Timeout: opts.Timeout, InsecureSkipVerify: opts.InsecureSkipVerify, InsecureSkipVerifySet: opts.InsecureSkipVerifySet})
 			if err != nil {
 				return err
 			}
@@ -568,7 +568,7 @@ func newPolicyDetectionWhitelistActionCommand(opts *RootOptions, policyOpts *pol
 					return writePolicyError(cmd, task, commandText, "POLICY_DETECTION_WHITELIST_"+strings.ToUpper(action)+"_CONFIRMATION_REQUIRED", err.Error(), false)
 				}
 			}
-			cfg, err := LoadConfig(ConfigOptions{Address: opts.Address, Token: opts.Token, Timeout: opts.Timeout, InsecureSkipVerify: opts.InsecureSkipVerify})
+			cfg, err := LoadConfig(ConfigOptions{Address: opts.Address, Token: opts.Token, Timeout: opts.Timeout, InsecureSkipVerify: opts.InsecureSkipVerify, InsecureSkipVerifySet: opts.InsecureSkipVerifySet})
 			if err != nil {
 				return err
 			}
@@ -635,7 +635,7 @@ func newPolicyCustomIntelligenceCommand(opts *RootOptions) *cobra.Command {
 			if policyOpts.pageSize < 1 || policyOpts.pageSize > 100 {
 				return writePolicyError(cmd, "查询自定义情报", "chaitin-cli tanswer policy custom-intelligence", "INVALID_PAGE_SIZE", "page-size must be between 1 and 100", false)
 			}
-			cfg, err := LoadConfig(ConfigOptions{Address: opts.Address, Token: opts.Token, Timeout: opts.Timeout, InsecureSkipVerify: opts.InsecureSkipVerify})
+			cfg, err := LoadConfig(ConfigOptions{Address: opts.Address, Token: opts.Token, Timeout: opts.Timeout, InsecureSkipVerify: opts.InsecureSkipVerify, InsecureSkipVerifySet: opts.InsecureSkipVerifySet})
 			if err != nil {
 				return err
 			}
@@ -716,7 +716,7 @@ func newPolicyCustomIntelligenceCreateCommand(opts *RootOptions) *cobra.Command 
 			if err := ValidateWriteConfirmation(policyOpts.confirm, policyCustomIntelligenceCreateConfirmToken); err != nil {
 				return writePolicyError(cmd, "新增自定义情报", "chaitin-cli tanswer policy custom-intelligence-create", "POLICY_CUSTOM_INTELLIGENCE_CREATE_CONFIRMATION_REQUIRED", err.Error(), false)
 			}
-			cfg, err := LoadConfig(ConfigOptions{Address: opts.Address, Token: opts.Token, Timeout: opts.Timeout, InsecureSkipVerify: opts.InsecureSkipVerify})
+			cfg, err := LoadConfig(ConfigOptions{Address: opts.Address, Token: opts.Token, Timeout: opts.Timeout, InsecureSkipVerify: opts.InsecureSkipVerify, InsecureSkipVerifySet: opts.InsecureSkipVerifySet})
 			if err != nil {
 				return err
 			}
@@ -764,7 +764,7 @@ func newPolicyCustomIntelligenceUpdateCommand(opts *RootOptions) *cobra.Command 
 					return writePolicyError(cmd, "编辑自定义情报", "chaitin-cli tanswer policy custom-intelligence-update", "POLICY_CUSTOM_INTELLIGENCE_UPDATE_CONFIRMATION_REQUIRED", err.Error(), false)
 				}
 			}
-			cfg, err := LoadConfig(ConfigOptions{Address: opts.Address, Token: opts.Token, Timeout: opts.Timeout, InsecureSkipVerify: opts.InsecureSkipVerify})
+			cfg, err := LoadConfig(ConfigOptions{Address: opts.Address, Token: opts.Token, Timeout: opts.Timeout, InsecureSkipVerify: opts.InsecureSkipVerify, InsecureSkipVerifySet: opts.InsecureSkipVerifySet})
 			if err != nil {
 				return err
 			}
@@ -838,7 +838,7 @@ func newPolicyCustomIntelligenceStatusCommand(opts *RootOptions, policyOpts *pol
 					return writePolicyError(cmd, task, commandText, "POLICY_CUSTOM_INTELLIGENCE_"+strings.ToUpper(action)+"_CONFIRMATION_REQUIRED", err.Error(), false)
 				}
 			}
-			cfg, err := LoadConfig(ConfigOptions{Address: opts.Address, Token: opts.Token, Timeout: opts.Timeout, InsecureSkipVerify: opts.InsecureSkipVerify})
+			cfg, err := LoadConfig(ConfigOptions{Address: opts.Address, Token: opts.Token, Timeout: opts.Timeout, InsecureSkipVerify: opts.InsecureSkipVerify, InsecureSkipVerifySet: opts.InsecureSkipVerifySet})
 			if err != nil {
 				return err
 			}
@@ -905,7 +905,7 @@ func newPolicyCustomIntelligenceDeleteCommand(opts *RootOptions) *cobra.Command 
 					return writePolicyError(cmd, "删除自定义情报", commandText, "POLICY_CUSTOM_INTELLIGENCE_DELETE_CONFIRMATION_REQUIRED", err.Error(), false)
 				}
 			}
-			cfg, err := LoadConfig(ConfigOptions{Address: opts.Address, Token: opts.Token, Timeout: opts.Timeout, InsecureSkipVerify: opts.InsecureSkipVerify})
+			cfg, err := LoadConfig(ConfigOptions{Address: opts.Address, Token: opts.Token, Timeout: opts.Timeout, InsecureSkipVerify: opts.InsecureSkipVerify, InsecureSkipVerifySet: opts.InsecureSkipVerifySet})
 			if err != nil {
 				return err
 			}

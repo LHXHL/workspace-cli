@@ -220,7 +220,7 @@ func newAssetListCommand(opts *RootOptions) *cobra.Command {
 			if assetOpts.pageSize < 1 || assetOpts.pageSize > 100 {
 				return writeAssetError(cmd, "查询资产列表", "chaitin-cli tanswer asset list", "INVALID_PAGE_SIZE", "page-size must be between 1 and 100", false)
 			}
-			cfg, err := LoadConfig(ConfigOptions{Address: opts.Address, Token: opts.Token, Timeout: opts.Timeout, InsecureSkipVerify: opts.InsecureSkipVerify})
+			cfg, err := LoadConfig(ConfigOptions{Address: opts.Address, Token: opts.Token, Timeout: opts.Timeout, InsecureSkipVerify: opts.InsecureSkipVerify, InsecureSkipVerifySet: opts.InsecureSkipVerifySet})
 			if err != nil {
 				return err
 			}
@@ -276,7 +276,7 @@ func newAssetDetailCommand(opts *RootOptions) *cobra.Command {
 			if err != nil {
 				return writeAssetError(cmd, "查看资产详情", "chaitin-cli tanswer asset detail", "MISSING_ASSET_ID", err.Error(), false)
 			}
-			cfg, err := LoadConfig(ConfigOptions{Address: opts.Address, Token: opts.Token, Timeout: opts.Timeout, InsecureSkipVerify: opts.InsecureSkipVerify})
+			cfg, err := LoadConfig(ConfigOptions{Address: opts.Address, Token: opts.Token, Timeout: opts.Timeout, InsecureSkipVerify: opts.InsecureSkipVerify, InsecureSkipVerifySet: opts.InsecureSkipVerifySet})
 			if err != nil {
 				return err
 			}
@@ -323,7 +323,7 @@ func newAssetGroupTreeCommand(opts *RootOptions) *cobra.Command {
 			if assetOpts.depth < 1 || assetOpts.depth > 100 {
 				return writeAssetError(cmd, "查询资产组树", "chaitin-cli tanswer asset group-tree", "INVALID_DEPTH", "depth must be between 1 and 100", false)
 			}
-			cfg, err := LoadConfig(ConfigOptions{Address: opts.Address, Token: opts.Token, Timeout: opts.Timeout, InsecureSkipVerify: opts.InsecureSkipVerify})
+			cfg, err := LoadConfig(ConfigOptions{Address: opts.Address, Token: opts.Token, Timeout: opts.Timeout, InsecureSkipVerify: opts.InsecureSkipVerify, InsecureSkipVerifySet: opts.InsecureSkipVerifySet})
 			if err != nil {
 				return err
 			}
@@ -371,7 +371,7 @@ func newAssetDownloadTemplateCommand(opts *RootOptions) *cobra.Command {
 		Example: "  chaitin-cli tanswer asset download-template --output ./asset-template.xlsx\n" +
 			"  chaitin-cli tanswer asset download-template --with-example --output ./asset-template-example.xlsx",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			cfg, err := LoadConfig(ConfigOptions{Address: opts.Address, Token: opts.Token, Timeout: opts.Timeout, InsecureSkipVerify: opts.InsecureSkipVerify})
+			cfg, err := LoadConfig(ConfigOptions{Address: opts.Address, Token: opts.Token, Timeout: opts.Timeout, InsecureSkipVerify: opts.InsecureSkipVerify, InsecureSkipVerifySet: opts.InsecureSkipVerifySet})
 			if err != nil {
 				return err
 			}
@@ -423,7 +423,7 @@ func newAssetImportCommand(opts *RootOptions) *cobra.Command {
 			if err := ValidateWriteConfirmation(assetOpts.confirm, assetImportConfirmToken); err != nil {
 				return writeAssetError(cmd, "导入资产", "chaitin-cli tanswer asset import", "ASSET_IMPORT_CONFIRMATION_REQUIRED", err.Error(), false)
 			}
-			cfg, err := LoadConfig(ConfigOptions{Address: opts.Address, Token: opts.Token, Timeout: opts.Timeout, InsecureSkipVerify: opts.InsecureSkipVerify})
+			cfg, err := LoadConfig(ConfigOptions{Address: opts.Address, Token: opts.Token, Timeout: opts.Timeout, InsecureSkipVerify: opts.InsecureSkipVerify, InsecureSkipVerifySet: opts.InsecureSkipVerifySet})
 			if err != nil {
 				return err
 			}
@@ -471,7 +471,7 @@ func newAssetExportCommand(opts *RootOptions) *cobra.Command {
 		Example: "  chaitin-cli tanswer asset export --output ./asset-export.xlsx\n" +
 			"  chaitin-cli tanswer asset export --id-list 3,7 --output ./selected-assets.xlsx",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			cfg, err := LoadConfig(ConfigOptions{Address: opts.Address, Token: opts.Token, Timeout: opts.Timeout, InsecureSkipVerify: opts.InsecureSkipVerify})
+			cfg, err := LoadConfig(ConfigOptions{Address: opts.Address, Token: opts.Token, Timeout: opts.Timeout, InsecureSkipVerify: opts.InsecureSkipVerify, InsecureSkipVerifySet: opts.InsecureSkipVerifySet})
 			if err != nil {
 				return err
 			}
@@ -543,7 +543,7 @@ func newAssetCreateCommand(opts *RootOptions) *cobra.Command {
 			if err := ValidateWriteConfirmation(assetOpts.confirm, assetCreateConfirmToken); err != nil {
 				return writeAssetError(cmd, "新增资产", "chaitin-cli tanswer asset create", "ASSET_CREATE_CONFIRMATION_REQUIRED", err.Error(), false)
 			}
-			cfg, err := LoadConfig(ConfigOptions{Address: opts.Address, Token: opts.Token, Timeout: opts.Timeout, InsecureSkipVerify: opts.InsecureSkipVerify})
+			cfg, err := LoadConfig(ConfigOptions{Address: opts.Address, Token: opts.Token, Timeout: opts.Timeout, InsecureSkipVerify: opts.InsecureSkipVerify, InsecureSkipVerifySet: opts.InsecureSkipVerifySet})
 			if err != nil {
 				return err
 			}
@@ -622,7 +622,7 @@ func newAssetUpdateCommand(opts *RootOptions) *cobra.Command {
 					return writeAssetError(cmd, "编辑资产", "chaitin-cli tanswer asset update", "ASSET_UPDATE_CONFIRMATION_REQUIRED", err.Error(), false)
 				}
 			}
-			cfg, err := LoadConfig(ConfigOptions{Address: opts.Address, Token: opts.Token, Timeout: opts.Timeout, InsecureSkipVerify: opts.InsecureSkipVerify})
+			cfg, err := LoadConfig(ConfigOptions{Address: opts.Address, Token: opts.Token, Timeout: opts.Timeout, InsecureSkipVerify: opts.InsecureSkipVerify, InsecureSkipVerifySet: opts.InsecureSkipVerifySet})
 			if err != nil {
 				return err
 			}
@@ -737,7 +737,7 @@ func newAssetDeleteCommand(opts *RootOptions) *cobra.Command {
 					return writeAssetError(cmd, "删除资产", "chaitin-cli tanswer asset delete", "ASSET_DELETE_CONFIRMATION_REQUIRED", err.Error(), false)
 				}
 			}
-			cfg, err := LoadConfig(ConfigOptions{Address: opts.Address, Token: opts.Token, Timeout: opts.Timeout, InsecureSkipVerify: opts.InsecureSkipVerify})
+			cfg, err := LoadConfig(ConfigOptions{Address: opts.Address, Token: opts.Token, Timeout: opts.Timeout, InsecureSkipVerify: opts.InsecureSkipVerify, InsecureSkipVerifySet: opts.InsecureSkipVerifySet})
 			if err != nil {
 				return err
 			}
@@ -838,7 +838,7 @@ func newAssetBatchMaintainCommand(opts *RootOptions) *cobra.Command {
 					return writeAssetError(cmd, "批量维护资产", "chaitin-cli tanswer asset batch-maintain", "ASSET_BATCH_MAINTAIN_CONFIRMATION_REQUIRED", err.Error(), false)
 				}
 			}
-			cfg, err := LoadConfig(ConfigOptions{Address: opts.Address, Token: opts.Token, Timeout: opts.Timeout, InsecureSkipVerify: opts.InsecureSkipVerify})
+			cfg, err := LoadConfig(ConfigOptions{Address: opts.Address, Token: opts.Token, Timeout: opts.Timeout, InsecureSkipVerify: opts.InsecureSkipVerify, InsecureSkipVerifySet: opts.InsecureSkipVerifySet})
 			if err != nil {
 				return err
 			}
@@ -943,7 +943,7 @@ func newAssetBatchTagCommand(opts *RootOptions) *cobra.Command {
 					return writeAssetError(cmd, "批量维护资产标签", "chaitin-cli tanswer asset batch-tag", "ASSET_BATCH_TAG_CONFIRMATION_REQUIRED", err.Error(), false)
 				}
 			}
-			cfg, err := LoadConfig(ConfigOptions{Address: opts.Address, Token: opts.Token, Timeout: opts.Timeout, InsecureSkipVerify: opts.InsecureSkipVerify})
+			cfg, err := LoadConfig(ConfigOptions{Address: opts.Address, Token: opts.Token, Timeout: opts.Timeout, InsecureSkipVerify: opts.InsecureSkipVerify, InsecureSkipVerifySet: opts.InsecureSkipVerifySet})
 			if err != nil {
 				return err
 			}
@@ -1045,7 +1045,7 @@ func newAssetGroupCreateCommand(opts *RootOptions) *cobra.Command {
 					return writeAssetError(cmd, "创建资产组", "chaitin-cli tanswer asset group-create", "ASSET_GROUP_CREATE_CONFIRMATION_REQUIRED", err.Error(), false)
 				}
 			}
-			cfg, err := LoadConfig(ConfigOptions{Address: opts.Address, Token: opts.Token, Timeout: opts.Timeout, InsecureSkipVerify: opts.InsecureSkipVerify})
+			cfg, err := LoadConfig(ConfigOptions{Address: opts.Address, Token: opts.Token, Timeout: opts.Timeout, InsecureSkipVerify: opts.InsecureSkipVerify, InsecureSkipVerifySet: opts.InsecureSkipVerifySet})
 			if err != nil {
 				return err
 			}
@@ -1115,7 +1115,7 @@ func newAssetGroupRenameCommand(opts *RootOptions) *cobra.Command {
 					return writeAssetError(cmd, "重命名资产组", "chaitin-cli tanswer asset group-rename", "ASSET_GROUP_RENAME_CONFIRMATION_REQUIRED", err.Error(), false)
 				}
 			}
-			cfg, err := LoadConfig(ConfigOptions{Address: opts.Address, Token: opts.Token, Timeout: opts.Timeout, InsecureSkipVerify: opts.InsecureSkipVerify})
+			cfg, err := LoadConfig(ConfigOptions{Address: opts.Address, Token: opts.Token, Timeout: opts.Timeout, InsecureSkipVerify: opts.InsecureSkipVerify, InsecureSkipVerifySet: opts.InsecureSkipVerifySet})
 			if err != nil {
 				return err
 			}
@@ -1172,7 +1172,7 @@ func newAssetGroupDeleteCommand(opts *RootOptions) *cobra.Command {
 					return writeAssetError(cmd, "删除资产组", "chaitin-cli tanswer asset group-delete", "ASSET_GROUP_DELETE_CONFIRMATION_REQUIRED", err.Error(), false)
 				}
 			}
-			cfg, err := LoadConfig(ConfigOptions{Address: opts.Address, Token: opts.Token, Timeout: opts.Timeout, InsecureSkipVerify: opts.InsecureSkipVerify})
+			cfg, err := LoadConfig(ConfigOptions{Address: opts.Address, Token: opts.Token, Timeout: opts.Timeout, InsecureSkipVerify: opts.InsecureSkipVerify, InsecureSkipVerifySet: opts.InsecureSkipVerifySet})
 			if err != nil {
 				return err
 			}
@@ -1230,7 +1230,7 @@ func newAssetTreeMoveCommand(opts *RootOptions) *cobra.Command {
 					return writeAssetError(cmd, "调整资产树层级", "chaitin-cli tanswer asset tree-move", "ASSET_TREE_MOVE_CONFIRMATION_REQUIRED", err.Error(), false)
 				}
 			}
-			cfg, err := LoadConfig(ConfigOptions{Address: opts.Address, Token: opts.Token, Timeout: opts.Timeout, InsecureSkipVerify: opts.InsecureSkipVerify})
+			cfg, err := LoadConfig(ConfigOptions{Address: opts.Address, Token: opts.Token, Timeout: opts.Timeout, InsecureSkipVerify: opts.InsecureSkipVerify, InsecureSkipVerifySet: opts.InsecureSkipVerifySet})
 			if err != nil {
 				return err
 			}

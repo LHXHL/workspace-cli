@@ -30,8 +30,8 @@ func newAuthStatusCommand(opts *RootOptions) *cobra.Command {
 				Address:            opts.Address,
 				Token:              opts.Token,
 				Timeout:            opts.Timeout,
-				InsecureSkipVerify: opts.InsecureSkipVerify,
-				AllowMissingToken:  true,
+				InsecureSkipVerify: opts.InsecureSkipVerify, InsecureSkipVerifySet: opts.InsecureSkipVerifySet,
+				AllowMissingToken: true,
 			})
 			if err != nil {
 				return err
@@ -67,7 +67,7 @@ func newAuthCheckCommand(opts *RootOptions) *cobra.Command {
 				Address:            opts.Address,
 				Token:              opts.Token,
 				Timeout:            opts.Timeout,
-				InsecureSkipVerify: opts.InsecureSkipVerify,
+				InsecureSkipVerify: opts.InsecureSkipVerify, InsecureSkipVerifySet: opts.InsecureSkipVerifySet,
 			})
 			if err != nil {
 				return err

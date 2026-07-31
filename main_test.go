@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"os"
 	"path/filepath"
 	"strings"
@@ -364,4 +365,43 @@ func setTestHome(t *testing.T, dir string) {
 	t.Setenv("USERPROFILE", dir)
 	t.Setenv("HOMEDRIVE", "")
 	t.Setenv("HOMEPATH", "")
+}
+
+func TestTAnswerExplicitFalseInsecureFlagOverridesEnvironment(t *testing.T) {
+	homeDir := t.TempDir()
+	workDir := t.TempDir()
+	setTestHome(t, homeDir)
+	withWorkingDir(t, workDir)
+	t.Setenv("TANSWER_URL", "http://127.0.0.1:9")
+	t.Setenv("TANSWER_API_KEY", "placeholder")
+	t.Setenv("TANSWER_INSECURE", "true")
+
+	app, err := newApp()
+	if err != nil {
+		t.Fatalf("newApp() error = %v", err)
+	}
+	var out strings.Builder
+	app.root.SetOut(&out)
+	app.root.SetErr(&out)
+	app.root.SetArgs([]string{"--config", filepath.Join(t.TempDir(), "empty.yaml"), "tanswer", "--insecure=false", "auth", "status"})
+
+	if err := app.execute(); err != nil {
+		t.Fatalf("execute() error = %v", err)
+	}
+
+	var payload struct {
+		Success bool `json:"success"`
+		Data    struct {
+			InsecureSkipVerify bool `json:"insecure_skip_verify"`
+		} `json:"data"`
+	}
+	if err := json.Unmarshal([]byte(out.String()), &payload); err != nil {
+		t.Fatalf("decode auth status: %v", err)
+	}
+	if !payload.Success {
+		t.Fatal("auth status success = false")
+	}
+	if payload.Data.InsecureSkipVerify {
+		t.Fatal("--insecure=false must override TANSWER_INSECURE=true")
+	}
 }

@@ -130,7 +130,7 @@ func runAlarmSubjectCommand(cmd *cobra.Command, opts *RootOptions, alarmOpts ala
 	if err := validateAlarmSubjectOptions(alarmOpts, kind); err != nil {
 		return writeAlarmListError(cmd, task, command, "INVALID_ALARM_SUBJECT", err.Error(), false)
 	}
-	cfg, err := LoadConfig(ConfigOptions{Address: opts.Address, Token: opts.Token, Timeout: opts.Timeout, InsecureSkipVerify: opts.InsecureSkipVerify})
+	cfg, err := LoadConfig(ConfigOptions{Address: opts.Address, Token: opts.Token, Timeout: opts.Timeout, InsecureSkipVerify: opts.InsecureSkipVerify, InsecureSkipVerifySet: opts.InsecureSkipVerifySet})
 	if err != nil {
 		return err
 	}
@@ -329,7 +329,7 @@ func runAlarmRankCommand(cmd *cobra.Command, opts *RootOptions, alarmOpts alarmR
 	if alarmOpts.top < 1 || alarmOpts.top > 100 {
 		return writeAlarmListError(cmd, task, command, "INVALID_TOP", "top must be between 1 and 100", false)
 	}
-	cfg, err := LoadConfig(ConfigOptions{Address: opts.Address, Token: opts.Token, Timeout: opts.Timeout, InsecureSkipVerify: opts.InsecureSkipVerify})
+	cfg, err := LoadConfig(ConfigOptions{Address: opts.Address, Token: opts.Token, Timeout: opts.Timeout, InsecureSkipVerify: opts.InsecureSkipVerify, InsecureSkipVerifySet: opts.InsecureSkipVerifySet})
 	if err != nil {
 		return err
 	}

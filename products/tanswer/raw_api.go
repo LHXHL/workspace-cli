@@ -34,7 +34,7 @@ func newRawAPICommand(opts *RootOptions) *cobra.Command {
 				Address:            opts.Address,
 				Token:              opts.Token,
 				Timeout:            opts.Timeout,
-				InsecureSkipVerify: opts.InsecureSkipVerify,
+				InsecureSkipVerify: opts.InsecureSkipVerify, InsecureSkipVerifySet: opts.InsecureSkipVerifySet,
 			})
 			if err != nil {
 				return err
