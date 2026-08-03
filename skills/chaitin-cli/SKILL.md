@@ -765,6 +765,39 @@ For T-Answer tasks, use the following protocol:
 4. **Protected semantic writes require user authorization.** First run the target command with `--preview`. Present the target, change summary, impact, and risk warnings to the user, then wait for explicit confirmation for that specific change. Only after the user confirms may you invoke the command with its exact documented `--confirm` token. A token discoverable from help or manifest is a mechanical CLI requirement, not user authorization; never use it to execute a write on your own.
 5. **Open API fallback.** Use `chaitin-cli tanswer api` only when no semantic command covers the requested capability and the user has supplied a known, authorized endpoint, method, and request body. Do not guess RPC methods, paths, or request bodies. GET/HEAD requests may run directly. For every other HTTP method, first run the command without `--confirm` or with `--preview`; present its method, path, query, body, and risks; wait for explicit confirmation for that exact request; then use `--confirm CONFIRM_TANSWER_RAW_API_WRITE`. The root-level `--dry-run` flag does not apply to `tanswer`.
 
+### Fast Agent Workflow (T-Answer)
+
+Before autonomous T-Answer work, run `chaitin-cli tanswer auth check` and `chaitin-cli tanswer manifest` unless the current session already verified the environment. For create, update, delete, import, enable, disable, or response actions, run the command with `--preview` first and do not fill `--confirm` unless the user or upstream system explicitly provides the exact confirmation token.
+
+For routine read-only tasks, this section is enough. For complex routing, write-operation planning, or ambiguous policy/response decisions, continue with the relevant domain/leaf `--help` and `chaitin-cli tanswer manifest`; do not guess. Use `products/tanswer/COMMAND_REFERENCE.md` when a specific command's full flags, output fields, long examples, or boundaries are needed. Onboarding, Token setup, permission requirements, smoke tests, and troubleshooting live in `products/tanswer/README.md`.
+
+### Quick Routing (T-Answer)
+
+| User intent | Prefer |
+| --- | --- |
+| Verify connection, local config, or Token availability | `tanswer auth status`, `tanswer auth check` |
+| Discover supported commands, flags, risk levels, output fields | `tanswer manifest` |
+| System version, License, node status, health summary | `tanswer system status` |
+| Overall threat posture, alarm distribution, attacker/victim top lists | `tanswer alarm overview` |
+| Critical/high successful or compromised alarms for duty handling | `tanswer alarm high-priority` |
+| Original threat alarm rows or one alarm detail | `tanswer alarm list`, then `tanswer alarm detail --id <doc_id>` |
+| Related alarms around one source alarm | `tanswer alarm related --id <doc_id>` |
+| Malicious file, Webshell, or sandbox-result investigation | `tanswer file-alarm overview`, `malicious`, `webshell`, `sandbox`, `detail` |
+| Configured asset inventory, group tree, import/export, asset maintenance | `tanswer asset ...` |
+| Traffic metadata by protocol, advanced query, detail, or alarm context | `tanswer metadata ...` |
+| Detection whitelist or custom IOC intelligence | `tanswer policy ...` |
+| Bypass block policies, block records, response whitelist, linkage devices, automatic response | `tanswer response ...` |
+
+Use `alarm detail`, `file-alarm detail`, `asset detail`, `metadata detail`, `metadata near-alarm`, and alarm-derived policy/response commands only after the required IDs are available from list/detail commands or the user.
+
+### Safety Rules (T-Answer)
+
+- Do not bypass `chaitin-cli tanswer` with `curl` for state-changing operations.
+- Do not guess RPC methods or request bodies. Use semantic commands, `manifest`, command `--help`, or user-provided authorized Open API documentation.
+- Do not use `file-alarm` to download samples, submit samples, or trigger new sandbox analysis.
+- Treat `metadata near-alarm` as investigation context, not standalone proof of an attack.
+- Do not treat T-Answer response records as proof that a third-party device completed enforcement without separate validation.
+
 ---
 
 ## SafeLine-CE (雷池社区版)

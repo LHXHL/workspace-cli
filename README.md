@@ -172,6 +172,8 @@ cloudwalker.url      -> CLOUDWALKER_URL
 cloudwalker.api_key  -> CLOUDWALKER_API_KEY
 tanswer.url          -> TANSWER_URL
 tanswer.api_key      -> TANSWER_API_KEY
+tanswer.timeout      -> TANSWER_TIMEOUT
+tanswer.insecure     -> TANSWER_INSECURE
 ddr.url              -> DDR_URL
 ddr.api_key          -> DDR_API_KEY
 ddr.company_id       -> DDR_COMPANY_ID
@@ -202,12 +204,17 @@ monkeyscan.api_key   -> MONKEYSCAN_API_KEY
 
 ### 全悉快速开始
 
+全悉命令使用 OpenAPI Token。可在全悉 Web 控制台的“系统管理 → Open API”创建 Token，再配置 `tanswer.api_key` 或 `TANSWER_API_KEY`。
+
 可使用 `--url`、`--api-key`、`--timeout`、`--insecure`；环境变量 `TANSWER_URL`、`TANSWER_API_KEY`、`TANSWER_TIMEOUT`、`TANSWER_INSECURE`；或 `config.yaml` 的 `tanswer.url`、`tanswer.api_key`、`tanswer.timeout`、`tanswer.insecure` 配置全悉连接。不要将 Token 提交到仓库。
 
 ```bash
 chaitin-cli tanswer auth check
 chaitin-cli tanswer --help
 chaitin-cli tanswer manifest
+chaitin-cli tanswer system status
+chaitin-cli tanswer alarm overview --time today
+chaitin-cli tanswer asset list --page-size 10
 ```
 
 全悉产品的命令、参数、示例、输出字段和写操作确认要求以安装后二进制的 `--help` 与 `chaitin-cli tanswer manifest` 为准。

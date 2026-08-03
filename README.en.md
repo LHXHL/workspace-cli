@@ -175,12 +175,17 @@ safeline.api_key     -> SAFELINE_API_KEY
 
 ### T-Answer Quick Start
 
+T-Answer commands use an OpenAPI Token. Create it in the T-Answer web console under `System Management` -> `Open API`, then configure `tanswer.api_key` or `TANSWER_API_KEY`.
+
 Configure T-Answer with `--url`, `--api-key`, `--timeout`, and `--insecure`; environment variables `TANSWER_URL`, `TANSWER_API_KEY`, `TANSWER_TIMEOUT`, and `TANSWER_INSECURE`; or `tanswer.url`, `tanswer.api_key`, `tanswer.timeout`, and `tanswer.insecure` in `config.yaml`. Never commit a real token.
 
 ```bash
 chaitin-cli tanswer auth check
 chaitin-cli tanswer --help
 chaitin-cli tanswer manifest
+chaitin-cli tanswer system status
+chaitin-cli tanswer alarm overview --time today
+chaitin-cli tanswer asset list --page-size 10
 ```
 
 For human operators using this repository, see [the T-Answer guide (Chinese)](./products/tanswer/README.md) and [command reference (Chinese)](./products/tanswer/COMMAND_REFERENCE.md). Users who only have the installed binary should start with `chaitin-cli tanswer --help`, then use domain or leaf-command help and `manifest` for the current contract. The root-level `--dry-run` flag does not apply to `tanswer`.

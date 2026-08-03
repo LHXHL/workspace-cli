@@ -1,12 +1,62 @@
 package main
 
 import (
+	"bytes"
 	"encoding/json"
+	"errors"
+	"io"
 	"os"
 	"path/filepath"
 	"strings"
 	"testing"
 )
+
+func TestAgentComposeBusyBoxAliasShowsProductHelp(t *testing.T) {
+	app, err := newApp()
+	if err != nil {
+		t.Fatal(err)
+	}
+	originalArgs := os.Args
+	os.Args = []string{"/tmp/agent-compose", "--help"}
+	t.Cleanup(func() { os.Args = originalArgs })
+	var out bytes.Buffer
+	app.root.SetOut(&out)
+	app.root.SetErr(&out)
+	if err := app.execute(); err != nil {
+		t.Fatal(err)
+	}
+	if !strings.Contains(out.String(), "Remotely operate Agent Compose") || strings.Contains(out.String(), "cloudAtlas") {
+		t.Fatalf("alias help = %s", out.String())
+	}
+}
+
+func TestAgentComposeConfigErrorUsesJSONAndUsageExitCode(t *testing.T) {
+	configPath := filepath.Join(t.TempDir(), "invalid.yaml")
+	if err := os.WriteFile(configPath, []byte("agent-compose:\n  url: [broken\n"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	app, err := newApp()
+	if err != nil {
+		t.Fatal(err)
+	}
+	app.root.SetArgs([]string{"--config", configPath, "agent-compose", "--json", "status"})
+	err = app.execute()
+	var coder interface{ ExitCode() int }
+	if !errors.As(err, &coder) || coder.ExitCode() != 2 {
+		t.Fatalf("error = %v", err)
+	}
+	var renderer interface{ RenderError(io.Writer) error }
+	if !errors.As(err, &renderer) {
+		t.Fatalf("error does not render itself: %T", err)
+	}
+	var output bytes.Buffer
+	if err := renderer.RenderError(&output); err != nil {
+		t.Fatal(err)
+	}
+	if !strings.Contains(output.String(), `"kind":"usage"`) || !strings.Contains(output.String(), `"message":`) {
+		t.Fatalf("rendered error = %s", output.String())
+	}
+}
 
 func TestNewAppUsesDefaultConfigPath(t *testing.T) {
 	homeDir := t.TempDir()
