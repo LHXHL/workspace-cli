@@ -64,7 +64,7 @@ func newFileAlarmOverviewCommand(opts *RootOptions) *cobra.Command {
 		Example: "  chaitin-cli tanswer file-alarm overview --time today\n" +
 			"  chaitin-cli tanswer file-alarm overview --time 24h --severity critical,high",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			cfg, err := LoadConfig(ConfigOptions{Address: opts.Address, Token: opts.Token, Timeout: opts.Timeout, InsecureSkipVerify: opts.InsecureSkipVerify})
+			cfg, err := LoadConfig(ConfigOptions{Address: opts.Address, Token: opts.Token, Timeout: opts.Timeout, InsecureSkipVerify: opts.InsecureSkipVerify, InsecureSkipVerifySet: opts.InsecureSkipVerifySet})
 			if err != nil {
 				return err
 			}
@@ -142,7 +142,7 @@ func newFileAlarmDetailCommand(opts *RootOptions) *cobra.Command {
 			if strings.TrimSpace(fileOpts.id) == "" {
 				return writeFileAlarmError(cmd, "查看文件告警详情", "chaitin-cli tanswer file-alarm detail", "MISSING_FILE_ALARM_ID", "missing file alarm doc_id: set --id", false)
 			}
-			cfg, err := LoadConfig(ConfigOptions{Address: opts.Address, Token: opts.Token, Timeout: opts.Timeout, InsecureSkipVerify: opts.InsecureSkipVerify})
+			cfg, err := LoadConfig(ConfigOptions{Address: opts.Address, Token: opts.Token, Timeout: opts.Timeout, InsecureSkipVerify: opts.InsecureSkipVerify, InsecureSkipVerifySet: opts.InsecureSkipVerifySet})
 			if err != nil {
 				return err
 			}
@@ -179,7 +179,7 @@ func runFileAlarmListCommand(cmd *cobra.Command, opts *RootOptions, fileOpts fil
 	if fileOpts.pageSize < 1 || fileOpts.pageSize > 100 {
 		return writeFileAlarmError(cmd, task, command, "INVALID_PAGE_SIZE", "page-size must be between 1 and 100", false)
 	}
-	cfg, err := LoadConfig(ConfigOptions{Address: opts.Address, Token: opts.Token, Timeout: opts.Timeout, InsecureSkipVerify: opts.InsecureSkipVerify})
+	cfg, err := LoadConfig(ConfigOptions{Address: opts.Address, Token: opts.Token, Timeout: opts.Timeout, InsecureSkipVerify: opts.InsecureSkipVerify, InsecureSkipVerifySet: opts.InsecureSkipVerifySet})
 	if err != nil {
 		return err
 	}

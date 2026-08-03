@@ -164,7 +164,7 @@ func newPolicyDetectionWhitelistCommand(opts *RootOptions) *cobra.Command {
 			if policyOpts.pageSize < 1 || policyOpts.pageSize > 100 {
 				return writePolicyError(cmd, "查询检测白名单", "chaitin-cli tanswer policy detection-whitelist", "INVALID_PAGE_SIZE", "page-size must be between 1 and 100", false)
 			}
-			cfg, err := LoadConfig(ConfigOptions{Address: opts.Address, Token: opts.Token, Timeout: opts.Timeout, InsecureSkipVerify: opts.InsecureSkipVerify})
+			cfg, err := LoadConfig(ConfigOptions{Address: opts.Address, Token: opts.Token, Timeout: opts.Timeout, InsecureSkipVerify: opts.InsecureSkipVerify, InsecureSkipVerifySet: opts.InsecureSkipVerifySet})
 			if err != nil {
 				return err
 			}
@@ -209,10 +209,11 @@ func newPolicyDetectionWhitelistCreateCommand(opts *RootOptions) *cobra.Command 
 		Use:   "detection-whitelist-create",
 		Short: "新增检测白名单",
 		Long: "新增检测白名单，用于维护误报抑制规则。该命令是高影响写操作：默认只返回写入预览，必须使用 --confirm CONFIRM_POLICY_DETECTION_WHITELIST_CREATE 才会调用后端创建接口。\n\n" +
+			"有效期必须提供 --expire（毫秒时间戳）或 --valid-time（正整数秒）中的至少一项。\n" +
 			"输出预览：requires_confirmation、confirmed、operation_type、target、change_summary、impact、risk_warnings、confirmation_token。\n" +
 			"执行输出：confirmed、result、object、audit。",
-		Example: "  chaitin-cli tanswer policy detection-whitelist-create --name 登录误报 --src-ip 198.51.100.10 --preview\n" +
-			"  chaitin-cli tanswer policy detection-whitelist-create --name 登录误报 --src-ip 198.51.100.10 --confirm CONFIRM_POLICY_DETECTION_WHITELIST_CREATE",
+		Example: "  chaitin-cli tanswer policy detection-whitelist-create --name 登录误报 --src-ip 198.51.100.10 --valid-time 3600 --preview\n" +
+			"  chaitin-cli tanswer policy detection-whitelist-create --name 登录误报 --src-ip 198.51.100.10 --valid-time 3600 --confirm CONFIRM_POLICY_DETECTION_WHITELIST_CREATE",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			req, err := buildPolicyDetectionWhitelistWriteRequest(policyOpts)
 			if err != nil {
@@ -238,7 +239,7 @@ func newPolicyDetectionWhitelistCreateCommand(opts *RootOptions) *cobra.Command 
 			if err := ValidateWriteConfirmation(policyOpts.confirm, policyDetectionWhitelistCreateConfirmToken); err != nil {
 				return writePolicyError(cmd, "新增检测白名单", "chaitin-cli tanswer policy detection-whitelist-create", "POLICY_DETECTION_WHITELIST_CREATE_CONFIRMATION_REQUIRED", err.Error(), false)
 			}
-			cfg, err := LoadConfig(ConfigOptions{Address: opts.Address, Token: opts.Token, Timeout: opts.Timeout, InsecureSkipVerify: opts.InsecureSkipVerify})
+			cfg, err := LoadConfig(ConfigOptions{Address: opts.Address, Token: opts.Token, Timeout: opts.Timeout, InsecureSkipVerify: opts.InsecureSkipVerify, InsecureSkipVerifySet: opts.InsecureSkipVerifySet})
 			if err != nil {
 				return err
 			}
@@ -272,10 +273,11 @@ func newPolicyDetectionWhitelistUpdateCommand(opts *RootOptions) *cobra.Command 
 		Use:   "detection-whitelist-update",
 		Short: "编辑检测白名单",
 		Long: "编辑检测白名单，用于更新单条误报抑制规则。该命令是高影响写操作：预览阶段会读取当前白名单并返回 before/after；必须使用 --confirm CONFIRM_POLICY_DETECTION_WHITELIST_UPDATE 才会调用后端更新接口。\n\n" +
+			"有效期必须提供 --expire（毫秒时间戳）或 --valid-time（正整数秒）中的至少一项。\n" +
 			"输出预览：requires_confirmation、confirmed、operation_type、target、change_summary、impact、risk_warnings、confirmation_token。\n" +
 			"执行输出：confirmed、result、object、audit。",
-		Example: "  chaitin-cli tanswer policy detection-whitelist-update --id 21 --name 新白名单 --src-ip 198.51.100.11 --preview\n" +
-			"  chaitin-cli tanswer policy detection-whitelist-update --id 21 --name 新白名单 --src-ip 198.51.100.11 --confirm CONFIRM_POLICY_DETECTION_WHITELIST_UPDATE",
+		Example: "  chaitin-cli tanswer policy detection-whitelist-update --id 21 --name 新白名单 --src-ip 198.51.100.11 --valid-time 3600 --preview\n" +
+			"  chaitin-cli tanswer policy detection-whitelist-update --id 21 --name 新白名单 --src-ip 198.51.100.11 --valid-time 3600 --confirm CONFIRM_POLICY_DETECTION_WHITELIST_UPDATE",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			req, err := buildPolicyDetectionWhitelistUpdateRequest(policyOpts)
 			if err != nil {
@@ -286,7 +288,7 @@ func newPolicyDetectionWhitelistUpdateCommand(opts *RootOptions) *cobra.Command 
 					return writePolicyError(cmd, "编辑检测白名单", "chaitin-cli tanswer policy detection-whitelist-update", "POLICY_DETECTION_WHITELIST_UPDATE_CONFIRMATION_REQUIRED", err.Error(), false)
 				}
 			}
-			cfg, err := LoadConfig(ConfigOptions{Address: opts.Address, Token: opts.Token, Timeout: opts.Timeout, InsecureSkipVerify: opts.InsecureSkipVerify})
+			cfg, err := LoadConfig(ConfigOptions{Address: opts.Address, Token: opts.Token, Timeout: opts.Timeout, InsecureSkipVerify: opts.InsecureSkipVerify, InsecureSkipVerifySet: opts.InsecureSkipVerifySet})
 			if err != nil {
 				return err
 			}
@@ -355,20 +357,24 @@ func newPolicyDetectionWhitelistFromAlarmCommand(opts *RootOptions) *cobra.Comma
 		Use:   "detection-whitelist-from-alarm",
 		Short: "从告警对象生成检测白名单",
 		Long: "从告警对象生成检测白名单，用于把已确认误报的威胁告警转换为候选误报抑制规则。该命令是高影响写操作：预览阶段会读取告警详情并生成候选白名单；必须使用 --confirm CONFIRM_POLICY_DETECTION_WHITELIST_FROM_ALARM 才会调用后端创建接口。\n\n" +
+			"有效期必须提供 --expire（毫秒时间戳）或 --valid-time（正整数秒）中的至少一项。\n" +
 			"输出预览：source_alarm、suggested_whitelist、requires_confirmation、confirmation_token、risk_warnings。\n" +
 			"执行输出：confirmed、result、object、audit。",
-		Example: "  chaitin-cli tanswer policy detection-whitelist-from-alarm --id '<doc_id>' --preview\n" +
-			"  chaitin-cli tanswer policy detection-whitelist-from-alarm --id '<doc_id>' --remark 已确认误报 --confirm CONFIRM_POLICY_DETECTION_WHITELIST_FROM_ALARM",
+		Example: "  chaitin-cli tanswer policy detection-whitelist-from-alarm --id '<doc_id>' --valid-time 3600 --preview\n" +
+			"  chaitin-cli tanswer policy detection-whitelist-from-alarm --id '<doc_id>' --remark 已确认误报 --valid-time 3600 --confirm CONFIRM_POLICY_DETECTION_WHITELIST_FROM_ALARM",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			if strings.TrimSpace(policyOpts.id) == "" {
 				return writePolicyError(cmd, "从告警对象生成检测白名单", commandText, "MISSING_ALARM_ID", "missing alarm doc_id: set --id", false)
+			}
+			if _, _, err := policyDetectionWhitelistExpiry(policyOpts.write); err != nil {
+				return writePolicyError(cmd, "从告警对象生成检测白名单", commandText, "INVALID_POLICY_DETECTION_WHITELIST_FROM_ALARM_REQUEST", err.Error(), false)
 			}
 			if strings.TrimSpace(policyOpts.write.confirm) != "" {
 				if err := ValidateWriteConfirmation(policyOpts.write.confirm, policyDetectionWhitelistFromAlarmConfirmToken); err != nil {
 					return writePolicyError(cmd, "从告警对象生成检测白名单", commandText, "POLICY_DETECTION_WHITELIST_FROM_ALARM_CONFIRMATION_REQUIRED", err.Error(), false)
 				}
 			}
-			cfg, err := LoadConfig(ConfigOptions{Address: opts.Address, Token: opts.Token, Timeout: opts.Timeout, InsecureSkipVerify: opts.InsecureSkipVerify})
+			cfg, err := LoadConfig(ConfigOptions{Address: opts.Address, Token: opts.Token, Timeout: opts.Timeout, InsecureSkipVerify: opts.InsecureSkipVerify, InsecureSkipVerifySet: opts.InsecureSkipVerifySet})
 			if err != nil {
 				return err
 			}
@@ -447,7 +453,7 @@ func newPolicyFileExportCommand(opts *RootOptions, use string, task string, meth
 		Long:    fmt.Sprintf("%s，用于批量备份或离线审计安全策略文件。未指定 --id-list 时导出全部；指定 --id-list 时只导出选中对象。该命令只下载文件，不修改策略。\n\n输出：file_name、file_path、size_bytes、status_code、method、download_query、export_scope。", task),
 		Example: fmt.Sprintf("  %s --output ./%s\n  %s --id-list 21,22 --output ./selected-%s", commandText, defaultName, commandText, defaultName),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			cfg, err := LoadConfig(ConfigOptions{Address: opts.Address, Token: opts.Token, Timeout: opts.Timeout, InsecureSkipVerify: opts.InsecureSkipVerify})
+			cfg, err := LoadConfig(ConfigOptions{Address: opts.Address, Token: opts.Token, Timeout: opts.Timeout, InsecureSkipVerify: opts.InsecureSkipVerify, InsecureSkipVerifySet: opts.InsecureSkipVerifySet})
 			if err != nil {
 				return err
 			}
@@ -504,7 +510,7 @@ func newPolicyFileImportCommand(opts *RootOptions, use string, task string, meth
 			if err := ValidateWriteConfirmation(policyOpts.confirm, confirmToken); err != nil {
 				return writePolicyError(cmd, task, commandText, "POLICY_IMPORT_CONFIRMATION_REQUIRED", err.Error(), false)
 			}
-			cfg, err := LoadConfig(ConfigOptions{Address: opts.Address, Token: opts.Token, Timeout: opts.Timeout, InsecureSkipVerify: opts.InsecureSkipVerify})
+			cfg, err := LoadConfig(ConfigOptions{Address: opts.Address, Token: opts.Token, Timeout: opts.Timeout, InsecureSkipVerify: opts.InsecureSkipVerify, InsecureSkipVerifySet: opts.InsecureSkipVerifySet})
 			if err != nil {
 				return err
 			}
@@ -562,7 +568,7 @@ func newPolicyDetectionWhitelistActionCommand(opts *RootOptions, policyOpts *pol
 					return writePolicyError(cmd, task, commandText, "POLICY_DETECTION_WHITELIST_"+strings.ToUpper(action)+"_CONFIRMATION_REQUIRED", err.Error(), false)
 				}
 			}
-			cfg, err := LoadConfig(ConfigOptions{Address: opts.Address, Token: opts.Token, Timeout: opts.Timeout, InsecureSkipVerify: opts.InsecureSkipVerify})
+			cfg, err := LoadConfig(ConfigOptions{Address: opts.Address, Token: opts.Token, Timeout: opts.Timeout, InsecureSkipVerify: opts.InsecureSkipVerify, InsecureSkipVerifySet: opts.InsecureSkipVerifySet})
 			if err != nil {
 				return err
 			}
@@ -629,7 +635,7 @@ func newPolicyCustomIntelligenceCommand(opts *RootOptions) *cobra.Command {
 			if policyOpts.pageSize < 1 || policyOpts.pageSize > 100 {
 				return writePolicyError(cmd, "查询自定义情报", "chaitin-cli tanswer policy custom-intelligence", "INVALID_PAGE_SIZE", "page-size must be between 1 and 100", false)
 			}
-			cfg, err := LoadConfig(ConfigOptions{Address: opts.Address, Token: opts.Token, Timeout: opts.Timeout, InsecureSkipVerify: opts.InsecureSkipVerify})
+			cfg, err := LoadConfig(ConfigOptions{Address: opts.Address, Token: opts.Token, Timeout: opts.Timeout, InsecureSkipVerify: opts.InsecureSkipVerify, InsecureSkipVerifySet: opts.InsecureSkipVerifySet})
 			if err != nil {
 				return err
 			}
@@ -710,7 +716,7 @@ func newPolicyCustomIntelligenceCreateCommand(opts *RootOptions) *cobra.Command 
 			if err := ValidateWriteConfirmation(policyOpts.confirm, policyCustomIntelligenceCreateConfirmToken); err != nil {
 				return writePolicyError(cmd, "新增自定义情报", "chaitin-cli tanswer policy custom-intelligence-create", "POLICY_CUSTOM_INTELLIGENCE_CREATE_CONFIRMATION_REQUIRED", err.Error(), false)
 			}
-			cfg, err := LoadConfig(ConfigOptions{Address: opts.Address, Token: opts.Token, Timeout: opts.Timeout, InsecureSkipVerify: opts.InsecureSkipVerify})
+			cfg, err := LoadConfig(ConfigOptions{Address: opts.Address, Token: opts.Token, Timeout: opts.Timeout, InsecureSkipVerify: opts.InsecureSkipVerify, InsecureSkipVerifySet: opts.InsecureSkipVerifySet})
 			if err != nil {
 				return err
 			}
@@ -758,7 +764,7 @@ func newPolicyCustomIntelligenceUpdateCommand(opts *RootOptions) *cobra.Command 
 					return writePolicyError(cmd, "编辑自定义情报", "chaitin-cli tanswer policy custom-intelligence-update", "POLICY_CUSTOM_INTELLIGENCE_UPDATE_CONFIRMATION_REQUIRED", err.Error(), false)
 				}
 			}
-			cfg, err := LoadConfig(ConfigOptions{Address: opts.Address, Token: opts.Token, Timeout: opts.Timeout, InsecureSkipVerify: opts.InsecureSkipVerify})
+			cfg, err := LoadConfig(ConfigOptions{Address: opts.Address, Token: opts.Token, Timeout: opts.Timeout, InsecureSkipVerify: opts.InsecureSkipVerify, InsecureSkipVerifySet: opts.InsecureSkipVerifySet})
 			if err != nil {
 				return err
 			}
@@ -832,7 +838,7 @@ func newPolicyCustomIntelligenceStatusCommand(opts *RootOptions, policyOpts *pol
 					return writePolicyError(cmd, task, commandText, "POLICY_CUSTOM_INTELLIGENCE_"+strings.ToUpper(action)+"_CONFIRMATION_REQUIRED", err.Error(), false)
 				}
 			}
-			cfg, err := LoadConfig(ConfigOptions{Address: opts.Address, Token: opts.Token, Timeout: opts.Timeout, InsecureSkipVerify: opts.InsecureSkipVerify})
+			cfg, err := LoadConfig(ConfigOptions{Address: opts.Address, Token: opts.Token, Timeout: opts.Timeout, InsecureSkipVerify: opts.InsecureSkipVerify, InsecureSkipVerifySet: opts.InsecureSkipVerifySet})
 			if err != nil {
 				return err
 			}
@@ -899,7 +905,7 @@ func newPolicyCustomIntelligenceDeleteCommand(opts *RootOptions) *cobra.Command 
 					return writePolicyError(cmd, "删除自定义情报", commandText, "POLICY_CUSTOM_INTELLIGENCE_DELETE_CONFIRMATION_REQUIRED", err.Error(), false)
 				}
 			}
-			cfg, err := LoadConfig(ConfigOptions{Address: opts.Address, Token: opts.Token, Timeout: opts.Timeout, InsecureSkipVerify: opts.InsecureSkipVerify})
+			cfg, err := LoadConfig(ConfigOptions{Address: opts.Address, Token: opts.Token, Timeout: opts.Timeout, InsecureSkipVerify: opts.InsecureSkipVerify, InsecureSkipVerifySet: opts.InsecureSkipVerifySet})
 			if err != nil {
 				return err
 			}
@@ -1011,8 +1017,8 @@ func addPolicyDetectionWhitelistWriteFlags(cmd *cobra.Command, opts *policyDetec
 	cmd.Flags().StringVar(&opts.status, "status", "enabled", "status: enabled, disabled, 1, or 0")
 	cmd.Flags().StringVar(&opts.storage, "storage", "drop", "handling mode: drop, ignore, 1, or 2")
 	cmd.Flags().StringVar(&opts.defaultMode, "mode", "default", "match mode: default, advanced, 1, or 2")
-	cmd.Flags().StringVar(&opts.expire, "expire", "", "expire timestamp in milliseconds")
-	cmd.Flags().StringVar(&opts.validTime, "valid-time", "", "valid duration in seconds")
+	cmd.Flags().StringVar(&opts.expire, "expire", "", "expire timestamp in milliseconds; provide this or --valid-time")
+	cmd.Flags().StringVar(&opts.validTime, "valid-time", "", "valid duration in seconds; must be greater than 0; provide this or --expire")
 	cmd.Flags().BoolVar(&opts.ignore, "ignore-history", false, "ignore matched historical alarms")
 	cmd.Flags().StringVar(&opts.remark, "remark", "", "remark")
 	cmd.Flags().StringVar(&opts.srcAdvanced, "src-advanced", "", "advanced source IP:port rules, comma separated")
@@ -1141,11 +1147,7 @@ func buildPolicyDetectionWhitelistWriteRequest(opts policyDetectionWhitelistWrit
 	if err != nil {
 		return nil, err
 	}
-	expire, err := optionalInt64(opts.expire, "expire")
-	if err != nil {
-		return nil, err
-	}
-	validTime, err := optionalInt64(opts.validTime, "valid-time")
+	expire, validTime, err := policyDetectionWhitelistExpiry(opts)
 	if err != nil {
 		return nil, err
 	}
@@ -1179,6 +1181,27 @@ func buildPolicyDetectionWhitelistWriteRequest(opts policyDetectionWhitelistWrit
 		return nil, fmt.Errorf("missing detection whitelist match condition: set at least one simple or advanced match field")
 	}
 	return req, nil
+}
+
+func policyDetectionWhitelistExpiry(opts policyDetectionWhitelistWriteOptions) (int64, int64, error) {
+	expire, err := optionalInt64(opts.expire, "expire")
+	if err != nil {
+		return 0, 0, err
+	}
+	if strings.TrimSpace(opts.expire) != "" && expire <= 0 {
+		return 0, 0, fmt.Errorf("expire must be greater than 0")
+	}
+	validTime, err := optionalInt64(opts.validTime, "valid-time")
+	if err != nil {
+		return 0, 0, err
+	}
+	if strings.TrimSpace(opts.validTime) != "" && validTime <= 0 {
+		return 0, 0, fmt.Errorf("valid-time must be greater than 0")
+	}
+	if expire <= 0 && validTime <= 0 {
+		return 0, 0, fmt.Errorf("missing detection whitelist expiry: set --expire or --valid-time")
+	}
+	return expire, validTime, nil
 }
 
 func buildPolicyDetectionWhitelistUpdateRequest(opts policyDetectionWhitelistWriteOptions) (map[string]any, error) {

@@ -2,6 +2,7 @@ package main
 
 import (
 	"bytes"
+	"encoding/json"
 	"errors"
 	"io"
 	"os"
@@ -318,6 +319,40 @@ func TestRuntimeConfigFallsBackToGlobalWhenLocalConfigParseFails(t *testing.T) {
 	}
 }
 
+func TestTAnswerGlobalConfigFallbackAtCLIEntry(t *testing.T) {
+	homeDir := t.TempDir()
+	workDir := t.TempDir()
+	setTestHome(t, homeDir)
+	withWorkingDir(t, workDir)
+	t.Setenv("TANSWER_URL", "")
+	t.Setenv("TANSWER_API_KEY", "")
+	t.Setenv("TANSWER_TIMEOUT", "")
+	t.Setenv("TANSWER_INSECURE", "")
+
+	globalPath := filepath.Join(homeDir, defaultConfigDir, defaultConfigFile)
+	if err := os.MkdirAll(filepath.Dir(globalPath), 0o700); err != nil {
+		t.Fatalf("MkdirAll() error = %v", err)
+	}
+	if err := os.WriteFile(globalPath, []byte("tanswer:\n  url: https://global-tanswer.example\n  api_key: placeholder\n"), 0o600); err != nil {
+		t.Fatalf("WriteFile(global) error = %v", err)
+	}
+
+	app, err := newApp()
+	if err != nil {
+		t.Fatalf("newApp() error = %v", err)
+	}
+	var out strings.Builder
+	app.root.SetOut(&out)
+	app.root.SetErr(&out)
+	app.root.SetArgs([]string{"tanswer", "auth", "status"})
+	if err := app.execute(); err != nil {
+		t.Fatalf("execute() error = %v\\n%s", err, out.String())
+	}
+	if !strings.Contains(out.String(), `"environment": "https://global-tanswer.example"`) || !strings.Contains(out.String(), `"token_set": true`) {
+		t.Fatalf("auth status did not use global T-Answer configuration:\n%s", out.String())
+	}
+}
+
 func TestWriteConfigPathUsesRecognizedLocalConfig(t *testing.T) {
 	homeDir := t.TempDir()
 	workDir := t.TempDir()
@@ -380,4 +415,43 @@ func setTestHome(t *testing.T, dir string) {
 	t.Setenv("USERPROFILE", dir)
 	t.Setenv("HOMEDRIVE", "")
 	t.Setenv("HOMEPATH", "")
+}
+
+func TestTAnswerExplicitFalseInsecureFlagOverridesEnvironment(t *testing.T) {
+	homeDir := t.TempDir()
+	workDir := t.TempDir()
+	setTestHome(t, homeDir)
+	withWorkingDir(t, workDir)
+	t.Setenv("TANSWER_URL", "http://127.0.0.1:9")
+	t.Setenv("TANSWER_API_KEY", "placeholder")
+	t.Setenv("TANSWER_INSECURE", "true")
+
+	app, err := newApp()
+	if err != nil {
+		t.Fatalf("newApp() error = %v", err)
+	}
+	var out strings.Builder
+	app.root.SetOut(&out)
+	app.root.SetErr(&out)
+	app.root.SetArgs([]string{"--config", filepath.Join(t.TempDir(), "empty.yaml"), "tanswer", "--insecure=false", "auth", "status"})
+
+	if err := app.execute(); err != nil {
+		t.Fatalf("execute() error = %v", err)
+	}
+
+	var payload struct {
+		Success bool `json:"success"`
+		Data    struct {
+			InsecureSkipVerify bool `json:"insecure_skip_verify"`
+		} `json:"data"`
+	}
+	if err := json.Unmarshal([]byte(out.String()), &payload); err != nil {
+		t.Fatalf("decode auth status: %v", err)
+	}
+	if !payload.Success {
+		t.Fatal("auth status success = false")
+	}
+	if payload.Data.InsecureSkipVerify {
+		t.Fatal("--insecure=false must override TANSWER_INSECURE=true")
+	}
 }

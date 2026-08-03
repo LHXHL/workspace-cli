@@ -11,11 +11,12 @@ import (
 )
 
 type ConfigOptions struct {
-	Address            string
-	Token              string
-	Timeout            string
-	InsecureSkipVerify bool
-	AllowMissingToken  bool
+	Address               string
+	Token                 string
+	Timeout               string
+	InsecureSkipVerify    bool
+	InsecureSkipVerifySet bool
+	AllowMissingToken     bool
 }
 
 type Config struct {
@@ -49,7 +50,10 @@ func LoadConfig(opts ConfigOptions) (Config, error) {
 	addr := firstNonEmpty(opts.Address, os.Getenv("TANSWER_URL"))
 	token := firstNonEmpty(opts.Token, os.Getenv("TANSWER_API_KEY"))
 	timeoutText := firstNonEmpty(opts.Timeout, os.Getenv("TANSWER_TIMEOUT"), "30s")
-	insecureSkipVerify := opts.InsecureSkipVerify || truthy(os.Getenv("TANSWER_INSECURE"))
+	insecureSkipVerify := opts.InsecureSkipVerify
+	if !opts.InsecureSkipVerifySet && !insecureSkipVerify {
+		insecureSkipVerify = truthy(os.Getenv("TANSWER_INSECURE"))
+	}
 
 	addr = strings.TrimRight(strings.TrimSpace(addr), "/")
 	if addr == "" {

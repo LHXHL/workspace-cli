@@ -229,7 +229,7 @@ func newResponseBlockPolicyCreateCommand(opts *RootOptions) *cobra.Command {
 			if err := ValidateWriteConfirmation(responseOpts.confirm, responseBlockPolicyCreateConfirmToken); err != nil {
 				return writeResponseError(cmd, "新增旁路阻断策略", commandText, "RESPONSE_BLOCK_POLICY_CREATE_CONFIRMATION_REQUIRED", err.Error(), false)
 			}
-			cfg, err := LoadConfig(ConfigOptions{Address: opts.Address, Token: opts.Token, Timeout: opts.Timeout, InsecureSkipVerify: opts.InsecureSkipVerify})
+			cfg, err := LoadConfig(ConfigOptions{Address: opts.Address, Token: opts.Token, Timeout: opts.Timeout, InsecureSkipVerify: opts.InsecureSkipVerify, InsecureSkipVerifySet: opts.InsecureSkipVerifySet})
 			if err != nil {
 				return err
 			}
@@ -273,7 +273,7 @@ func newResponseBlockPolicyUpdateCommand(opts *RootOptions) *cobra.Command {
 					return writeResponseError(cmd, "编辑旁路阻断策略", commandText, "RESPONSE_BLOCK_POLICY_UPDATE_CONFIRMATION_REQUIRED", err.Error(), false)
 				}
 			}
-			cfg, err := LoadConfig(ConfigOptions{Address: opts.Address, Token: opts.Token, Timeout: opts.Timeout, InsecureSkipVerify: opts.InsecureSkipVerify})
+			cfg, err := LoadConfig(ConfigOptions{Address: opts.Address, Token: opts.Token, Timeout: opts.Timeout, InsecureSkipVerify: opts.InsecureSkipVerify, InsecureSkipVerifySet: opts.InsecureSkipVerifySet})
 			if err != nil {
 				return err
 			}
@@ -334,7 +334,7 @@ func newResponseBlockPolicyActionCommand(opts *RootOptions, responseOpts *respon
 					return writeResponseError(cmd, task, commandText, "RESPONSE_BLOCK_POLICY_"+strings.ToUpper(action)+"_CONFIRMATION_REQUIRED", err.Error(), false)
 				}
 			}
-			cfg, err := LoadConfig(ConfigOptions{Address: opts.Address, Token: opts.Token, Timeout: opts.Timeout, InsecureSkipVerify: opts.InsecureSkipVerify})
+			cfg, err := LoadConfig(ConfigOptions{Address: opts.Address, Token: opts.Token, Timeout: opts.Timeout, InsecureSkipVerify: opts.InsecureSkipVerify, InsecureSkipVerifySet: opts.InsecureSkipVerifySet})
 			if err != nil {
 				return err
 			}
@@ -380,7 +380,7 @@ func newResponseBlockRecordsCommand(opts *RootOptions) *cobra.Command {
 			if err := validateResponsePage(responseOpts.page, responseOpts.pageSize); err != nil {
 				return writeResponseError(cmd, "查询旁路阻断记录", "chaitin-cli tanswer response block-records", "INVALID_PAGE", err.Error(), false)
 			}
-			cfg, err := LoadConfig(ConfigOptions{Address: opts.Address, Token: opts.Token, Timeout: opts.Timeout, InsecureSkipVerify: opts.InsecureSkipVerify})
+			cfg, err := LoadConfig(ConfigOptions{Address: opts.Address, Token: opts.Token, Timeout: opts.Timeout, InsecureSkipVerify: opts.InsecureSkipVerify, InsecureSkipVerifySet: opts.InsecureSkipVerifySet})
 			if err != nil {
 				return err
 			}
@@ -455,7 +455,7 @@ func newResponseWhitelistCreateCommand(opts *RootOptions) *cobra.Command {
 			if err := ValidateWriteConfirmation(responseOpts.confirm, responseWhitelistCreateConfirmToken); err != nil {
 				return writeResponseError(cmd, "新增响应白名单", commandText, "RESPONSE_WHITELIST_CREATE_CONFIRMATION_REQUIRED", err.Error(), false)
 			}
-			cfg, err := LoadConfig(ConfigOptions{Address: opts.Address, Token: opts.Token, Timeout: opts.Timeout, InsecureSkipVerify: opts.InsecureSkipVerify})
+			cfg, err := LoadConfig(ConfigOptions{Address: opts.Address, Token: opts.Token, Timeout: opts.Timeout, InsecureSkipVerify: opts.InsecureSkipVerify, InsecureSkipVerifySet: opts.InsecureSkipVerifySet})
 			if err != nil {
 				return err
 			}
@@ -499,7 +499,7 @@ func newResponseWhitelistUpdateCommand(opts *RootOptions) *cobra.Command {
 					return writeResponseError(cmd, "编辑响应白名单", commandText, "RESPONSE_WHITELIST_UPDATE_CONFIRMATION_REQUIRED", err.Error(), false)
 				}
 			}
-			cfg, err := LoadConfig(ConfigOptions{Address: opts.Address, Token: opts.Token, Timeout: opts.Timeout, InsecureSkipVerify: opts.InsecureSkipVerify})
+			cfg, err := LoadConfig(ConfigOptions{Address: opts.Address, Token: opts.Token, Timeout: opts.Timeout, InsecureSkipVerify: opts.InsecureSkipVerify, InsecureSkipVerifySet: opts.InsecureSkipVerifySet})
 			if err != nil {
 				return err
 			}
@@ -558,7 +558,7 @@ func newResponseWhitelistActionCommand(opts *RootOptions, responseOpts *response
 					return writeResponseError(cmd, task, commandText, "RESPONSE_WHITELIST_"+strings.ToUpper(action)+"_CONFIRMATION_REQUIRED", err.Error(), false)
 				}
 			}
-			cfg, err := LoadConfig(ConfigOptions{Address: opts.Address, Token: opts.Token, Timeout: opts.Timeout, InsecureSkipVerify: opts.InsecureSkipVerify})
+			cfg, err := LoadConfig(ConfigOptions{Address: opts.Address, Token: opts.Token, Timeout: opts.Timeout, InsecureSkipVerify: opts.InsecureSkipVerify, InsecureSkipVerifySet: opts.InsecureSkipVerifySet})
 			if err != nil {
 				return err
 			}
@@ -616,7 +616,7 @@ func newResponseBlockPolicyFromAlarmCommand(opts *RootOptions) *cobra.Command {
 					return writeResponseError(cmd, "从告警生成旁路阻断策略", commandText, "RESPONSE_BLOCK_POLICY_FROM_ALARM_CONFIRMATION_REQUIRED", err.Error(), false)
 				}
 			}
-			cfg, err := LoadConfig(ConfigOptions{Address: opts.Address, Token: opts.Token, Timeout: opts.Timeout, InsecureSkipVerify: opts.InsecureSkipVerify})
+			cfg, err := LoadConfig(ConfigOptions{Address: opts.Address, Token: opts.Token, Timeout: opts.Timeout, InsecureSkipVerify: opts.InsecureSkipVerify, InsecureSkipVerifySet: opts.InsecureSkipVerifySet})
 			if err != nil {
 				return err
 			}
@@ -690,7 +690,7 @@ func newResponseWhitelistFromAlarmCommand(opts *RootOptions) *cobra.Command {
 					return writeResponseError(cmd, "从告警生成响应白名单", commandText, "RESPONSE_WHITELIST_FROM_ALARM_CONFIRMATION_REQUIRED", err.Error(), false)
 				}
 			}
-			cfg, err := LoadConfig(ConfigOptions{Address: opts.Address, Token: opts.Token, Timeout: opts.Timeout, InsecureSkipVerify: opts.InsecureSkipVerify})
+			cfg, err := LoadConfig(ConfigOptions{Address: opts.Address, Token: opts.Token, Timeout: opts.Timeout, InsecureSkipVerify: opts.InsecureSkipVerify, InsecureSkipVerifySet: opts.InsecureSkipVerifySet})
 			if err != nil {
 				return err
 			}
@@ -830,7 +830,7 @@ func runResponseDataListCommand(cmd *cobra.Command, opts *RootOptions, task stri
 	if err := validateResponsePage(page, pageSize); err != nil {
 		return writeResponseError(cmd, task, command, "INVALID_PAGE", err.Error(), false)
 	}
-	cfg, err := LoadConfig(ConfigOptions{Address: opts.Address, Token: opts.Token, Timeout: opts.Timeout, InsecureSkipVerify: opts.InsecureSkipVerify})
+	cfg, err := LoadConfig(ConfigOptions{Address: opts.Address, Token: opts.Token, Timeout: opts.Timeout, InsecureSkipVerify: opts.InsecureSkipVerify, InsecureSkipVerifySet: opts.InsecureSkipVerifySet})
 	if err != nil {
 		return err
 	}

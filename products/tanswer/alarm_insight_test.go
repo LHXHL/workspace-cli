@@ -25,6 +25,19 @@ func TestAlarmByAttackerHelpIsAIReadable(t *testing.T) {
 	}
 }
 
+func TestAlarmByThreatHelpExplainsAtLeastOneSelector(t *testing.T) {
+	var out bytes.Buffer
+	cmd := NewRootCommand(RootOptions{Out: &out, ErrOut: &out})
+	cmd.SetArgs([]string{"tanswer", "alarm", "by-threat", "--help"})
+
+	if err := cmd.Execute(); err != nil {
+		t.Fatalf("Execute returned error: %v", err)
+	}
+	if !strings.Contains(out.String(), "至少提供 --name、--tag 或 --phase 中的一项") {
+		t.Fatalf("help does not explain selector requirement:\n%s", out.String())
+	}
+}
+
 func TestBuildAlarmSubjectRequestMapsAttacker(t *testing.T) {
 	rng := TimeRange{Start: 1000, End: 2000}
 	req := buildAlarmSubjectListRequest(rng, alarmSubjectOptions{

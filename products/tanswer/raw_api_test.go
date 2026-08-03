@@ -19,10 +19,102 @@ func TestRawAPIHelpExplainsFallback(t *testing.T) {
 		t.Fatalf("Execute returned error: %v", err)
 	}
 	text := out.String()
-	for _, want := range []string{"Open API 兜底调用", "METHOD", "PATH", "--query", "--body"} {
+	for _, want := range []string{"Open API 兜底调用", "METHOD", "PATH", "--query", "--body", "--preview", "--confirm", "--dry-run 不适用于", "<known-unwrapped-openapi-path>"} {
 		if !strings.Contains(text, want) {
 			t.Fatalf("help missing %q:\n%s", want, text)
 		}
+	}
+	if strings.Contains(text, "OpsService.GetBaseInfo") {
+		t.Fatalf("raw API help must not bypass the system status semantic command:\n%s", text)
+	}
+}
+
+func TestRawAPIPotentiallyMutatingRequestReturnsPreviewWithoutSending(t *testing.T) {
+	called := false
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		called = true
+		t.Fatalf("unconfirmed raw API request must not be sent")
+	}))
+	defer server.Close()
+
+	var out bytes.Buffer
+	cmd := NewRootCommand(RootOptions{Out: &out, ErrOut: &out})
+	cmd.SetArgs([]string{
+		"tanswer", "--url", server.URL, "--api-key", "token-123",
+		"api", "POST", "/rpc",
+		"--body", `{"method":"AssetService.Create"}`,
+	})
+
+	if err := cmd.Execute(); err != nil {
+		t.Fatalf("Execute returned error: %v", err)
+	}
+	if called {
+		t.Fatal("unconfirmed raw API request was sent")
+	}
+	var env SuccessEnvelope
+	if err := json.Unmarshal(out.Bytes(), &env); err != nil {
+		t.Fatalf("decode output: %v\n%s", err, out.String())
+	}
+	data := env.Data.(map[string]any)
+	if data["requires_confirmation"] != true || data["confirmed"] != false || data["confirmation_token"] != "CONFIRM_TANSWER_RAW_API_WRITE" {
+		t.Fatalf("preview data = %#v", data)
+	}
+}
+
+func TestRawAPIPotentiallyMutatingRequestRequiresExactConfirm(t *testing.T) {
+	calls := 0
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		calls++
+		if r.Method != http.MethodPost {
+			t.Fatalf("method = %s", r.Method)
+		}
+		w.WriteHeader(http.StatusNoContent)
+	}))
+	defer server.Close()
+
+	for _, confirm := range []string{"wrong", "CONFIRM_TANSWER_RAW_API_WRITE"} {
+		var out bytes.Buffer
+		cmd := NewRootCommand(RootOptions{Out: &out, ErrOut: &out})
+		cmd.SetArgs([]string{
+			"tanswer", "--url", server.URL, "--api-key", "token-123",
+			"api", "POST", "/rpc", "--confirm", confirm,
+		})
+		if err := cmd.Execute(); err != nil {
+			t.Fatalf("confirm %q: Execute returned error: %v", confirm, err)
+		}
+	}
+	if calls != 1 {
+		t.Fatalf("server calls = %d, want 1", calls)
+	}
+}
+
+func TestRawAPIPotentiallyMutatingRequestRejectsWrongConfirmStructurally(t *testing.T) {
+	called := false
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		called = true
+		t.Fatal("wrong raw API confirmation token must not send a request")
+	}))
+	defer server.Close()
+
+	var out bytes.Buffer
+	cmd := NewRootCommand(RootOptions{Out: &out, ErrOut: &out})
+	cmd.SetArgs([]string{
+		"tanswer", "--url", server.URL, "--api-key", "token-123",
+		"api", "POST", "/rpc", "--confirm", "wrong",
+	})
+	if err := cmd.Execute(); err != nil {
+		t.Fatalf("Execute returned error: %v", err)
+	}
+	if called {
+		t.Fatal("wrong raw API confirmation token sent a request")
+	}
+
+	var env ErrorEnvelope
+	if err := json.Unmarshal(out.Bytes(), &env); err != nil {
+		t.Fatalf("decode structured confirmation error: %v\n%s", err, out.String())
+	}
+	if env.Success || env.Error.Code != "RAW_API_CONFIRMATION_REQUIRED" || env.Error.Retryable {
+		t.Fatalf("confirmation error = %#v", env)
 	}
 }
 
@@ -100,6 +192,7 @@ func TestRawAPIPostBodyFileOutputsNon2xxStatus(t *testing.T) {
 		"tanswer", "--url", server.URL, "--api-key", "token-123",
 		"api", "POST", "/rpc",
 		"--body", "@" + bodyFile,
+		"--confirm", rawAPIWriteConfirmToken,
 	})
 
 	if err := cmd.Execute(); err != nil {
@@ -175,12 +268,15 @@ func TestRawAPIRejectsExternalURLPathBeforeRequest(t *testing.T) {
 			"api", "GET", path,
 		})
 
-		err := cmd.Execute()
-		if err == nil {
-			t.Fatalf("path %q should be rejected", path)
+		if err := cmd.Execute(); err != nil {
+			t.Fatalf("path %q: Execute returned error: %v", path, err)
 		}
-		if !strings.Contains(err.Error(), "not a full URL") {
-			t.Fatalf("path %q error = %v", path, err)
+		var env ErrorEnvelope
+		if err := json.Unmarshal(out.Bytes(), &env); err != nil {
+			t.Fatalf("path %q: decode structured error: %v\\n%s", path, err, out.String())
+		}
+		if env.Success || env.Error.Code != "INVALID_API_PATH" || env.Error.Retryable {
+			t.Fatalf("path %q: error = %#v", path, env)
 		}
 	}
 	if called {
@@ -196,11 +292,74 @@ func TestRawAPIRejectsRelativePath(t *testing.T) {
 		"api", "GET", "api/example",
 	})
 
-	err := cmd.Execute()
-	if err == nil {
-		t.Fatalf("relative path should be rejected")
+	if err := cmd.Execute(); err != nil {
+		t.Fatalf("Execute returned error: %v", err)
 	}
-	if !strings.Contains(err.Error(), "must start with /") {
-		t.Fatalf("error = %v", err)
+	var env ErrorEnvelope
+	if err := json.Unmarshal(out.Bytes(), &env); err != nil {
+		t.Fatalf("decode structured error: %v\\n%s", err, out.String())
+	}
+	if env.Success || env.Error.Code != "INVALID_API_PATH" || env.Error.Retryable {
+		t.Fatalf("error = %#v", env)
+	}
+}
+
+func TestRawAPIInvalidInputReturnsStructuredErrorWithoutSending(t *testing.T) {
+	called := false
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		called = true
+		t.Fatal("invalid raw API input must not send a request")
+	}))
+	defer server.Close()
+
+	tests := []struct {
+		name string
+		args []string
+		code string
+	}{
+		{
+			name: "full URL path",
+			args: []string{"GET", server.URL + "/steal"},
+			code: "INVALID_API_PATH",
+		},
+		{
+			name: "relative path",
+			args: []string{"GET", "api/example"},
+			code: "INVALID_API_PATH",
+		},
+		{
+			name: "invalid query JSON",
+			args: []string{"GET", "/api/example", "--query", "{"},
+			code: "INVALID_API_QUERY",
+		},
+		{
+			name: "invalid body JSON",
+			args: []string{"POST", "/api/example", "--body", "{"},
+			code: "INVALID_API_BODY",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			var out bytes.Buffer
+			cmd := NewRootCommand(RootOptions{Out: &out, ErrOut: &out})
+			cmd.SetArgs(append([]string{
+				"tanswer", "--url", server.URL, "--api-key", "token-123", "api",
+			}, tt.args...))
+
+			if err := cmd.Execute(); err != nil {
+				t.Fatalf("Execute returned error: %v", err)
+			}
+			var env ErrorEnvelope
+			if err := json.Unmarshal(out.Bytes(), &env); err != nil {
+				t.Fatalf("decode structured input error: %v\\n%s", err, out.String())
+			}
+			if env.Success || env.Error.Code != tt.code || env.Error.Retryable {
+				t.Fatalf("input error = %#v", env)
+			}
+		})
+	}
+	if called {
+		t.Fatal("invalid raw API input sent a request")
 	}
 }

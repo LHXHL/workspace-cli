@@ -1,6 +1,12 @@
-# 全悉 AI 可读 CLI
+# 全悉 CLI（`tanswer`）
 
 `chaitin-cli tanswer` 是全悉面向人类操作者和 AI Agent 的命令行入口。它把高频安全运营动作封装为语义命令，并提供 `api <METHOD> <PATH>` 通用调用入口，用于访问用户已知且已授权的全悉 Open API。
+
+## 文档定位
+
+本文档提供人工可读的入门、配置、权限、故障排查和常见操作说明。它不替代运行时命令契约：安装后的 `chaitin-cli tanswer --help`、领域/具体命令的 `--help` 与 `chaitin-cli tanswer manifest` 才是当前版本的命令、参数、输出和确认要求事实来源。
+
+AI Agent 必须先用运行时 help 发现命令，需要机器可读完整契约时读取 manifest；不得根据本文档猜测命令、RPC 方法、路径或请求体。统一 AI 使用规则见 [`skills/chaitin-cli/SKILL.md`](../../skills/chaitin-cli/SKILL.md)。
 
 ## 为什么使用全悉 CLI？
 
@@ -67,6 +73,9 @@ chaitin-cli tanswer api POST /rpc --body @./request.json
 
 ## 配置和认证
 
+连接信息可通过 `--url`、`--api-key`、`--timeout`、`--insecure`；环境变量 `TANSWER_URL`、`TANSWER_API_KEY`、`TANSWER_TIMEOUT`、`TANSWER_INSECURE`；或配置文件中的 `tanswer.url`、`tanswer.api_key`、`tanswer.timeout`、`tanswer.insecure` 提供。优先级为 flags > environment/.env > 识别到的 `./config.yaml` > `~/.chaitin-cli/config.yaml`。
+
+
 `chaitin-cli tanswer` 支持通过配置文件、环境变量和全局 flag 配置连接信息。
 
 ### 获取 OpenAPI Token
@@ -122,7 +131,7 @@ CLI 调用继承全悉现有 OpenAPI Token 的权限、有效期、频率限制�
 | Protected write | `chaitin-cli tanswer asset create --preview` | 先返回写操作预览，不直接修改产品状态。 |
 | Open API 通用调用 | `chaitin-cli tanswer api <METHOD> <PATH>` | 访问用户已知且已授权的全悉 Open API。 |
 
-语义命令按领域组织；Agent 可通过 `chaitin-cli tanswer manifest` 区分语义命令、风险等级和 Open API 通用调用入口。
+语义命令按领域组织；Agent 应先通过运行时 `--help` 发现命令，并通过 `chaitin-cli tanswer manifest` 区分语义命令、风险等级和 Open API 通用调用入口。根级 `--dry-run` 不适用于 `tanswer`。
 
 ## 常用场景
 
@@ -196,6 +205,10 @@ chaitin-cli tanswer response block-policy-create --name block-bad-ip --object 19
 
 ## 安全边界
 
+- 运行时 help 与 manifest 是命令事实来源；本文档和命令索引不替代它们。
+- 语义写操作必须先 `--preview`，展示目标、影响和风险，并在人工明确确认后才使用精确 `--confirm` token。对 AI Agent，还必须等待用户对本次具体变更的明确确认。
+- `tanswer api` 的 GET/HEAD 可直接执行；其他 HTTP 方法必须先 preview，并在明确确认本次 method、path、query 和 body 后才使用 `--confirm CONFIRM_TANSWER_RAW_API_WRITE`。
+
 - 不在脚本、日志、共享文档、commit message 或 MR 描述中暴露真实 Token、真实环境地址或真实内网地址。
 - 查询命令可以直接执行；资产、安全策略、元数据配置和响应处置写命令必须先预览变更，再使用确认令牌执行，并返回审计信息。
 - 使用 `chaitin-cli tanswer manifest` 查看当前版本支持的命令、参数、输出字段和确认要求。
@@ -217,5 +230,5 @@ chaitin-cli tanswer response block-policy-create --name block-bad-ip --object 19
 ## 文档索引
 
 - [COMMAND_REFERENCE.md](./COMMAND_REFERENCE.md)：完整命令参考和长示例。
-- [agent-skill.md](./agent-skill.md)：AI Agent 使用规则。
+- [统一 chaitin-cli Skill](../../skills/chaitin-cli/SKILL.md)：AI Agent 使用规则。
 - [manifest.go](./manifest.go)：`chaitin-cli tanswer manifest` 使用的 AI 可读命令清单。

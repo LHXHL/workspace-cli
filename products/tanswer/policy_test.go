@@ -182,6 +182,45 @@ func TestBuildPolicyDetectionWhitelistWriteRequestMapsFields(t *testing.T) {
 	}
 }
 
+func TestBuildPolicyDetectionWhitelistWriteRequestRejectsNonPositiveValidTime(t *testing.T) {
+	for _, validTime := range []string{"0", "-1"} {
+		t.Run(validTime, func(t *testing.T) {
+			_, err := buildPolicyDetectionWhitelistWriteRequest(policyDetectionWhitelistWriteOptions{
+				name:      "登录误报",
+				srcIP:     "198.51.100.10",
+				validTime: validTime,
+			})
+			if err == nil || !strings.Contains(err.Error(), "valid-time") {
+				t.Fatalf("valid-time %q error = %v", validTime, err)
+			}
+		})
+	}
+}
+
+func TestBuildPolicyDetectionWhitelistWriteRequestRequiresExpiry(t *testing.T) {
+	_, err := buildPolicyDetectionWhitelistWriteRequest(policyDetectionWhitelistWriteOptions{
+		name:  "登录误报",
+		srcIP: "198.51.100.10",
+	})
+	if err == nil || !strings.Contains(err.Error(), "--expire or --valid-time") {
+		t.Fatalf("missing expiry error = %v", err)
+	}
+}
+
+func TestBuildPolicyDetectionWhitelistWriteRequestAcceptsExpireWithoutValidTime(t *testing.T) {
+	req, err := buildPolicyDetectionWhitelistWriteRequest(policyDetectionWhitelistWriteOptions{
+		name:   "登录误报",
+		srcIP:  "198.51.100.10",
+		expire: "1784277612000",
+	})
+	if err != nil {
+		t.Fatalf("buildPolicyDetectionWhitelistWriteRequest returned error: %v", err)
+	}
+	if req["expire"] != int64(1784277612000) || req["valid_time"] != int64(0) {
+		t.Fatalf("expiry fields = %#v", req)
+	}
+}
+
 func TestPolicyDetectionWhitelistCreatePreviewDoesNotCallRPC(t *testing.T) {
 	serverCalled := false
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -199,6 +238,7 @@ func TestPolicyDetectionWhitelistCreatePreviewDoesNotCallRPC(t *testing.T) {
 		"policy", "detection-whitelist-create",
 		"--name", "登录误报",
 		"--src-ip", "198.51.100.10",
+		"--valid-time", "3600",
 		"--preview",
 	})
 
@@ -242,6 +282,7 @@ func TestPolicyDetectionWhitelistCreateRequiresExactConfirmBeforeRPC(t *testing.
 		"policy", "detection-whitelist-create",
 		"--name", "登录误报",
 		"--src-ip", "198.51.100.10",
+		"--valid-time", "3600",
 		"--confirm", "confirm_policy_detection_whitelist_create",
 	})
 
@@ -283,6 +324,7 @@ func TestPolicyDetectionWhitelistCreateConfirmedCallsCreate(t *testing.T) {
 		"policy", "detection-whitelist-create",
 		"--name", "登录误报",
 		"--src-ip", "198.51.100.10",
+		"--valid-time", "3600",
 		"--confirm", "CONFIRM_POLICY_DETECTION_WHITELIST_CREATE",
 	})
 
@@ -331,6 +373,7 @@ func TestPolicyDetectionWhitelistUpdateConfirmedReadsBeforeAndCallsUpdate(t *tes
 		"--id", "21",
 		"--name", "新白名单",
 		"--src-ip", "198.51.100.11",
+		"--valid-time", "3600",
 		"--confirm", "CONFIRM_POLICY_DETECTION_WHITELIST_UPDATE",
 	})
 
@@ -426,7 +469,8 @@ func TestBuildPolicyDetectionWhitelistFromAlarmRequestMapsAlarmFields(t *testing
 	}, policyDetectionWhitelistFromAlarmOptions{
 		id: "doc-1",
 		write: policyDetectionWhitelistWriteOptions{
-			remark: "confirmed false positive",
+			remark:    "confirmed false positive",
+			validTime: "3600",
 		},
 	})
 	if err != nil {
@@ -476,6 +520,7 @@ func TestPolicyDetectionWhitelistFromAlarmPreviewReadsAlarmOnly(t *testing.T) {
 		"--api-key", "token-123",
 		"policy", "detection-whitelist-from-alarm",
 		"--id", "doc-1",
+		"--valid-time", "3600",
 		"--preview",
 	})
 
@@ -528,6 +573,7 @@ func TestPolicyDetectionWhitelistFromAlarmConfirmedCreatesWhitelist(t *testing.T
 		"--api-key", "token-123",
 		"policy", "detection-whitelist-from-alarm",
 		"--id", "doc-1",
+		"--valid-time", "3600",
 		"--confirm", "CONFIRM_POLICY_DETECTION_WHITELIST_FROM_ALARM",
 	})
 

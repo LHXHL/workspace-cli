@@ -12,24 +12,56 @@ type CommandManifest struct {
 	Binary        string            `json:"binary"`
 	Namespace     string            `json:"namespace"`
 	Env           map[string]string `json:"env"`
+	Bootstrap     BootstrapManifest `json:"bootstrap"`
 	Commands      []ManifestCommand `json:"commands"`
 }
 
+type ConfigSource struct {
+	Flag       string `json:"flag,omitempty"`
+	Env        string `json:"env,omitempty"`
+	ConfigPath string `json:"config_path,omitempty"`
+	Secret     bool   `json:"secret,omitempty"`
+}
+
+type AuthenticationManifest struct {
+	URL           ConfigSource `json:"url"`
+	APIKey        ConfigSource `json:"api_key"`
+	Timeout       ConfigSource `json:"timeout"`
+	Insecure      ConfigSource `json:"insecure"`
+	Precedence    []string     `json:"precedence"`
+	StatusCommand string       `json:"status_command"`
+	VerifyCommand string       `json:"verify_command"`
+}
+
+type BootstrapManifest struct {
+	Authentication AuthenticationManifest `json:"authentication"`
+	AgentProtocol  []string               `json:"agent_protocol"`
+}
+
 type ManifestCommand struct {
-	Name                 string                 `json:"name"`
-	FullCommand          string                 `json:"full_command"`
-	Layer                string                 `json:"layer"`
-	Summary              string                 `json:"summary"`
-	UseWhen              []string               `json:"use_when"`
-	DoNotUseWhen         []string               `json:"do_not_use_when,omitempty"`
-	Arguments            []ManifestArgument     `json:"arguments,omitempty"`
-	Flags                []ManifestFlag         `json:"flags,omitempty"`
-	OutputType           string                 `json:"output_type"`
-	OutputFields         []string               `json:"output_fields"`
-	RiskLevel            string                 `json:"risk_level"`
-	RequiresConfirmation bool                   `json:"requires_confirmation"`
-	Examples             []ManifestExample      `json:"examples"`
-	Backend              map[string]interface{} `json:"backend,omitempty"`
+	Name                  string                    `json:"name"`
+	FullCommand           string                    `json:"full_command"`
+	Layer                 string                    `json:"layer"`
+	Summary               string                    `json:"summary"`
+	UseWhen               []string                  `json:"use_when"`
+	DoNotUseWhen          []string                  `json:"do_not_use_when,omitempty"`
+	Arguments             []ManifestArgument        `json:"arguments,omitempty"`
+	Flags                 []ManifestFlag            `json:"flags,omitempty"`
+	InputConstraints      []ManifestInputConstraint `json:"input_constraints,omitempty"`
+	OutputType            string                    `json:"output_type"`
+	OutputFields          []string                  `json:"output_fields"`
+	PreviewOutputFields   []string                  `json:"preview_output_fields,omitempty"`
+	RiskLevel             string                    `json:"risk_level"`
+	RequiresConfirmation  bool                      `json:"requires_confirmation"`
+	ConfirmationCondition string                    `json:"confirmation_condition,omitempty"`
+	Examples              []ManifestExample         `json:"examples"`
+	Backend               map[string]interface{}    `json:"backend,omitempty"`
+}
+
+type ManifestInputConstraint struct {
+	Rule        string   `json:"rule"`
+	Flags       []string `json:"flags"`
+	Description string   `json:"description"`
 }
 
 type ManifestArgument struct {
@@ -56,7 +88,7 @@ func newManifestCommand(opts *RootOptions) *cobra.Command {
 	return &cobra.Command{
 		Use:     "manifest",
 		Short:   "查看 CLI 命令清单",
-		Long:    "查看 CLI 命令清单。面向 AI Agent 和集成方返回机器可读的命令元数据，包括命令层级、参数、默认值、枚举、output 类型、risk 等级、确认要求和示例。",
+		Long:    "查看 CLI 命令清单，并输出全悉 CLI 的机器可读命令、配置和安全契约。面向 AI Agent 和集成方返回机器可读的命令元数据，包括命令层级、参数、默认值、枚举、output 类型、risk 等级、确认要求和示例。",
 		Example: "  chaitin-cli tanswer manifest",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			raw, err := RenderJSON(SuccessEnvelope{
@@ -75,8 +107,8 @@ func newManifestCommand(opts *RootOptions) *cobra.Command {
 }
 
 func BuildCommandManifest() CommandManifest {
-	return CommandManifest{
-		SchemaVersion: "2026-06-26",
+	manifest := CommandManifest{
+		SchemaVersion: "2026-07-29",
 		Product:       "tanswer",
 		Binary:        "chaitin-cli",
 		Namespace:     "tanswer",
@@ -86,7 +118,43 @@ func BuildCommandManifest() CommandManifest {
 			"TANSWER_TIMEOUT":  "request timeout, default 30s",
 			"TANSWER_INSECURE": "skip TLS certificate verification when certificate validation must be bypassed, default false",
 		},
+		Bootstrap: BootstrapManifest{
+			Authentication: AuthenticationManifest{
+				URL:           ConfigSource{Flag: "--url", Env: "TANSWER_URL", ConfigPath: "tanswer.url"},
+				APIKey:        ConfigSource{Flag: "--api-key", Env: "TANSWER_API_KEY", ConfigPath: "tanswer.api_key", Secret: true},
+				Timeout:       ConfigSource{Flag: "--timeout", Env: "TANSWER_TIMEOUT", ConfigPath: "tanswer.timeout"},
+				Insecure:      ConfigSource{Flag: "--insecure", Env: "TANSWER_INSECURE", ConfigPath: "tanswer.insecure"},
+				Precedence:    []string{"command flag", "environment variable", "config.yaml", "default"},
+				StatusCommand: "chaitin-cli tanswer auth status",
+				VerifyCommand: "chaitin-cli tanswer auth check",
+			},
+			AgentProtocol: []string{
+				"discover commands and unknown flags with --help",
+				"prefer semantic commands; use api only for known authorized endpoints not covered by semantic commands",
+				"run preview before protected writes and require the documented confirmation token",
+				"wait for explicit user confirmation after preview before executing a protected write",
+				"for api fallback, execute non-GET/HEAD requests only after preview, explicit user confirmation, and CONFIRM_TANSWER_RAW_API_WRITE",
+				"do not guess unsupported commands or direct API endpoints",
+			},
+		},
 		Commands: []ManifestCommand{
+			{
+				Name:        "tanswer manifest",
+				FullCommand: "chaitin-cli tanswer manifest",
+				Layer:       "foundation",
+				Summary:     "输出全悉 CLI 的机器可读命令、配置和安全契约。",
+				UseWhen: []string{
+					"需要枚举当前版本支持的命令、参数、输出字段、风险和确认要求。",
+					"AI Agent 需要在读取 help 后结构化确认命令契约。",
+				},
+				OutputType:           "command_manifest",
+				OutputFields:         []string{"schema_version", "bootstrap", "commands"},
+				RiskLevel:            "read",
+				RequiresConfirmation: false,
+				Examples: []ManifestExample{
+					{Description: "输出当前版本命令清单", Command: "chaitin-cli tanswer manifest"},
+				},
+			},
 			{
 				Name:        "tanswer auth status",
 				FullCommand: "chaitin-cli tanswer auth status",
@@ -139,6 +207,7 @@ func BuildCommandManifest() CommandManifest {
 				DoNotUseWhen: []string{
 					"已有语义快捷命令可以满足目标任务时，优先使用语义快捷命令。",
 					"需要 CLI 提供专属参数解释、字段摘要或业务口径时，不应依赖该兜底入口。",
+					"尚未取得用户对具体请求的明确确认时，不得执行非 GET/HEAD 请求。",
 				},
 				Arguments: []ManifestArgument{
 					{Name: "METHOD", Required: true, Description: "HTTP method, for example GET or POST"},
@@ -147,13 +216,18 @@ func BuildCommandManifest() CommandManifest {
 				Flags: []ManifestFlag{
 					{Name: "--query", Type: "json_object", Required: false, Description: "query parameters as JSON object"},
 					{Name: "--body", Type: "json_object_or_file", Required: false, Description: "request body as JSON object or @file path"},
+					{Name: "--preview", Type: "boolean", Required: false, Description: "return the non-GET/HEAD request preview without sending it"},
+					{Name: "--confirm", Type: "string", Required: false, Description: "required with CONFIRM_TANSWER_RAW_API_WRITE to execute a non-GET/HEAD request after explicit user confirmation"},
 				},
-				OutputType:           "raw_openapi_response",
-				OutputFields:         []string{"status_code", "raw"},
-				RiskLevel:            "read_write",
-				RequiresConfirmation: false,
+				OutputType:            "raw_openapi_response",
+				OutputFields:          []string{"status_code", "raw"},
+				PreviewOutputFields:   []string{"requires_confirmation", "confirmed", "operation_type", "risk_level", "target", "change_summary", "impact", "risk_warnings", "confirmation_token", "confirmation_note"},
+				RiskLevel:             "read_write",
+				RequiresConfirmation:  true,
+				ConfirmationCondition: "required for non-GET/HEAD requests",
 				Examples: []ManifestExample{
-					{Description: "调用 JSON-RPC Open API", Command: "chaitin-cli tanswer api POST /rpc --body '{\"jsonrpc\":\"2.0\",\"method\":\"OpsService.GetBaseInfo\",\"params\":{},\"id\":\"1\"}'"},
+					{Description: "预览已知但未封装的非 GET/HEAD Open API 请求；占位符必须按官方 OpenAPI 文档替换", Command: "chaitin-cli tanswer api POST '/<known-unwrapped-openapi-path>' --body '{\"<known_parameter>\":\"<value>\"}' --preview"},
+					{Description: "查看 Open API 文档", Command: "chaitin-cli tanswer api GET /api/openapi/rpc/openapi.json"},
 				},
 			},
 			{
@@ -409,7 +483,14 @@ func BuildCommandManifest() CommandManifest {
 				DoNotUseWhen: []string{
 					"没有指定威胁名称、威胁类型或攻击阶段时，使用 tanswer alarm overview 或 list。",
 				},
-				Flags:      alarmThreatManifestFlags(),
+				Flags: alarmThreatManifestFlags(),
+				InputConstraints: []ManifestInputConstraint{
+					{
+						Rule:        "at_least_one",
+						Flags:       []string{"--name", "--tag", "--phase"},
+						Description: "provide at least one threat selector",
+					},
+				},
 				OutputType: "alarm_subject_summary",
 				OutputFields: []string{
 					"threat",
@@ -1580,15 +1661,15 @@ func BuildCommandManifest() CommandManifest {
 				"需要新增检测白名单来抑制误报或重复告警。",
 				"已经明确白名单名称、匹配条件、处置方式、状态和有效期。",
 			}, policyDetectionWhitelistWriteManifestFlags(false, "CONFIRM_POLICY_DETECTION_WHITELIST_CREATE"), "policy_detection_whitelist_create_result", []ManifestExample{
-				{Description: "预览新增检测白名单", Command: "chaitin-cli tanswer policy detection-whitelist-create --name 登录误报 --src-ip 198.51.100.10 --preview"},
-				{Description: "确认新增检测白名单", Command: "chaitin-cli tanswer policy detection-whitelist-create --name 登录误报 --src-ip 198.51.100.10 --confirm CONFIRM_POLICY_DETECTION_WHITELIST_CREATE"},
+				{Description: "预览新增检测白名单", Command: "chaitin-cli tanswer policy detection-whitelist-create --name 登录误报 --src-ip 198.51.100.10 --valid-time 3600 --preview"},
+				{Description: "确认新增检测白名单", Command: "chaitin-cli tanswer policy detection-whitelist-create --name 登录误报 --src-ip 198.51.100.10 --valid-time 3600 --confirm CONFIRM_POLICY_DETECTION_WHITELIST_CREATE"},
 			}, []string{"AlarmService.CreateWhiteList"}, policyDetectionWhitelistCreateConfirmToken),
 			policyDetectionWhitelistWriteManifestCommand("tanswer policy detection-whitelist-update", "chaitin-cli tanswer policy detection-whitelist-update", "编辑检测白名单。", []string{
 				"需要更新单条检测白名单配置。",
 				"需要执行前查看当前白名单与目标配置差异。",
 			}, policyDetectionWhitelistWriteManifestFlags(true, "CONFIRM_POLICY_DETECTION_WHITELIST_UPDATE"), "policy_detection_whitelist_update_result", []ManifestExample{
-				{Description: "预览编辑检测白名单", Command: "chaitin-cli tanswer policy detection-whitelist-update --id 21 --name 新白名单 --src-ip 198.51.100.11 --preview"},
-				{Description: "确认编辑检测白名单", Command: "chaitin-cli tanswer policy detection-whitelist-update --id 21 --name 新白名单 --src-ip 198.51.100.11 --confirm CONFIRM_POLICY_DETECTION_WHITELIST_UPDATE"},
+				{Description: "预览编辑检测白名单", Command: "chaitin-cli tanswer policy detection-whitelist-update --id 21 --name 新白名单 --src-ip 198.51.100.11 --valid-time 3600 --preview"},
+				{Description: "确认编辑检测白名单", Command: "chaitin-cli tanswer policy detection-whitelist-update --id 21 --name 新白名单 --src-ip 198.51.100.11 --valid-time 3600 --confirm CONFIRM_POLICY_DETECTION_WHITELIST_UPDATE"},
 			}, []string{"AlarmService.SearchWhiteList", "AlarmService.UpdateWhiteList"}, policyDetectionWhitelistUpdateConfirmToken),
 			policyDetectionWhitelistWriteManifestCommand("tanswer policy detection-whitelist-enable", "chaitin-cli tanswer policy detection-whitelist-enable", "启用检测白名单。", []string{
 				"需要启用一条或多条检测白名单。",
@@ -1609,8 +1690,8 @@ func BuildCommandManifest() CommandManifest {
 				"已经确认一条威胁告警为误报，需要基于告警字段生成候选检测白名单。",
 				"需要执行前查看告警对象、建议白名单匹配范围和风险提示。",
 			}, policyDetectionWhitelistFromAlarmManifestFlags(), "policy_detection_whitelist_from_alarm_result", []ManifestExample{
-				{Description: "预览从告警生成检测白名单", Command: "chaitin-cli tanswer policy detection-whitelist-from-alarm --id '<doc_id>' --preview"},
-				{Description: "确认从告警生成检测白名单", Command: "chaitin-cli tanswer policy detection-whitelist-from-alarm --id '<doc_id>' --remark 已确认误报 --confirm CONFIRM_POLICY_DETECTION_WHITELIST_FROM_ALARM"},
+				{Description: "预览从告警生成检测白名单", Command: "chaitin-cli tanswer policy detection-whitelist-from-alarm --id '<doc_id>' --valid-time 3600 --preview"},
+				{Description: "确认从告警生成检测白名单", Command: "chaitin-cli tanswer policy detection-whitelist-from-alarm --id '<doc_id>' --remark 已确认误报 --valid-time 3600 --confirm CONFIRM_POLICY_DETECTION_WHITELIST_FROM_ALARM"},
 			}, []string{"AlarmService.GetAlarm", "AlarmService.CreateWhiteList"}, policyDetectionWhitelistFromAlarmConfirmToken),
 			policyFileExportManifestCommand("tanswer policy detection-whitelist-export", "chaitin-cli tanswer policy detection-whitelist-export", "导出检测白名单文件。", "detection_whitelist_export_file", []ManifestExample{
 				{Description: "导出全部检测白名单", Command: "chaitin-cli tanswer policy detection-whitelist-export --output ./detection-whitelist.xlsx"},
@@ -1842,6 +1923,36 @@ func BuildCommandManifest() CommandManifest {
 			}, []string{"FirewallService.SearchBlackList"}),
 		},
 	}
+	applySemanticProtectedWriteContract(&manifest)
+	return manifest
+}
+
+var semanticProtectedWritePreviewFields = []string{
+	"requires_confirmation",
+	"confirmed",
+	"operation_type",
+	"risk_level",
+	"target",
+	"change_summary",
+	"impact",
+	"risk_warnings",
+	"confirmation_token",
+	"confirmation_note",
+}
+
+func applySemanticProtectedWriteContract(manifest *CommandManifest) {
+	for index := range manifest.Commands {
+		command := &manifest.Commands[index]
+		if command.Layer != "semantic_shortcut" || !command.RequiresConfirmation {
+			continue
+		}
+		if len(command.PreviewOutputFields) == 0 {
+			command.PreviewOutputFields = append([]string(nil), semanticProtectedWritePreviewFields...)
+		}
+		if command.ConfirmationCondition == "" {
+			command.ConfirmationCondition = "required after preview and explicit user confirmation"
+		}
+	}
 }
 
 func responseManifestCommand(name string, fullCommand string, summary string, useWhen []string, doNotUseWhen []string, flags []ManifestFlag, outputType string, dataKey string, examples []ManifestExample, rpcMethods []string) ManifestCommand {
@@ -2033,7 +2144,14 @@ func policyDetectionWhitelistWriteManifestCommand(name string, fullCommand strin
 			"需要响应白名单或旁路阻断策略时，使用 response 域命令。",
 			"需要导入或导出检测白名单文件时，使用后续文件型命令。",
 		},
-		Flags:      flags,
+		Flags: flags,
+		InputConstraints: []ManifestInputConstraint{
+			{
+				Rule:        "at_least_one",
+				Flags:       []string{"--expire", "--valid-time"},
+				Description: "provide an expiry timestamp in milliseconds or a positive valid duration in seconds",
+			},
+		},
 		OutputType: outputType,
 		OutputFields: []string{
 			"preview.requires_confirmation",
@@ -2078,8 +2196,8 @@ func policyDetectionWhitelistWriteManifestFlags(includeID bool, confirmToken str
 		ManifestFlag{Name: "--storage", Type: "enum", Required: false, Default: "drop", Enum: []string{"drop", "ignore", "1", "2"}, Description: "handling mode"},
 		ManifestFlag{Name: "--status", Type: "enum", Required: false, Default: "enabled", Enum: []string{"enabled", "disabled", "1", "0"}, Description: "status"},
 		ManifestFlag{Name: "--mode", Type: "enum", Required: false, Default: "default", Enum: []string{"default", "advanced", "1", "2"}, Description: "match mode"},
-		ManifestFlag{Name: "--expire", Type: "integer", Required: false, Description: "expire timestamp in milliseconds"},
-		ManifestFlag{Name: "--valid-time", Type: "integer", Required: false, Description: "valid duration in seconds"},
+		ManifestFlag{Name: "--expire", Type: "integer", Required: false, Description: "expiry timestamp in milliseconds; provide this or --valid-time; when set, must be greater than 0"},
+		ManifestFlag{Name: "--valid-time", Type: "integer", Required: false, Description: "valid duration in seconds; provide this or --expire; must be greater than 0"},
 		ManifestFlag{Name: "--ignore-history", Type: "boolean", Required: false, Description: "ignore matched historical alarms"},
 		ManifestFlag{Name: "--preview", Type: "boolean", Required: false, Description: "return write preview without executing"},
 		ManifestFlag{Name: "--confirm", Type: "string", Required: false, Description: "must equal " + confirmToken + " to execute"},

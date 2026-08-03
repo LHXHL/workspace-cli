@@ -97,6 +97,8 @@ npx skills add chaitin/chaitin-cli
 | `cosmos`      | 安全分析与运营管理平台（万象）        | Cosmos / AISOC 告警、日志、情报、封禁、资产、通知、运维、SOAR 和漏洞管理           |
 | `monkeyscan`  | AI 代码安全平台 MonkeyScan      | 本地目录、源码压缩包与 GitHub 仓库全量安全扫描                                 |
 
+
+
 根命令负责配置加载、产品命令注册和 BusyBox 风格调用分发；各产品目录负责自己的命令、参数、配置解析和 API 调用逻辑。
 
 ## 配置
@@ -170,6 +172,8 @@ cloudwalker.url      -> CLOUDWALKER_URL
 cloudwalker.api_key  -> CLOUDWALKER_API_KEY
 tanswer.url          -> TANSWER_URL
 tanswer.api_key      -> TANSWER_API_KEY
+tanswer.timeout      -> TANSWER_TIMEOUT
+tanswer.insecure     -> TANSWER_INSECURE
 ddr.url              -> DDR_URL
 ddr.api_key          -> DDR_API_KEY
 ddr.company_id       -> DDR_COMPANY_ID
@@ -198,22 +202,42 @@ monkeyscan.url       -> MONKEYSCAN_URL
 monkeyscan.api_key   -> MONKEYSCAN_API_KEY
 ```
 
-### T-Answer
+### 全悉快速开始
 
-全悉 CLI 使用 OpenAPI Token。请在全悉 Web 控制台的 `系统管理` -> `Open API` 中新增 API Token，并在配置中填写 `tanswer.api_key`，或设置 `TANSWER_API_KEY`。
+全悉命令使用 OpenAPI Token。可在全悉 Web 控制台的“系统管理 → Open API”创建 Token，再配置 `tanswer.api_key` 或 `TANSWER_API_KEY`。
 
-全悉 CLI 的安装、Token 获取、权限要求、最小可用性验证和常见问题见 [`products/tanswer/README.md`](products/tanswer/README.md)；完整命令参考见 [`products/tanswer/COMMAND_REFERENCE.md`](products/tanswer/COMMAND_REFERENCE.md)；AI Agent 使用规则见 [`products/tanswer/agent-skill.md`](products/tanswer/agent-skill.md)。
+可使用 `--url`、`--api-key`、`--timeout`、`--insecure`；环境变量 `TANSWER_URL`、`TANSWER_API_KEY`、`TANSWER_TIMEOUT`、`TANSWER_INSECURE`；或 `config.yaml` 的 `tanswer.url`、`tanswer.api_key`、`tanswer.timeout`、`tanswer.insecure` 配置全悉连接。不要将 Token 提交到仓库。
 
 ```bash
-chaitin-cli tanswer manifest
 chaitin-cli tanswer auth check
+chaitin-cli tanswer --help
+chaitin-cli tanswer manifest
 chaitin-cli tanswer system status
 chaitin-cli tanswer alarm overview --time today
 chaitin-cli tanswer asset list --page-size 10
-chaitin-cli tanswer response block-policies --page-size 10
 ```
 
-优先使用 `alarm`、`file-alarm`、`asset`、`metadata`、`policy` 和 `response` 语义命令。`tanswer api <METHOD> <PATH>` 仅用于用户已知、已授权且语义命令未覆盖的 Open API。
+全悉产品的命令、参数、示例、输出字段和写操作确认要求以安装后二进制的 `--help` 与 `chaitin-cli tanswer manifest` 为准。
+
+#### 人工使用指引
+
+- 使用本仓库源码时，可先阅读 [全悉 CLI 入门](./products/tanswer/README.md) 和 [全悉 CLI 命令索引](./products/tanswer/COMMAND_REFERENCE.md)，了解常见任务和安全示例。
+- 仅安装了二进制时，先执行 `chaitin-cli tanswer --help`，再按领域或具体命令继续执行 `--help`；需要完整结构化契约时执行 `chaitin-cli tanswer manifest`。
+- 查询命令可在确认目标环境后直接执行。语义写操作必须先使用 `--preview`，核对目标、影响和风险，再按运行时要求使用精确的 `--confirm` token。`tanswer api` 的 GET/HEAD 可直接执行；其他 HTTP 方法同样必须先预览并确认。
+- 根级 `--dry-run` 不适用于 `tanswer`；全悉语义写操作和 raw API 的实际保护规则以对应命令的 `--help` 与 manifest 为准。
+
+#### AI Agent 使用规则
+
+当任务涉及全悉时，使用 `chaitin-cli tanswer`，并遵循以下流程：
+
+1. 首次连接先执行 `chaitin-cli tanswer auth check`。
+2. 先执行 `chaitin-cli tanswer --help`；进入具体领域或不确定参数时，继续执行相应的 `--help`。
+3. 需要机器可读的完整命令、参数、输出、风险和确认契约时，执行 `chaitin-cli tanswer manifest`。
+4. 优先使用语义命令；只有当前版本没有对应语义命令、且用户已提供已知、已授权的 endpoint、方法和请求体时，才使用 `tanswer api`。不得猜测 RPC 方法、路径或请求体。
+5. 语义写操作必须先使用 `--preview`；向用户说明目标、影响和风险，并等待用户对该次变更的明确确认后，才能使用命令 help 或 manifest 指定的精确 `--confirm` token。不能仅因已知 token 就自行执行。
+6. `tanswer api` 的 GET/HEAD 可直接执行；非 GET/HEAD 请求默认只返回 preview。必须展示请求的方法、路径、query 和 body，等待用户对该次请求明确确认后，才可使用 `--confirm CONFIRM_TANSWER_RAW_API_WRITE` 发送请求。根级 `--dry-run` 不适用于 `tanswer`。
+
+AI 使用已安装的全悉 CLI 时不依赖产品专属 README 或 skill；运行时 `--help` 和 `manifest` 是唯一的命令事实来源。
 
 ### MonkeyScan
 
