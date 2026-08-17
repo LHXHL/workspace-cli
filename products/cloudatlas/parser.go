@@ -280,6 +280,9 @@ func (p *Parser) createOperationCommand(use, method, path string, op *Operation)
 			continue
 		}
 		flagName := normalizeFlagName(param.Name)
+		if param.In == "query" && isReservedFlagName(flagName) {
+			continue
+		}
 		required := param.Required || (param.In == "query" && flagName == "space")
 		cmd.Flags().String(flagName, "", formatParameterUsage(param, required))
 	}
@@ -363,6 +366,9 @@ func buildQuery(cmd *cobra.Command, params []Parameter) (url.Values, error) {
 			continue
 		}
 		flagName := normalizeFlagName(param.Name)
+		if isReservedFlagName(flagName) {
+			continue
+		}
 		if flagName == "space" {
 			spaceHandled = true
 		}
@@ -511,7 +517,12 @@ func buildOperationHelp(method, path string, op *Operation) string {
 		fmt.Fprintln(&b, "\nParameters:")
 		for _, param := range op.Parameters {
 			required := param.Required || (param.In == "query" && normalizeFlagName(param.Name) == "space")
-			fmt.Fprintf(&b, "  --%s (%s): %s\n", normalizeFlagName(param.Name), param.In, formatParameterUsage(param, required))
+			flagName := normalizeFlagName(param.Name)
+			if param.In == "query" && isReservedFlagName(flagName) {
+				fmt.Fprintf(&b, "  --query %s=<value> (%s，透传): %s\n", param.Name, param.In, formatParameterUsage(param, required))
+				continue
+			}
+			fmt.Fprintf(&b, "  --%s (%s): %s\n", flagName, param.In, formatParameterUsage(param, required))
 		}
 	}
 	if op.RequestBody != nil {
@@ -706,6 +717,22 @@ func valueHelp(value any) string {
 
 func normalizeFlagName(name string) string {
 	return strings.ReplaceAll(normalizeSegment(name), "_", "-")
+}
+
+var reservedFlagNames = map[string]bool{
+	"url":               true,
+	"token":             true,
+	"space-id":          true,
+	"output":            true,
+	"insecure":          true,
+	"verbose":           true,
+	"verbose-sensitive": true,
+	"config":            true,
+	"dry-run":           true,
+}
+
+func isReservedFlagName(name string) bool {
+	return reservedFlagNames[name]
 }
 
 func normalizeSegment(value string) string {
