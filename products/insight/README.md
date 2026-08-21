@@ -57,7 +57,7 @@ chaitin-cli insight task list --insecure --output json
 
 ### 1. 任务流管理 (Task & Execution)
 
-这是平台运转的心脏，最适合通过 CLI 触发扫描任务或监控扫描进度。
+这是平台运转的心脏，最适合通过 CLI 触发扫描任务或查看任务执行记录。
 
 #### 1.1 列出所有任务 (`task list`)
 
@@ -84,11 +84,11 @@ chaitin-cli insight task start --id <task_id>
 chaitin-cli insight task stop --id <task_id>
 ```
 
-#### 1.4 查询执行进度 (`task status`)
+#### 1.4 查询执行记录详情 (`task execution`)
 
-查询当前某次排查任务的进度。
+查询某一次排查任务执行记录的详情。Insight 后端接口为 `GET /exposure/api/task/execution?id=<execution_id>`，其中 `id` 是执行记录 ID。
 ```bash
-chaitin-cli insight task status --exec-id <execution_id>
+chaitin-cli insight task execution --id <execution_id>
 ```
 
 ---
@@ -122,9 +122,10 @@ chaitin-cli insight vuln web [flags]
 
 #### 2.3 获取特定排查任务的风险点 (`result list`)
 
-获取某次任务最新排查出的风险列表。
+获取某次任务最新排查出的风险列表。CLI 使用业务语义参数 `--task-id`，请求 Insight REST 接口时会映射为 `id=<task_id>`。
 ```bash
 chaitin-cli insight result list --task-id <task_id>
+chaitin-cli insight result list --task-id <task_id> --execution-id <execution_id>
 ```
 
 #### 2.4 获取排查风险增量对比 (`result diff`)
@@ -204,9 +205,10 @@ chaitin-cli insight asset business [flags]
 
 #### 3.6 平台资产全量快照 (`snapshot asset`)
 
-查看某一时刻平台纳管的整体资产快照数据。
+查看某个排查任务的资产快照数据。CLI 使用业务语义参数 `--task-id`，请求 Insight REST 接口时会映射为 `id=<task_id>`。
 ```bash
-chaitin-cli insight snapshot asset
+chaitin-cli insight snapshot asset --task-id <task_id>
+chaitin-cli insight snapshot asset --task-id <task_id> --execution-id <execution_id>
 ```
 
 ---
@@ -259,8 +261,8 @@ chaitin-cli insight task list --count 100
 # 2. 拿到 Task ID 后，触发重新执行
 chaitin-cli insight task start --id "1234"
 
-# 3. 后续轮询状态，直到结束
-chaitin-cli insight task status --exec-id "exec_abcd"
+# 3. 拿到 execution_id 后，查看本次执行记录详情
+chaitin-cli insight task execution --id "456"
 ```
 
 ### 场景二：每日定时拉取超时工单
