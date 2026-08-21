@@ -1,6 +1,8 @@
 package cmd
 
 import (
+	"net/url"
+
 	"github.com/chaitin/chaitin-cli/products/insight/client"
 	"github.com/spf13/cobra"
 )
@@ -18,13 +20,15 @@ func NewResultCmd(getClient func(cmd *cobra.Command) *client.Client) *cobra.Comm
 			c := getClient(cmd)
 
 			taskId, _ := cmd.Flags().GetString("task-id")
+			executionId, _ := cmd.Flags().GetString("execution-id")
 
-			query := ""
-			if taskId != "" {
-				query = "?task_id=" + taskId
+			query := url.Values{}
+			query.Set("id", taskId)
+			if executionId != "" {
+				query.Set("execution_id", executionId)
 			}
 
-			resp, err := c.Request("GET", "/exposure/api/result"+query, nil)
+			resp, err := c.Request("GET", "/exposure/api/result?"+query.Encode(), nil)
 			if err != nil {
 				return err
 			}
@@ -35,6 +39,8 @@ func NewResultCmd(getClient func(cmd *cobra.Command) *client.Client) *cobra.Comm
 		},
 	}
 	listCmd.Flags().String("task-id", "", "filter by task id")
+	listCmd.Flags().String("execution-id", "", "filter by execution id")
+	listCmd.MarkFlagRequired("task-id")
 	cmd.AddCommand(listCmd)
 
 	diffCmd := &cobra.Command{

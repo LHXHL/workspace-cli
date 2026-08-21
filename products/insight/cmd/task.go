@@ -115,9 +115,35 @@ func NewTaskCmd(getClient func(cmd *cobra.Command) *client.Client) *cobra.Comman
 	stopCmd.MarkFlagRequired("id")
 	cmd.AddCommand(stopCmd)
 
+	executionCmd := &cobra.Command{
+		Use:   "execution",
+		Short: "Show task execution detail",
+		RunE: func(cmd *cobra.Command, args []string) error {
+			c := getClient(cmd)
+
+			id, _ := cmd.Flags().GetString("id")
+
+			query := "?id=" + id
+
+			resp, err := c.Request("GET", "/exposure/api/task/execution"+query, nil)
+			if err != nil {
+				return err
+			}
+
+			format, _ := cmd.Flags().GetString("output")
+			renderer := client.NewRenderer(format, cmd.OutOrStdout())
+			return renderer.Render(resp)
+		},
+	}
+	executionCmd.Flags().String("id", "", "execution id to query")
+	executionCmd.MarkFlagRequired("id")
+	cmd.AddCommand(executionCmd)
+
 	statusCmd := &cobra.Command{
-		Use:   "status",
-		Short: "Check task execution status",
+		Use:        "status",
+		Short:      "Show task execution detail",
+		Deprecated: "use 'task execution --id <execution_id>' instead",
+		Hidden:     true,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			c := getClient(cmd)
 
@@ -135,7 +161,7 @@ func NewTaskCmd(getClient func(cmd *cobra.Command) *client.Client) *cobra.Comman
 			return renderer.Render(resp)
 		},
 	}
-	statusCmd.Flags().String("exec-id", "", "execution id to check status")
+	statusCmd.Flags().String("exec-id", "", "execution id to query")
 	statusCmd.MarkFlagRequired("exec-id")
 	cmd.AddCommand(statusCmd)
 
