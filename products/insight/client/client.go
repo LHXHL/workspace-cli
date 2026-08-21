@@ -103,16 +103,26 @@ func (c *Client) Request(method, path string, body io.Reader) ([]byte, error) {
 
 	// Try to parse standard Insight common response structure
 	// Format is typically {"code": ..., "msg": "...", "data": ...}
+	var apiErr struct {
+		Code *int   `json:"code"`
+		Msg  string `json:"msg"`
+	}
+	hasAPIErrorShape := json.Unmarshal(bodyBytes, &apiErr) == nil && apiErr.Code != nil
+
 	if resp.StatusCode >= 400 {
-		var apiErr struct {
-			Code int    `json:"code"`
-			Msg  string `json:"msg"`
-		}
-		if parseErr := json.Unmarshal(bodyBytes, &apiErr); parseErr == nil && apiErr.Msg != "" {
-			return nil, fmt.Errorf("insight API error: %s (HTTP %d, Code %d)", apiErr.Msg, resp.StatusCode, apiErr.Code)
+		if hasAPIErrorShape && apiErr.Msg != "" {
+			return nil, fmt.Errorf("insight API error: %s (HTTP %d, Code %d)", apiErr.Msg, resp.StatusCode, *apiErr.Code)
 		}
 		// Fallback to raw body if not standard JSON error
 		return nil, fmt.Errorf("insight API HTTP %d error: %s", resp.StatusCode, string(bodyBytes))
+	}
+
+	if hasAPIErrorShape && *apiErr.Code != 0 {
+		msg := apiErr.Msg
+		if msg == "" {
+			msg = "request failed"
+		}
+		return nil, fmt.Errorf("insight API error: %s (Code %d)", msg, *apiErr.Code)
 	}
 
 	return bodyBytes, nil
