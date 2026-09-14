@@ -102,6 +102,68 @@ func TestListUsesConfiguredSpaceID(t *testing.T) {
 	}
 }
 
+func TestWebsiteFingerprintListURLIsNotALocalFlag(t *testing.T) {
+	cmd := NewCommand()
+	leaf := findLeaf(t, cmd, "exposure", "website-fingerprint", "list")
+	if got := leaf.LocalFlags().Lookup("url"); got != nil {
+		t.Fatalf("--url should not be registered as a local query flag")
+	}
+	if got := leaf.Flags().Lookup("url"); got == nil {
+		t.Fatalf("--url should still be available as the base URL flag")
+	}
+}
+
+func TestWebsiteFingerprintListURLFlagDoesNotBecomeQueryParameter(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path != "/v1/attack/appfinger" {
+			t.Fatalf("path = %s", r.URL.Path)
+		}
+		if got := r.Header.Get("TOKEN"); got != "secret-token" {
+			t.Fatalf("TOKEN = %q", got)
+		}
+		if got := r.URL.Query().Get("space"); got != "35" {
+			t.Fatalf("space = %q", got)
+		}
+		if r.URL.Query().Has("url") {
+			t.Fatalf("url query parameter should not be set from --url, got %q", r.URL.Query().Get("url"))
+		}
+		writeJSON(t, w, map[string]any{"code": 200, "message": "", "data": map[string]any{"current": 1, "size": 3, "total": 0, "items": []any{}}})
+	}))
+	defer server.Close()
+
+	ApplyRuntimeConfig(nil, rawConfig(Config{Token: "secret-token"}), false)
+	cmd := NewCommand()
+	cmd.SetArgs([]string{"exposure", "website-fingerprint", "list", "--url", server.URL, "--space-id", "35", "--page", "1", "--size", "3"})
+
+	if err := cmd.Execute(); err != nil {
+		t.Fatalf("Execute() error = %v", err)
+	}
+}
+
+func TestWebsiteFingerprintListURLFilterViaQueryFlag(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path != "/v1/attack/appfinger" {
+			t.Fatalf("path = %s", r.URL.Path)
+		}
+		if got := r.URL.Query().Get("space"); got != "35" {
+			t.Fatalf("space = %q", got)
+		}
+		if got := r.URL.Query().Get("url"); got != "foo" {
+			t.Fatalf("url query parameter = %q, want foo", got)
+		}
+		writeJSON(t, w, map[string]any{"code": 200, "message": "", "data": map[string]any{"current": 1, "size": 3, "total": 0, "items": []any{}}})
+	}))
+	defer server.Close()
+
+	ApplyRuntimeConfig(nil, rawConfig(Config{Token: "secret-token"}), false)
+	cmd := NewCommand()
+	cmd.SetArgs([]string{"exposure", "website-fingerprint", "list", "--url", server.URL, "--space-id", "35", "--query", "url=foo", "--page", "1", "--size", "3"})
+
+	if err := cmd.Execute(); err != nil {
+		t.Fatalf("Execute() error = %v", err)
+	}
+}
+
 func TestSpaceIsRequiredForEveryCommand(t *testing.T) {
 	ApplyRuntimeConfig(nil, rawConfig(Config{URL: "https://example.com", Token: "token"}), false)
 	cmd := NewCommand()

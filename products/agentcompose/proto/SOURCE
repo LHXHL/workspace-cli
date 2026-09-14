@@ -1,0 +1,4 @@
+repository=../agent-compose
+commit=92b5bd307d3c10b72ae112f3ebd3f8628e908001
+agentcompose_sha256=16017d737b403dfef09bb222fb60f2df020918ed4224ef1dcaafb25fc39934c1
+health_sha256=8a5e3661dc717a990feefa8b28d485250237b51502ba36fc4ef3c17b36e96899

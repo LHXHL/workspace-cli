@@ -11,7 +11,7 @@
 
 ## 项目简介
 
-`chaitin-cli` 是面向长亭安全产品的统一命令行工具，目标是在一个二进制中提供多产品的常用运维、查询和自动化能力。它解决了不同产品 API、认证方式和输出格式分散的问题，让开发者、运维人员和 AI Agent 可以用一致的方式管理 SafeLine、X-Ray、Cloud Atlas、CloudWalker、Veinmind、T-Answer、DDR 等产品。
+`chaitin-cli` 是面向长亭安全产品的统一命令行工具，目标是在一个二进制中提供多产品的常用运维、查询和自动化能力。它解决了不同产品 API、认证方式和输出格式分散的问题，让开发者、运维人员和 AI Agent 可以用一致的方式管理 SafeLine、X-Ray、MonkeyScan、Cloud Atlas、CloudWalker、Veinmind、T-Answer、DDR 等产品。
 
 核心能力：
 
@@ -46,6 +46,7 @@ npx skills add chaitin/chaitin-cli
 - "列出 Cloud Atlas 中待处理的漏洞"
 - "列出 CloudWalker 中的漏洞事件"
 - "在 CodeForce 中创建降噪任务并查看结果"
+- "使用 MonkeyScan 对当前项目发起全量安全扫描"
 
 ## 演示
 
@@ -77,28 +78,32 @@ npx skills add chaitin/chaitin-cli
 
 ## 功能模块
 
-| 模块 | 说明 |
-| --- | --- |
-| `chaitin` | 示例和基础命令 |
-| `safeline` | SafeLine WAF 站点、策略、ACL、攻击日志和系统信息管理 |
-| `safeline-3` | SafeLine-3 保护对象、策略、ACL、日志、监控、系统和网络管理 |
-| `safeline-ce` | SafeLine CE 站点、规则、日志、证书和增强防护管理 |
-| `xray` | X-Ray 扫描任务、资产、漏洞、报告和系统配置管理 |
-| `cloudAtlas` | Cloud Atlas 资产、暴露面、风险、情报、策略和任务管理 |
-| `cloudwalker` | CloudWalker CWPP 事件、资产、漏洞、防护策略和系统管理 |
-| `veinmind` | CloudWalker CNAPP 容器、镜像、逃逸防护管理 |
-| `tanswer` | T-Answer 流量检测、白名单和阻断规则管理 |
-| `ddr` | DDR API Token 和连接配置辅助能力 |
-| `apisec` | APISec API 资产、站点、应用、访问者、数据安全和风险事件管理 |
-| `dsensor` | D-Sensor 谛听安全监控、探针、蜜罐、告警和威胁日志管理 |
-| `codeinsight` | CodeInsight 项目、代码托管配置、扫描任务和报告导出管理 |
-| `codeforce` | CodeForce 项目、项目 AI 员工、AI 开发任务、原生审计、降噪、代码包、仓库和 Git 授权配置管理 |
+| 模块            | 中文名                    | 说明                                                       |
+| ------------- | ---------------------- | -------------------------------------------------------- |
+| `chaitin`     | 主模块                    | 示例和基础命令                                                  |
+| `safeline`    | 下一代Web应用防火墙（雷池20系列）    | SafeLine WAF 站点、策略、ACL、攻击日志和系统信息管理                       |
+| `safeline-3`  | 下一代Web应用防火墙（雷池30系列）    | SafeLine-3 保护对象、策略、ACL、日志、监控、系统和网络管理                     |
+| `safeline-ce` | 雷池WAF社区版               | SafeLine CE 站点、规则、日志、证书和增强防护管理                           |
+| `xray`        | 风险评估系统（洞鉴）             | X-Ray 扫描任务、资产、漏洞、报告和系统配置管理                               |
+| `cloudAtlas`  | 资产暴露面运营管理（云图）          | Cloud Atlas 资产、暴露面、风险、情报、策略和任务管理                         |
+| `cloudwalker` | 云工作负载保护平台（牧云-主机安全）     | CloudWalker CWPP 事件、资产、漏洞、防护策略和系统管理                      |
+| `veinmind`    | 云工作负载保护平台（牧云-容器安全）     | CloudWalker CNAPP 容器、镜像、逃逸防护管理                           |
+| `tanswer`     | 流量威胁检测响应系统（全悉）         | 全悉威胁告警、文件告警、资产配置、安全策略、响应处置和 Open API fallback       |
+| `ddr`         | 终端统一管控与安全检测响应平台（长亭DDR） | DDR API Token 和连接配置辅助能力                                  |
+| `apisec`      | 高级API安全系统（APISEC）      | APISec API 资产、站点、应用、访问者、数据安全和风险事件管理                      |
+| `dsensor`     | 主动威胁欺骗防御系统（谛听）         | D-Sensor 谛听安全监控、探针、蜜罐、告警和威胁日志管理                          |
+| `codeinsight` | 智能静态应用程序安全测试系统（慧鉴）     | CodeInsight 项目、代码托管配置、扫描任务和报告导出管理                        |
+| `codeforce`   | 智能开发与安全一体化平台（码力）       | CodeForce 项目、项目 AI 员工、AI 开发任务、原生审计、降噪、代码包、仓库和 Git 授权配置管理 |
+| `cosmos`      | 安全分析与运营管理平台（万象）        | Cosmos / AISOC 告警、日志、情报、封禁、资产、通知、运维、SOAR 和漏洞管理           |
+| `monkeyscan`  | AI 代码安全平台 MonkeyScan      | 本地目录、源码压缩包与 GitHub 仓库全量安全扫描                                 |
+
+
 
 根命令负责配置加载、产品命令注册和 BusyBox 风格调用分发；各产品目录负责自己的命令、参数、配置解析和 API 调用逻辑。
 
 ## 配置
 
-将各产品的连接信息写入 `./config.yaml`：
+推荐将各产品的连接信息写入 `~/.chaitin-cli/config.yaml`。如果当前目录存在 `./config.yaml`，且顶层包含 chaitin-cli 产品名，CLI 会优先读取这个本地配置，以兼容既有使用流程：
 
 ```yaml
 cloudAtlas:
@@ -111,8 +116,8 @@ cloudwalker:
   api_key: YOUR_API_KEY
 
 tanswer:
-  url: https://tanswer.example.com
-  api_key: YOUR_API_KEY
+  url: 'https://<全悉 Web 端 IP>'
+  api_key: '<全悉 OpenAPI Token>'
 
 # chaitin-cli ddr get-api-token --url https://ddr.example.com:8443 --jwt-token "YOUR_JWT_TOKEN" 可以直接获取 url & api_key & company_id
 ddr:
@@ -148,6 +153,14 @@ codeforce:
   url: https://codeforce.example.com
   access_token: YOUR_ACCESS_TOKEN
   account_type: admin
+
+cosmos:
+  url: https://cosmos.example.com
+  api_key: YOUR_JWT_BEARER_TOKEN
+
+monkeyscan:
+  url: https://monkeyscan-ai.com
+  api_key: YOUR_API_KEY
 ```
 也可以把同样的配置放到环境变量或本地 `.env` 文件中。变量命名规则为 `<PRODUCT>_<FIELD>`：
 
@@ -159,6 +172,8 @@ cloudwalker.url      -> CLOUDWALKER_URL
 cloudwalker.api_key  -> CLOUDWALKER_API_KEY
 tanswer.url          -> TANSWER_URL
 tanswer.api_key      -> TANSWER_API_KEY
+tanswer.timeout      -> TANSWER_TIMEOUT
+tanswer.insecure     -> TANSWER_INSECURE
 ddr.url              -> DDR_URL
 ddr.api_key          -> DDR_API_KEY
 ddr.company_id       -> DDR_COMPANY_ID
@@ -175,12 +190,74 @@ codeinsight.access_token -> CODEINSIGHT_ACCESS_TOKEN 或 CODEINSIGHT_TOKEN
 codeforce.url        -> CODEFORCE_URL
 codeforce.access_token -> CODEFORCE_ACCESS_TOKEN 或 CODEFORCE_API_KEY
 codeforce.account_type -> CODEFORCE_ACCOUNT_TYPE
+cosmos.url           -> COSMOS_URL
+cosmos.api_key       -> COSMOS_API_KEY
 safeline-ce.url      -> SAFELINE_CE_URL
 safeline-ce.api_key  -> SAFELINE_CE_API_KEY
 safeline-3.url       -> SAFELINE_3_URL
 safeline-3.api_token -> SAFELINE_3_API_TOKEN
 safeline.url         -> SAFELINE_URL
 safeline.api_key     -> SAFELINE_API_KEY
+monkeyscan.url       -> MONKEYSCAN_URL
+monkeyscan.api_key   -> MONKEYSCAN_API_KEY
+```
+
+### 全悉快速开始
+
+全悉命令使用 OpenAPI Token。可在全悉 Web 控制台的“系统管理 → Open API”创建 Token，再配置 `tanswer.api_key` 或 `TANSWER_API_KEY`。
+
+可使用 `--url`、`--api-key`、`--timeout`、`--insecure`；环境变量 `TANSWER_URL`、`TANSWER_API_KEY`、`TANSWER_TIMEOUT`、`TANSWER_INSECURE`；或 `config.yaml` 的 `tanswer.url`、`tanswer.api_key`、`tanswer.timeout`、`tanswer.insecure` 配置全悉连接。不要将 Token 提交到仓库。
+
+```bash
+chaitin-cli tanswer auth check
+chaitin-cli tanswer --help
+chaitin-cli tanswer manifest
+chaitin-cli tanswer system status
+chaitin-cli tanswer alarm overview --time today
+chaitin-cli tanswer asset list --page-size 10
+```
+
+全悉产品的命令、参数、示例、输出字段和写操作确认要求以安装后二进制的 `--help` 与 `chaitin-cli tanswer manifest` 为准。
+
+#### 人工使用指引
+
+- 使用本仓库源码时，可先阅读 [全悉 CLI 入门](./products/tanswer/README.md) 和 [全悉 CLI 命令索引](./products/tanswer/COMMAND_REFERENCE.md)，了解常见任务和安全示例。
+- 仅安装了二进制时，先执行 `chaitin-cli tanswer --help`，再按领域或具体命令继续执行 `--help`；需要完整结构化契约时执行 `chaitin-cli tanswer manifest`。
+- 查询命令可在确认目标环境后直接执行。语义写操作必须先使用 `--preview`，核对目标、影响和风险，再按运行时要求使用精确的 `--confirm` token。`tanswer api` 的 GET/HEAD 可直接执行；其他 HTTP 方法同样必须先预览并确认。
+- 根级 `--dry-run` 不适用于 `tanswer`；全悉语义写操作和 raw API 的实际保护规则以对应命令的 `--help` 与 manifest 为准。
+
+#### AI Agent 使用规则
+
+当任务涉及全悉时，使用 `chaitin-cli tanswer`，并遵循以下流程：
+
+1. 首次连接先执行 `chaitin-cli tanswer auth check`。
+2. 先执行 `chaitin-cli tanswer --help`；进入具体领域或不确定参数时，继续执行相应的 `--help`。
+3. 需要机器可读的完整命令、参数、输出、风险和确认契约时，执行 `chaitin-cli tanswer manifest`。
+4. 优先使用语义命令；只有当前版本没有对应语义命令、且用户已提供已知、已授权的 endpoint、方法和请求体时，才使用 `tanswer api`。不得猜测 RPC 方法、路径或请求体。
+5. 语义写操作必须先使用 `--preview`；向用户说明目标、影响和风险，并等待用户对该次变更的明确确认后，才能使用命令 help 或 manifest 指定的精确 `--confirm` token。不能仅因已知 token 就自行执行。
+6. `tanswer api` 的 GET/HEAD 可直接执行；非 GET/HEAD 请求默认只返回 preview。必须展示请求的方法、路径、query 和 body，等待用户对该次请求明确确认后，才可使用 `--confirm CONFIRM_TANSWER_RAW_API_WRITE` 发送请求。根级 `--dry-run` 不适用于 `tanswer`。
+
+AI 使用已安装的全悉 CLI 时不依赖产品专属 README 或 skill；运行时 `--help` 和 `manifest` 是唯一的命令事实来源。
+
+### MonkeyScan
+
+MonkeyScan 支持对本地目录、源码压缩包或 GitHub 仓库发起全量安全扫描。首次使用时，先设置 MonkeyScan CLI API Key，再确认授权状态：
+
+```bash
+chaitin-cli monkeyscan auth set-key
+chaitin-cli monkeyscan auth status
+```
+
+也可以通过 `MONKEYSCAN_API_KEY` 环境变量提供 API Key；服务地址默认是 `https://monkeyscan-ai.com`，可通过 `MONKEYSCAN_URL` 覆盖。
+
+全量扫描支持目录、压缩包和 GitHub 仓库三种来源。添加 `--wait` 可等待任务完成并输出结果，添加 `--full` 可获取完整报告，`--output` 可将结果写入文件：
+
+```bash
+chaitin-cli monkeyscan scan --path . --wait
+chaitin-cli monkeyscan scan --file ./source.zip --wait --full --output ./monkeyscan-report.md
+chaitin-cli monkeyscan scan --repo https://github.com/example/project --branch main
+chaitin-cli monkeyscan scan list
+chaitin-cli monkeyscan scan result TASK_GROUP_ID --full
 ```
 
 ### Cloud Atlas
@@ -230,6 +307,25 @@ chaitin-cli safeline-3 raw request GET /api/v3/license
 
 创建、更新、删除等复杂请求优先使用实体命令的语义参数；复杂嵌套结构可使用对应的 `--payload-file`、`--application-file` 等文件入口。`raw request` 是兜底入口，可调用未封装的 `/api/v3/...` 接口。
 
+### Cosmos / AISOC
+
+完整模块文档见 [`products/cosmos/README.md`](products/cosmos/README.md)。
+
+Cosmos 通用 JSON-RPC 命令覆盖告警、日志、情报、封禁、资产、通知、运维、SOAR 和漏洞管理。根级 `--dry-run` 会打印脱敏后的请求摘要，不会发送请求。保存主机资产时，当前后端通常需要资产类型、分类和分组；`--asset_ip_type` 当前取值为 `1` 实际 IP、`2` 虚拟 IP：
+
+```bash
+chaitin-cli cosmos asset search-host-asset --count 20 --offset 0 --raw
+
+chaitin-cli --dry-run cosmos asset save-host-asset \
+  --ip 10.0.0.1/32 \
+  --name demo-host \
+  --organization_id 1 \
+  --asset_ip_type 1 \
+  --category_ids '[{"id":41,"name":"Linux"}]' \
+  --group_id 1 \
+  --raw
+```
+
 ### SafeLine 企业版 AI 站点操作
 
 SafeLine 企业版命令支持面向 AI/AISOC 调度的环境检查、证书查询/上传、站点创建预览、站点创建和回退删除。
@@ -259,19 +355,22 @@ XRAY_URL=https://xray.example.com/api/v2
 XRAY_API_KEY=YOUR_API_KEY
 ```
 
-优先级为 `flags > environment/.env > config.yaml`
+优先级为 `flags > environment/.env > 识别后的 ./config.yaml > ~/.chaitin-cli/config.yaml`。如果 `./config.yaml` 不包含 chaitin-cli 产品名，会被视为其他项目配置并忽略。识别到本地配置时，不会再合并全局配置。
 
-可以通过根命令的 `-c` 或 `--config` 指定其他配置文件。这在切换多个产品实例时很有用，例如多个 SafeLine 环境：
+可以通过根命令的 `-c` 或 `--config` 指定其他配置文件。这在切换多个产品实例或临时使用项目内配置时很有用，例如多个 SafeLine 环境：
 
 ```bash
 chaitin-cli -c ./configs/safeline-prod.yaml safeline stats overview
 chaitin-cli -c ./configs/safeline-staging.yaml safeline stats overview
 ```
 
+会创建或更新配置的命令默认遵循同样的路径选择：如果当前目录存在可识别的 `./config.yaml`，优先写入本地文件；否则写入 `~/.chaitin-cli/config.yaml`。显式使用 `-c` / `--config` 时，只写入指定文件。
+
 支持 dry-run 的命令可以使用根级别的 `--dry-run`：
 
 ```bash
 chaitin-cli --dry-run xray plan PostPlanFilter --filterPlan.limit=10
+chaitin-cli --dry-run cosmos asset save-host-asset --ip 10.0.0.1/32 --name demo-host --organization_id 1 --asset_ip_type 1 --category_ids '[{"id":41,"name":"Linux"}]' --group_id 1
 ```
 
 ### CodeInsight 项目与任务
@@ -404,7 +503,7 @@ task package GOOS=linux GOARCH=amd64
 
 **配置从哪里读取？**
 
-优先级为 `flags > environment/.env > config.yaml`。根命令的 `-c` / `--config` 可以指定其他配置文件。
+默认优先读取当前目录中识别为 chaitin-cli 配置的 `./config.yaml`，否则读取 `~/.chaitin-cli/config.yaml`。优先级为 `flags > environment/.env > 识别后的 ./config.yaml > ~/.chaitin-cli/config.yaml`。根命令的 `-c` / `--config` 可以指定其他配置文件。
 
 **自签名证书连接失败怎么办？**
 
