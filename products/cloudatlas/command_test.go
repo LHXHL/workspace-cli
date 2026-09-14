@@ -623,6 +623,25 @@ func assertQueryValues(t *testing.T, got, want []string) {
 	}
 }
 
+func findLeaf(t *testing.T, root *cobra.Command, path ...string) *cobra.Command {
+	t.Helper()
+	current := root
+	for _, name := range path {
+		var next *cobra.Command
+		for _, child := range current.Commands() {
+			if child.Name() == name {
+				next = child
+				break
+			}
+		}
+		if next == nil {
+			t.Fatalf("command %q not found under %q", name, current.Name())
+		}
+		current = next
+	}
+	return current
+}
+
 func rawConfig(value Config) config.Raw {
 	var node yaml.Node
 	if err := node.Encode(value); err != nil {
