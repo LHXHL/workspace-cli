@@ -284,6 +284,10 @@ func (p *Parser) createOperationCommand(use, method, path string, op *Operation)
 			continue
 		}
 		required := param.Required || (param.In == "query" && flagName == "space")
+		if isQueryArrayParameter(param) {
+			cmd.Flags().StringArray(flagName, nil, formatParameterUsage(param, required))
+			continue
+		}
 		cmd.Flags().String(flagName, "", formatParameterUsage(param, required))
 	}
 	if !hasQueryParameter(op.Parameters, "space") {
@@ -372,6 +376,23 @@ func buildQuery(cmd *cobra.Command, params []Parameter) (url.Values, error) {
 		if flagName == "space" {
 			spaceHandled = true
 		}
+		if isQueryArrayParameter(param) {
+			values, err := cmd.Flags().GetStringArray(flagName)
+			if err != nil {
+				return nil, err
+			}
+			values = nonEmptyValues(values)
+			if len(values) == 0 {
+				if param.Required {
+					return nil, fmt.Errorf("--%s is required", flagName)
+				}
+				continue
+			}
+			if err := addQueryArray(query, param, flagName, values); err != nil {
+				return nil, err
+			}
+			continue
+		}
 		value, err := cmd.Flags().GetString(flagName)
 		if err != nil {
 			return nil, err
@@ -419,6 +440,83 @@ func buildQuery(cmd *cobra.Command, params []Parameter) (url.Values, error) {
 		query.Add(key, value)
 	}
 	return query, nil
+}
+
+func isQueryArrayParameter(param Parameter) bool {
+	return param.In == "query" && isArraySchema(param.Schema)
+}
+
+func isArraySchema(schema *Schema) bool {
+	return schema != nil && (schema.Type == "array" || (schema.Type == "" && schema.Items != nil))
+}
+
+func nonEmptyValues(values []string) []string {
+	result := make([]string, 0, len(values))
+	for _, value := range values {
+		if value != "" {
+			result = append(result, value)
+		}
+	}
+	return result
+}
+
+func addQueryArray(query url.Values, param Parameter, flagName string, values []string) error {
+	for _, value := range values {
+		if err := rejectLegacyJSONArray(flagName, value); err != nil {
+			return err
+		}
+	}
+
+	style := strings.TrimSpace(param.Style)
+	if style == "" {
+		style = "form"
+	}
+
+	switch style {
+	case "form":
+		explode := true
+		if param.Explode != nil {
+			explode = *param.Explode
+		}
+		if explode {
+			for _, value := range values {
+				query.Add(param.Name, value)
+			}
+			return nil
+		}
+		query.Add(param.Name, strings.Join(values, ","))
+	case "spaceDelimited":
+		query.Add(param.Name, strings.Join(values, " "))
+	case "pipeDelimited":
+		query.Add(param.Name, strings.Join(values, "|"))
+	default:
+		return fmt.Errorf("unsupported OpenAPI query array style %q for --%s", style, flagName)
+	}
+	return nil
+}
+
+func rejectLegacyJSONArray(flagName, value string) error {
+	trimmed := strings.TrimSpace(value)
+	if !strings.HasPrefix(trimmed, "[") {
+		return nil
+	}
+
+	var items []any
+	if err := json.Unmarshal([]byte(trimmed), &items); err != nil {
+		return nil
+	}
+
+	suggestion := make([]string, 0, len(items))
+	for _, item := range items {
+		itemText := valueHelp(item)
+		if itemText != "" {
+			suggestion = append(suggestion, "--"+flagName+" "+itemText)
+		}
+	}
+	if len(suggestion) == 0 {
+		return fmt.Errorf("invalid value for --%s: JSON array syntax is not supported; omit the flag for an empty array", flagName)
+	}
+	return fmt.Errorf("invalid value for --%s: JSON array syntax is not supported; use %s", flagName, strings.Join(suggestion, " "))
 }
 
 func hasQueryParameter(params []Parameter, name string) bool {
@@ -545,11 +643,48 @@ func formatParameterUsage(param Parameter, required bool) string {
 	if required {
 		parts = append(parts, "必填")
 	}
-	parts = append(parts, formatSchemaDetails(param.Schema, param.Example)...)
+	if isQueryArrayParameter(param) {
+		parts = append(parts, "可重复指定")
+		details := formatSchemaDetails(param.Schema, param.Example)
+		for _, detail := range details {
+			if !strings.HasPrefix(detail, "示例: ") {
+				parts = append(parts, detail)
+			}
+		}
+		if example := formatArrayParameterExample(normalizeFlagName(param.Name), firstNonNil(param.Example, param.Schema.Example)); example != "" {
+			parts = append(parts, "示例: "+example)
+		}
+	} else {
+		parts = append(parts, formatSchemaDetails(param.Schema, param.Example)...)
+	}
 	if normalizeFlagName(param.Name) == "space" {
 		parts = append(parts, "可由 --space-id 或 cloudAtlas.space_id 提供默认值")
 	}
 	return strings.Join(parts, "；")
+}
+
+func formatArrayParameterExample(flagName string, example any) string {
+	if example == nil {
+		return ""
+	}
+
+	data, err := json.Marshal(example)
+	if err != nil {
+		return ""
+	}
+	var values []any
+	if err := json.Unmarshal(data, &values); err != nil {
+		values = []any{example}
+	}
+
+	parts := make([]string, 0, len(values))
+	for _, value := range values {
+		valueText := valueHelp(value)
+		if valueText != "" {
+			parts = append(parts, "--"+flagName+" "+valueText)
+		}
+	}
+	return strings.Join(parts, " ")
 }
 
 func formatSchemaDetails(schema *Schema, example any) []string {

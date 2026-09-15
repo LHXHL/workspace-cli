@@ -1,4 +1,5 @@
 cloudAtlas:
+  # OpenAPI 基址通常以 /openapi 结尾，例如 https://cloud-atlas.example.com/openapi
   url: ""
   token: ""
   space_id: ""
