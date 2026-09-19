@@ -216,7 +216,7 @@ func TestApplyRuntimeConfigAPIKeyAlias(t *testing.T) {
 	}
 	ApplyRuntimeConfig(cmd, config.Raw{productName: node}, "config.yaml", false)
 	state := stateFromCommand(cmd)
-	if state.options.URL != "https://example.com/agent-compose" || state.options.Token != "legacy-key" {
+	if state.options.URL != "https://example.com/agent-compose" || state.options.Token != "legacy-key" || state.options.TokenSource != "config" {
 		t.Fatalf("options = %+v", state.options)
 	}
 }
@@ -229,8 +229,22 @@ func TestApplyRuntimeConfigPrefersAPITokenOverAPIKey(t *testing.T) {
 	}
 	ApplyRuntimeConfig(cmd, config.Raw{productName: node}, "config.yaml", false)
 	state := stateFromCommand(cmd)
-	if state.options.Token != "canonical-token" {
-		t.Fatalf("token = %q", state.options.Token)
+	if state.options.Token != "canonical-token" || state.options.TokenSource != "config" {
+		t.Fatalf("options = %+v", state.options)
+	}
+}
+
+func TestApplyRuntimeConfigIgnoresUnrelatedAPIKeyEnv(t *testing.T) {
+	t.Setenv("AGENT_COMPOSE_API_KEY", "environment-key")
+	cmd := NewCommand()
+	var node yaml.Node
+	if err := node.Encode(productConfig{URL: "https://example.com", APIToken: "config-token"}); err != nil {
+		t.Fatal(err)
+	}
+	ApplyRuntimeConfig(cmd, config.Raw{productName: node}, "config.yaml", false)
+	state := stateFromCommand(cmd)
+	if state.options.Token != "config-token" || state.options.TokenSource != "config" {
+		t.Fatalf("options = %+v", state.options)
 	}
 }
 
@@ -247,7 +261,7 @@ func TestApplyRuntimeConfigEnvironmentPrecedence(t *testing.T) {
 	}
 	ApplyRuntimeConfig(cmd, config.Raw{productName: node}, "config.yaml", false)
 	state := stateFromCommand(cmd)
-	if state.options.URL != "https://environment.example" || state.options.Token != "environment-token" || state.options.Project != "environment-project" || state.options.timeoutText != "7s" || !state.options.Insecure {
+	if state.options.URL != "https://environment.example" || state.options.Token != "environment-token" || state.options.Project != "environment-project" || state.options.timeoutText != "7s" || !state.options.Insecure || state.options.TokenSource != "environment" {
 		t.Fatalf("options = %+v", state.options)
 	}
 }

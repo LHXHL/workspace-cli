@@ -68,13 +68,7 @@ func ApplyRuntimeConfig(cmd *cobra.Command, raw config.Raw, configPath string, d
 		state.options.Insecure = cfg.Insecure
 	}
 	state.options.Token = cfg.token()
-	state.options.TokenSource = "config"
-	if envTokenActive() {
-		state.options.TokenSource = "environment"
-	}
-	if strings.TrimSpace(state.options.Token) == "" {
-		state.options.TokenSource = "none"
-	}
+	state.options.TokenSource = tokenSource(cfg)
 	state.options.ConfigPath = configPath
 	state.options.DryRun = dryRun
 }
@@ -239,5 +233,29 @@ func (t *bearerTransport) RoundTrip(req *http.Request) (*http.Response, error) {
 }
 
 func envTokenActive() bool {
-	return strings.TrimSpace(os.Getenv("AGENT_COMPOSE_API_TOKEN")) != "" || strings.TrimSpace(os.Getenv("AGENT_COMPOSE_API_KEY")) != ""
+	return envAPIToken() != "" || envAPIKey() != ""
+}
+
+func tokenSource(cfg productConfig) string {
+	if strings.TrimSpace(cfg.token()) == "" {
+		return "none"
+	}
+	if strings.TrimSpace(cfg.APIToken) != "" {
+		if envAPIToken() != "" {
+			return "environment"
+		}
+		return "config"
+	}
+	if envAPIKey() != "" {
+		return "environment"
+	}
+	return "config"
+}
+
+func envAPIToken() string {
+	return strings.TrimSpace(os.Getenv("AGENT_COMPOSE_API_TOKEN"))
+}
+
+func envAPIKey() string {
+	return strings.TrimSpace(os.Getenv("AGENT_COMPOSE_API_KEY"))
 }

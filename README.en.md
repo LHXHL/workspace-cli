@@ -145,6 +145,7 @@ cosmos:
 agent-compose:
   url: https://agent-compose.example.com
   api_token: YOUR_API_TOKEN
+  default_project: YOUR_PROJECT
 ```
 You can also put the same keys into environment variables or a local `.env` file. Variable names follow `<PRODUCT>_<FIELD>`:
 
@@ -177,6 +178,8 @@ safeline.url         -> SAFELINE_URL
 safeline.api_key     -> SAFELINE_API_KEY
 agent-compose.url    -> AGENT_COMPOSE_URL
 agent-compose.api_token -> AGENT_COMPOSE_API_TOKEN
+agent-compose.api_key -> AGENT_COMPOSE_API_KEY (alias of api_token)
+agent-compose.default_project -> AGENT_COMPOSE_DEFAULT_PROJECT
 ```
 
 ### T-Answer Quick Start

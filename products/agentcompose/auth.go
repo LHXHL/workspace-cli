@@ -77,7 +77,7 @@ func newAuthCommand(state *commandState) *cobra.Command {
 		}
 		fmt.Fprintln(cmd.OutOrStdout(), "Local Agent Compose Token cleared")
 		if warning {
-			fmt.Fprintln(cmd.ErrOrStderr(), "Warning: AGENT_COMPOSE_API_TOKEN is still active")
+			fmt.Fprintln(cmd.ErrOrStderr(), "Warning: AGENT_COMPOSE_API_TOKEN or AGENT_COMPOSE_API_KEY is still active")
 		}
 		return nil
 	}}
