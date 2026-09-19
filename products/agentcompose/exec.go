@@ -96,7 +96,7 @@ func executeExec(cmd *cobra.Command, state *commandState, args []string, options
 	request := &agentcomposev2.ExecRequest{Target: &agentcomposev2.ExecRequest_SandboxId{SandboxId: sandbox.GetSandboxId()}, Command: &agentcomposev2.ExecCommand{Command: commandName, Args: commandArgs}, Cwd: options.CWD, Env: env, TimeoutMs: timeoutMS, MaxOutputBytes: options.MaxOutput}
 	ctx, cancel = streamContext(cmd)
 	defer cancel()
-	stream, err := state.clients().exec.ExecStream(ctx, connect.NewRequest(request))
+	stream, err := state.clients().exec.StreamExec(ctx, connect.NewRequest(request))
 	if err != nil {
 		return mapConnectError(err, state.options.URL, state.options.JSON)
 	}
@@ -107,7 +107,7 @@ func executeExec(cmd *cobra.Command, state *commandState, args []string, options
 			final = event.GetResult()
 		}
 		if state.options.JSON {
-			record := map[string]any{"event_type": enumText(event.GetEventType(), "EXEC_STREAM_EVENT_TYPE_"), "exec_id": event.GetExecId(), "sandbox_id": event.GetSandboxId(), "run_id": event.GetRunId(), "chunk": event.GetChunk(), "stream": enumText(event.GetStream(), "STDIO_STREAM_")}
+			record := map[string]any{"event_type": enumText(event.GetEventType(), "STREAM_EXEC_EVENT_TYPE_"), "exec_id": event.GetExecId(), "sandbox_id": event.GetSandboxId(), "run_id": event.GetRunId(), "chunk": event.GetChunk(), "stream": enumText(event.GetStream(), "STDIO_STREAM_")}
 			if final != nil {
 				addExecFields(record, execFromProto(final))
 			}

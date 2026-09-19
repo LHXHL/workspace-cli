@@ -41,7 +41,7 @@ func schedulerAndTriggers(response *agentcomposev2.GetSchedulerResponse) (schedu
 	result := schedulerDTO{SchedulerID: scheduler.GetSchedulerId(), SchedulerShortID: shortID(scheduler.GetSchedulerId()), AgentName: scheduler.GetAgentName(), Enabled: scheduler.GetEnabled(), TriggerCount: scheduler.GetTriggerCount(), Triggers: make([]triggerDTO, 0, len(response.GetTriggers()))}
 	for _, trigger := range response.GetTriggers() {
 		spec := trigger.GetSpec()
-		item := triggerDTO{SchedulerID: result.SchedulerID, SchedulerShortID: result.SchedulerShortID, AgentName: result.AgentName, TriggerID: trigger.GetTriggerId(), TriggerShortID: shortID(trigger.GetTriggerId()), Name: spec.GetName(), Kind: spec.GetKind(), Source: "declarative", Enabled: trigger.GetEnabled(), Cron: spec.GetCron(), Interval: spec.GetInterval(), Timeout: spec.GetTimeout()}
+		item := triggerDTO{SchedulerID: result.SchedulerID, SchedulerShortID: result.SchedulerShortID, AgentName: result.AgentName, TriggerID: trigger.GetTriggerId(), TriggerShortID: shortID(trigger.GetTriggerId()), Name: spec.GetName(), Kind: enumText(spec.GetKind(), "TRIGGER_KIND_"), Source: "declarative", Enabled: trigger.GetEnabled(), Cron: spec.GetCron(), Interval: spec.GetInterval(), Timeout: spec.GetTimeout()}
 		result.Triggers = append(result.Triggers, item)
 	}
 	return result, result.Triggers
@@ -69,7 +69,7 @@ type schedulerRunDTO struct {
 }
 
 func schedulerRunFromProto(run *agentcomposev2.SchedulerRun) schedulerRunDTO {
-	result := schedulerRunDTO{ID: run.GetRunId(), ShortID: shortID(run.GetRunId()), ProjectID: run.GetProjectId(), AgentName: run.GetAgentName(), SchedulerID: run.GetSchedulerId(), SchedulerShortID: shortID(run.GetSchedulerId()), TriggerID: run.GetTriggerId(), TriggerShortID: shortID(run.GetTriggerId()), TriggerKind: run.GetTriggerKind(), TriggerSource: run.GetTriggerSource(), Status: enumText(run.GetStatus(), "SCHEDULER_RUN_STATUS_"), DurationMS: run.GetDurationMs(), Error: run.GetError(), ResultJSON: run.GetResultJson(), PayloadJSON: run.GetPayloadJson(), SandboxIDs: append([]string(nil), run.GetSandboxIds()...)}
+	result := schedulerRunDTO{ID: run.GetRunId(), ShortID: shortID(run.GetRunId()), ProjectID: run.GetProjectId(), AgentName: run.GetAgentName(), SchedulerID: run.GetSchedulerId(), SchedulerShortID: shortID(run.GetSchedulerId()), TriggerID: run.GetTriggerId(), TriggerShortID: shortID(run.GetTriggerId()), TriggerKind: enumText(run.GetTriggerKind(), "TRIGGER_KIND_"), TriggerSource: run.GetTriggerSource(), Status: enumText(run.GetStatus(), "SCHEDULER_RUN_STATUS_"), DurationMS: run.GetDurationMs(), Error: run.GetError(), ResultJSON: run.GetResultJson(), PayloadJSON: run.GetPayloadJson(), SandboxIDs: append([]string(nil), run.GetSandboxIds()...)}
 	if run.GetStartedAt() != nil {
 		result.StartedAt = run.GetStartedAt().AsTime().Format(time.RFC3339)
 	}
@@ -98,7 +98,7 @@ func schedulerResponse(ctx context.Context, state *commandState, client agentcom
 	if len(matches) > 1 {
 		return nil, usageError("Scheduler reference is ambiguous", state.options.JSON)
 	}
-	resp, err := client.GetScheduler(ctx, connect.NewRequest(&agentcomposev2.GetSchedulerRequest{Project: &agentcomposev2.ProjectRef{ProjectId: project.GetSummary().GetProjectId()}, AgentName: matches[0].GetAgentName()}))
+	resp, err := client.GetScheduler(ctx, connect.NewRequest(&agentcomposev2.GetSchedulerRequest{Project: projectRefID(project.GetSummary().GetProjectId()), AgentName: matches[0].GetAgentName()}))
 	if err != nil {
 		return nil, mapConnectError(err, state.options.URL, state.options.JSON)
 	}
@@ -242,15 +242,15 @@ func newSchedulerInspectCommand(state *commandState) *cobra.Command {
 }
 
 type schedulerRunsOptions struct {
-	cursorOptions
+	offsetOptions
 	Trigger, Status string
 }
 
 func newSchedulerRunsCommand(state *commandState) *cobra.Command {
-	options := schedulerRunsOptions{cursorOptions: cursorOptions{Limit: 50}}
+	options := schedulerRunsOptions{offsetOptions: offsetOptions{Limit: 50}}
 	cmd := &cobra.Command{Use: "runs [scheduler-ref]", Short: "List Scheduler Runs", Args: rangeArgs(0, 1, state), RunE: func(cmd *cobra.Command, args []string) error {
 		resolvedOptions := options
-		if err := validateCursorOptions(cmd, resolvedOptions.cursorOptions, state); err != nil {
+		if err := validateOffsetOptions(cmd, resolvedOptions.offsetOptions, state); err != nil {
 			return err
 		}
 		if _, err := parseSchedulerStatus(resolvedOptions.Status); err != nil {
@@ -292,7 +292,7 @@ func newSchedulerRunsCommand(state *commandState) *cobra.Command {
 				Project projectDTO        `json:"project"`
 				Runs    []schedulerRunDTO `json:"runs"`
 				HasMore bool              `json:"has_more"`
-				Next    string            `json:"next_cursor,omitempty"`
+				Next    uint32            `json:"next_offset,omitempty"`
 			}{projectFromProto(project.GetSummary()), output, more, next})
 		}
 		table := newTable(cmd.OutOrStdout(), "RUN\tAGENT\tTRIGGER\tSTATUS\tSTARTED")
@@ -301,7 +301,7 @@ func newSchedulerRunsCommand(state *commandState) *cobra.Command {
 		}
 		return table.Flush()
 	}}
-	addCursorFlags(cmd, &options.cursorOptions)
+	addOffsetFlags(cmd, &options.offsetOptions)
 	cmd.Flags().StringVar(&options.Trigger, "trigger", "", "Filter by trigger")
 	cmd.Flags().StringVar(&options.Status, "status", "", "Filter by status")
 	return cmd
@@ -324,32 +324,40 @@ func parseSchedulerStatus(raw string) (agentcomposev2.SchedulerRunStatus, error)
 		return 0, fmt.Errorf("invalid Scheduler Run status %q", raw)
 	}
 }
-func listSchedulerRuns(ctx context.Context, client agentcomposev2connect.ProjectServiceClient, projectID, agentName string, options schedulerRunsOptions) ([]*agentcomposev2.SchedulerRun, bool, string, error) {
+func listSchedulerRuns(ctx context.Context, client agentcomposev2connect.ProjectServiceClient, projectID, agentName string, options schedulerRunsOptions) ([]*agentcomposev2.SchedulerRun, bool, uint32, error) {
 	status, err := parseSchedulerStatus(options.Status)
 	if err != nil {
-		return nil, false, "", err
+		return nil, false, 0, err
 	}
-	cursor := options.Cursor
+	offset := options.Offset
 	runs := make([]*agentcomposev2.SchedulerRun, 0)
 	for {
-		limit := cursorPageSize(options.cursorOptions, len(runs))
-		resp, err := client.ListSchedulerRuns(ctx, connect.NewRequest(&agentcomposev2.ListSchedulerRunsRequest{Project: &agentcomposev2.ProjectRef{ProjectId: projectID}, AgentName: agentName, TriggerId: options.Trigger, Status: status, Limit: limit, Cursor: cursor}))
+		pageSize := offsetPageSize(options.offsetOptions, len(runs))
+		resp, err := client.ListSchedulerRuns(ctx, connect.NewRequest(&agentcomposev2.ListSchedulerRunsRequest{Project: projectRefID(projectID), AgentName: agentName, TriggerId: options.Trigger, Status: status, Limit: pageSize, Offset: offset}))
 		if err != nil {
-			return nil, false, "", err
+			return nil, false, 0, err
 		}
-		runs = append(runs, resp.Msg.GetRuns()...)
-		next := resp.Msg.GetNextCursor()
-		if (!options.AllPages && uint32(len(runs)) >= options.Limit) || next == "" || next == cursor {
-			if !options.AllPages && uint32(len(runs)) > options.Limit {
+		page := resp.Msg.GetRuns()
+		runs = append(runs, page...)
+		next := offset + uint32(len(page))
+		more := next < resp.Msg.GetTotal()
+		if !options.AllPages && uint32(len(runs)) >= options.Limit {
+			if uint32(len(runs)) > options.Limit {
 				runs = runs[:options.Limit]
 			}
-			return runs, next != "", next, nil
+			if !more {
+				next = 0
+			}
+			return runs, more, next, nil
 		}
-		cursor = next
+		if !more || len(page) == 0 {
+			return runs, false, 0, nil
+		}
+		offset = next
 	}
 }
 func resolveSchedulerRun(ctx context.Context, state *commandState, client agentcomposev2connect.ProjectServiceClient, projectID, ref string) (*agentcomposev2.SchedulerRun, error) {
-	runs, _, _, err := listSchedulerRuns(ctx, client, projectID, "", schedulerRunsOptions{cursorOptions: cursorOptions{AllPages: true, Limit: 50}})
+	runs, _, _, err := listSchedulerRuns(ctx, client, projectID, "", schedulerRunsOptions{offsetOptions: offsetOptions{AllPages: true, Limit: 50}})
 	if err != nil {
 		return nil, mapConnectError(err, state.options.URL, state.options.JSON)
 	}
@@ -365,7 +373,7 @@ func resolveSchedulerRun(ctx context.Context, state *commandState, client agentc
 	if len(matches) > 1 {
 		return nil, usageError("Scheduler Run reference is ambiguous", state.options.JSON)
 	}
-	resp, err := client.GetSchedulerRun(ctx, connect.NewRequest(&agentcomposev2.GetSchedulerRunRequest{Project: &agentcomposev2.ProjectRef{ProjectId: projectID}, RunId: matches[0].GetRunId()}))
+	resp, err := client.GetSchedulerRun(ctx, connect.NewRequest(&agentcomposev2.GetSchedulerRunRequest{Project: projectRefID(projectID), RunId: matches[0].GetRunId()}))
 	if err != nil {
 		return nil, mapConnectError(err, state.options.URL, state.options.JSON)
 	}
@@ -397,7 +405,7 @@ func normalizeSchedulerTrigger(ctx context.Context, state *commandState, project
 	if response != nil {
 		agentName = response.GetScheduler().GetAgentName()
 	}
-	runs, _, _, err := listSchedulerRuns(ctx, state.clients().project, project.GetSummary().GetProjectId(), agentName, schedulerRunsOptions{cursorOptions: cursorOptions{AllPages: true, Limit: 50}})
+	runs, _, _, err := listSchedulerRuns(ctx, state.clients().project, project.GetSummary().GetProjectId(), agentName, schedulerRunsOptions{offsetOptions: offsetOptions{AllPages: true, Limit: 50}})
 	if err != nil {
 		return "", mapConnectError(err, state.options.URL, state.options.JSON)
 	}
@@ -410,16 +418,16 @@ func normalizeSchedulerTrigger(ctx context.Context, state *commandState, project
 }
 
 type schedulerLogsOptions struct {
-	cursorOptions
+	offsetOptions
 	Scheduler, Trigger, Run string
 	Tail                    int32
 }
 
 func newSchedulerLogsCommand(state *commandState) *cobra.Command {
-	options := schedulerLogsOptions{cursorOptions: cursorOptions{Limit: 50}, Tail: -1}
+	options := schedulerLogsOptions{offsetOptions: offsetOptions{Limit: 50}, Tail: -1}
 	cmd := &cobra.Command{Use: "logs [scheduler-run-ref]", Short: "List Scheduler events", Args: rangeArgs(0, 1, state), RunE: func(cmd *cobra.Command, args []string) error {
 		resolvedOptions := options
-		if err := validateCursorOptions(cmd, resolvedOptions.cursorOptions, state); err != nil {
+		if err := validateOffsetOptions(cmd, resolvedOptions.offsetOptions, state); err != nil {
 			return err
 		}
 		if resolvedOptions.Tail < -1 {
@@ -468,7 +476,7 @@ func newSchedulerLogsCommand(state *commandState) *cobra.Command {
 			}
 		}
 		if resolvedOptions.Tail == 0 {
-			return writeSchedulerEvents(cmd, state, project, nil, false, "")
+			return writeSchedulerEvents(cmd, state, project, nil, false, 0)
 		}
 		if resolvedOptions.Tail > 0 {
 			tailLimit := uint32(resolvedOptions.Tail)
@@ -483,7 +491,7 @@ func newSchedulerLogsCommand(state *commandState) *cobra.Command {
 		slices.Reverse(events)
 		return writeSchedulerEvents(cmd, state, project, events, more, next)
 	}}
-	addCursorFlags(cmd, &options.cursorOptions)
+	addOffsetFlags(cmd, &options.offsetOptions)
 	cmd.Flags().StringVar(&options.Scheduler, "scheduler", "", "Limit to Scheduler")
 	cmd.Flags().StringVar(&options.Trigger, "trigger", "", "Limit to trigger")
 	cmd.Flags().StringVar(&options.Run, "run", "", "Limit to Scheduler Run")
@@ -491,13 +499,13 @@ func newSchedulerLogsCommand(state *commandState) *cobra.Command {
 	return cmd
 }
 
-func writeSchedulerEvents(cmd *cobra.Command, state *commandState, project *agentcomposev2.Project, events []*agentcomposev2.SchedulerEvent, more bool, next string) error {
+func writeSchedulerEvents(cmd *cobra.Command, state *commandState, project *agentcomposev2.Project, events []*agentcomposev2.SchedulerEvent, more bool, next uint32) error {
 	if state.options.JSON {
 		output := make([]schedulerEventDTO, 0, len(events))
 		for _, event := range events {
 			output = append(output, schedulerEventFromProto(event))
 		}
-		return writeJSON(cmd.OutOrStdout(), map[string]any{"project": projectFromProto(project.GetSummary()), "events": output, "has_more": more, "next_cursor": next})
+		return writeJSON(cmd.OutOrStdout(), map[string]any{"project": projectFromProto(project.GetSummary()), "events": output, "has_more": more, "next_offset": next})
 	}
 	for _, event := range events {
 		created := ""
@@ -509,24 +517,32 @@ func writeSchedulerEvents(cmd *cobra.Command, state *commandState, project *agen
 	return nil
 }
 
-func listSchedulerEvents(ctx context.Context, client agentcomposev2connect.ProjectServiceClient, projectID, agentName string, options schedulerLogsOptions) ([]*agentcomposev2.SchedulerEvent, bool, string, error) {
-	cursor := options.Cursor
+func listSchedulerEvents(ctx context.Context, client agentcomposev2connect.ProjectServiceClient, projectID, agentName string, options schedulerLogsOptions) ([]*agentcomposev2.SchedulerEvent, bool, uint32, error) {
+	offset := options.Offset
 	events := make([]*agentcomposev2.SchedulerEvent, 0)
 	for {
-		limit := cursorPageSize(options.cursorOptions, len(events))
-		resp, err := client.ListProjectSchedulerEvents(ctx, connect.NewRequest(&agentcomposev2.ListProjectSchedulerEventsRequest{Project: &agentcomposev2.ProjectRef{ProjectId: projectID}, AgentName: agentName, TriggerId: options.Trigger, RunId: options.Run, Limit: limit, Cursor: cursor}))
+		pageSize := offsetPageSize(options.offsetOptions, len(events))
+		resp, err := client.ListProjectSchedulerEvents(ctx, connect.NewRequest(&agentcomposev2.ListProjectSchedulerEventsRequest{Project: projectRefID(projectID), AgentName: agentName, TriggerId: options.Trigger, RunId: options.Run, Limit: pageSize, Offset: offset}))
 		if err != nil {
-			return nil, false, "", err
+			return nil, false, 0, err
 		}
-		events = append(events, resp.Msg.GetEvents()...)
-		next := resp.Msg.GetNextCursor()
-		if (!options.AllPages && uint32(len(events)) >= options.Limit) || next == "" || next == cursor {
-			if !options.AllPages && uint32(len(events)) > options.Limit {
+		page := resp.Msg.GetEvents()
+		events = append(events, page...)
+		next := offset + uint32(len(page))
+		more := next < resp.Msg.GetTotal()
+		if !options.AllPages && uint32(len(events)) >= options.Limit {
+			if uint32(len(events)) > options.Limit {
 				events = events[:options.Limit]
 			}
-			return events, next != "", next, nil
+			if !more {
+				next = 0
+			}
+			return events, more, next, nil
 		}
-		cursor = next
+		if !more || len(page) == 0 {
+			return events, false, 0, nil
+		}
+		offset = next
 	}
 }
 
@@ -546,7 +562,7 @@ func newSchedulerInvokeCommand(state *commandState) *cobra.Command {
 		if err != nil {
 			return err
 		}
-		resp, err := state.clients().project.InvokeScheduler(ctx, connect.NewRequest(&agentcomposev2.InvokeSchedulerRequest{Project: &agentcomposev2.ProjectRef{ProjectId: project.GetSummary().GetProjectId()}, AgentName: response.GetScheduler().GetAgentName(), PayloadJson: payload}))
+		resp, err := state.clients().project.InvokeScheduler(ctx, connect.NewRequest(&agentcomposev2.InvokeSchedulerRequest{Project: projectRefID(project.GetSummary().GetProjectId()), AgentName: response.GetScheduler().GetAgentName(), PayloadJson: payload}))
 		if err != nil {
 			return mapConnectError(err, state.options.URL, state.options.JSON)
 		}
@@ -580,7 +596,7 @@ func newSchedulerTriggerCommand(state *commandState) *cobra.Command {
 		if err != nil {
 			return err
 		}
-		projectRef := &agentcomposev2.ProjectRef{ProjectId: project.GetSummary().GetProjectId()}
+		projectRef := projectRefID(project.GetSummary().GetProjectId())
 		var run *agentcomposev2.SchedulerRun
 		if detach {
 			resp, err := state.clients().project.StartSchedulerRun(ctx, connect.NewRequest(&agentcomposev2.StartSchedulerRunRequest{Project: projectRef, AgentName: response.GetScheduler().GetAgentName(), TriggerId: trigger.GetTriggerId(), PayloadJson: payload}))
@@ -621,7 +637,7 @@ func newSchedulerStopCommand(state *commandState) *cobra.Command {
 		if err != nil {
 			return err
 		}
-		resp, err := state.clients().project.StopSchedulerRun(ctx, connect.NewRequest(&agentcomposev2.StopSchedulerRunRequest{Project: &agentcomposev2.ProjectRef{ProjectId: project.GetSummary().GetProjectId()}, RunId: run.GetRunId(), Reason: reason}))
+		resp, err := state.clients().project.StopSchedulerRun(ctx, connect.NewRequest(&agentcomposev2.StopSchedulerRunRequest{Project: projectRefID(project.GetSummary().GetProjectId()), RunId: run.GetRunId(), Reason: reason}))
 		if err != nil {
 			return mapConnectError(err, state.options.URL, state.options.JSON)
 		}

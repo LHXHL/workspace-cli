@@ -61,6 +61,9 @@ const (
 	// ProjectServiceApplyProjectProcedure is the fully-qualified name of the ProjectService's
 	// ApplyProject RPC.
 	ProjectServiceApplyProjectProcedure = "/agentcompose.v2.ProjectService/ApplyProject"
+	// ProjectServicePatchProjectProcedure is the fully-qualified name of the ProjectService's
+	// PatchProject RPC.
+	ProjectServicePatchProjectProcedure = "/agentcompose.v2.ProjectService/PatchProject"
 	// ProjectServiceGetProjectProcedure is the fully-qualified name of the ProjectService's GetProject
 	// RPC.
 	ProjectServiceGetProjectProcedure = "/agentcompose.v2.ProjectService/GetProject"
@@ -103,6 +106,9 @@ const (
 	// ProjectServiceListSchedulerRunsProcedure is the fully-qualified name of the ProjectService's
 	// ListSchedulerRuns RPC.
 	ProjectServiceListSchedulerRunsProcedure = "/agentcompose.v2.ProjectService/ListSchedulerRuns"
+	// ProjectServiceBatchGetLatestSchedulerRunsProcedure is the fully-qualified name of the
+	// ProjectService's BatchGetLatestSchedulerRuns RPC.
+	ProjectServiceBatchGetLatestSchedulerRunsProcedure = "/agentcompose.v2.ProjectService/BatchGetLatestSchedulerRuns"
 	// ProjectServiceStreamSchedulerRunsProcedure is the fully-qualified name of the ProjectService's
 	// StreamSchedulerRuns RPC.
 	ProjectServiceStreamSchedulerRunsProcedure = "/agentcompose.v2.ProjectService/StreamSchedulerRuns"
@@ -120,13 +126,15 @@ const (
 	ProjectServiceSetSchedulerTriggerEnabledProcedure = "/agentcompose.v2.ProjectService/SetSchedulerTriggerEnabled"
 	// RunServiceRunAgentProcedure is the fully-qualified name of the RunService's RunAgent RPC.
 	RunServiceRunAgentProcedure = "/agentcompose.v2.RunService/RunAgent"
-	// RunServiceStartRunProcedure is the fully-qualified name of the RunService's StartRun RPC.
-	RunServiceStartRunProcedure = "/agentcompose.v2.RunService/StartRun"
-	// RunServiceRunAgentStreamProcedure is the fully-qualified name of the RunService's RunAgentStream
+	// RunServiceStartAgentRunProcedure is the fully-qualified name of the RunService's StartAgentRun
 	// RPC.
-	RunServiceRunAgentStreamProcedure = "/agentcompose.v2.RunService/RunAgentStream"
-	// RunServiceRunAttachProcedure is the fully-qualified name of the RunService's RunAttach RPC.
-	RunServiceRunAttachProcedure = "/agentcompose.v2.RunService/RunAttach"
+	RunServiceStartAgentRunProcedure = "/agentcompose.v2.RunService/StartAgentRun"
+	// RunServiceStreamAgentRunProcedure is the fully-qualified name of the RunService's StreamAgentRun
+	// RPC.
+	RunServiceStreamAgentRunProcedure = "/agentcompose.v2.RunService/StreamAgentRun"
+	// RunServiceAttachAgentRunProcedure is the fully-qualified name of the RunService's AttachAgentRun
+	// RPC.
+	RunServiceAttachAgentRunProcedure = "/agentcompose.v2.RunService/AttachAgentRun"
 	// RunServiceGetRunProcedure is the fully-qualified name of the RunService's GetRun RPC.
 	RunServiceGetRunProcedure = "/agentcompose.v2.RunService/GetRun"
 	// RunServiceListRunsProcedure is the fully-qualified name of the RunService's ListRuns RPC.
@@ -144,10 +152,10 @@ const (
 	RunServiceListSandboxRunEventsProcedure = "/agentcompose.v2.RunService/ListSandboxRunEvents"
 	// ExecServiceExecProcedure is the fully-qualified name of the ExecService's Exec RPC.
 	ExecServiceExecProcedure = "/agentcompose.v2.ExecService/Exec"
-	// ExecServiceExecStreamProcedure is the fully-qualified name of the ExecService's ExecStream RPC.
-	ExecServiceExecStreamProcedure = "/agentcompose.v2.ExecService/ExecStream"
-	// ExecServiceExecAttachProcedure is the fully-qualified name of the ExecService's ExecAttach RPC.
-	ExecServiceExecAttachProcedure = "/agentcompose.v2.ExecService/ExecAttach"
+	// ExecServiceStreamExecProcedure is the fully-qualified name of the ExecService's StreamExec RPC.
+	ExecServiceStreamExecProcedure = "/agentcompose.v2.ExecService/StreamExec"
+	// ExecServiceAttachExecProcedure is the fully-qualified name of the ExecService's AttachExec RPC.
+	ExecServiceAttachExecProcedure = "/agentcompose.v2.ExecService/AttachExec"
 	// ImageServiceListImagesProcedure is the fully-qualified name of the ImageService's ListImages RPC.
 	ImageServiceListImagesProcedure = "/agentcompose.v2.ImageService/ListImages"
 	// ImageServicePullImageProcedure is the fully-qualified name of the ImageService's PullImage RPC.
@@ -252,6 +260,20 @@ const (
 	// CapabilityServiceGetCapabilityCatalogProcedure is the fully-qualified name of the
 	// CapabilityService's GetCapabilityCatalog RPC.
 	CapabilityServiceGetCapabilityCatalogProcedure = "/agentcompose.v2.CapabilityService/GetCapabilityCatalog"
+	// LLMServiceCreateProviderProcedure is the fully-qualified name of the LLMService's CreateProvider
+	// RPC.
+	LLMServiceCreateProviderProcedure = "/agentcompose.v2.LLMService/CreateProvider"
+	// LLMServiceGetProviderProcedure is the fully-qualified name of the LLMService's GetProvider RPC.
+	LLMServiceGetProviderProcedure = "/agentcompose.v2.LLMService/GetProvider"
+	// LLMServiceListProvidersProcedure is the fully-qualified name of the LLMService's ListProviders
+	// RPC.
+	LLMServiceListProvidersProcedure = "/agentcompose.v2.LLMService/ListProviders"
+	// LLMServiceUpdateProviderProcedure is the fully-qualified name of the LLMService's UpdateProvider
+	// RPC.
+	LLMServiceUpdateProviderProcedure = "/agentcompose.v2.LLMService/UpdateProvider"
+	// LLMServiceDeleteProviderProcedure is the fully-qualified name of the LLMService's DeleteProvider
+	// RPC.
+	LLMServiceDeleteProviderProcedure = "/agentcompose.v2.LLMService/DeleteProvider"
 	// LLMServiceGenerateProcedure is the fully-qualified name of the LLMService's Generate RPC.
 	LLMServiceGenerateProcedure = "/agentcompose.v2.LLMService/Generate"
 	// ResourceServiceResolveIDProcedure is the fully-qualified name of the ResourceService's ResolveID
@@ -263,6 +285,7 @@ const (
 type ProjectServiceClient interface {
 	ValidateProject(context.Context, *connect.Request[v2.ValidateProjectRequest]) (*connect.Response[v2.ValidateProjectResponse], error)
 	ApplyProject(context.Context, *connect.Request[v2.ApplyProjectRequest]) (*connect.Response[v2.ApplyProjectResponse], error)
+	PatchProject(context.Context, *connect.Request[v2.PatchProjectRequest]) (*connect.Response[v2.ApplyProjectResponse], error)
 	GetProject(context.Context, *connect.Request[v2.GetProjectRequest]) (*connect.Response[v2.GetProjectResponse], error)
 	ListProjects(context.Context, *connect.Request[v2.ListProjectsRequest]) (*connect.Response[v2.ListProjectsResponse], error)
 	RemoveProject(context.Context, *connect.Request[v2.RemoveProjectRequest]) (*connect.Response[v2.RemoveProjectResponse], error)
@@ -272,11 +295,20 @@ type ProjectServiceClient interface {
 	ListSchedulerEvents(context.Context, *connect.Request[v2.ListSchedulerEventsRequest]) (*connect.Response[v2.ListSchedulerEventsResponse], error)
 	ListProjectSchedulerEvents(context.Context, *connect.Request[v2.ListProjectSchedulerEventsRequest]) (*connect.Response[v2.ListProjectSchedulerEventsResponse], error)
 	StreamProjectSchedulerEvents(context.Context, *connect.Request[v2.StreamProjectSchedulerEventsRequest]) (*connect.ServerStreamForClient[v2.StreamProjectSchedulerEventsResponse], error)
+	// Invokes the scheduler directly and returns its value without creating a
+	// persistent SchedulerRun. Cancellation cancels the invocation.
 	InvokeScheduler(context.Context, *connect.Request[v2.InvokeSchedulerRequest]) (*connect.Response[v2.InvokeSchedulerResponse], error)
+	// Creates a persistent SchedulerRun and waits for it to reach a terminal
+	// state. The returned run is queryable with GetSchedulerRun and
+	// ListSchedulerRuns. Cancellation requests cancellation of the execution.
 	RunScheduler(context.Context, *connect.Request[v2.RunSchedulerRequest]) (*connect.Response[v2.RunSchedulerResponse], error)
+	// Creates a persistent SchedulerRun and returns after submission, without
+	// waiting for a terminal state. Disconnecting after submission does not
+	// cancel the run; use StopSchedulerRun to cancel it.
 	StartSchedulerRun(context.Context, *connect.Request[v2.StartSchedulerRunRequest]) (*connect.Response[v2.StartSchedulerRunResponse], error)
 	GetSchedulerRun(context.Context, *connect.Request[v2.GetSchedulerRunRequest]) (*connect.Response[v2.GetSchedulerRunResponse], error)
 	ListSchedulerRuns(context.Context, *connect.Request[v2.ListSchedulerRunsRequest]) (*connect.Response[v2.ListSchedulerRunsResponse], error)
+	BatchGetLatestSchedulerRuns(context.Context, *connect.Request[v2.BatchGetLatestSchedulerRunsRequest]) (*connect.Response[v2.BatchGetLatestSchedulerRunsResponse], error)
 	StreamSchedulerRuns(context.Context, *connect.Request[v2.StreamSchedulerRunsRequest]) (*connect.ServerStreamForClient[v2.StreamSchedulerRunsResponse], error)
 	PruneSchedulerRuns(context.Context, *connect.Request[v2.PruneSchedulerRunsRequest]) (*connect.Response[v2.PruneSchedulerRunsResponse], error)
 	StopSchedulerRun(context.Context, *connect.Request[v2.StopSchedulerRunRequest]) (*connect.Response[v2.StopSchedulerRunResponse], error)
@@ -305,6 +337,12 @@ func NewProjectServiceClient(httpClient connect.HTTPClient, baseURL string, opts
 			httpClient,
 			baseURL+ProjectServiceApplyProjectProcedure,
 			connect.WithSchema(projectServiceMethods.ByName("ApplyProject")),
+			connect.WithClientOptions(opts...),
+		),
+		patchProject: connect.NewClient[v2.PatchProjectRequest, v2.ApplyProjectResponse](
+			httpClient,
+			baseURL+ProjectServicePatchProjectProcedure,
+			connect.WithSchema(projectServiceMethods.ByName("PatchProject")),
 			connect.WithClientOptions(opts...),
 		),
 		getProject: connect.NewClient[v2.GetProjectRequest, v2.GetProjectResponse](
@@ -391,6 +429,12 @@ func NewProjectServiceClient(httpClient connect.HTTPClient, baseURL string, opts
 			connect.WithSchema(projectServiceMethods.ByName("ListSchedulerRuns")),
 			connect.WithClientOptions(opts...),
 		),
+		batchGetLatestSchedulerRuns: connect.NewClient[v2.BatchGetLatestSchedulerRunsRequest, v2.BatchGetLatestSchedulerRunsResponse](
+			httpClient,
+			baseURL+ProjectServiceBatchGetLatestSchedulerRunsProcedure,
+			connect.WithSchema(projectServiceMethods.ByName("BatchGetLatestSchedulerRuns")),
+			connect.WithClientOptions(opts...),
+		),
 		streamSchedulerRuns: connect.NewClient[v2.StreamSchedulerRunsRequest, v2.StreamSchedulerRunsResponse](
 			httpClient,
 			baseURL+ProjectServiceStreamSchedulerRunsProcedure,
@@ -428,6 +472,7 @@ func NewProjectServiceClient(httpClient connect.HTTPClient, baseURL string, opts
 type projectServiceClient struct {
 	validateProject              *connect.Client[v2.ValidateProjectRequest, v2.ValidateProjectResponse]
 	applyProject                 *connect.Client[v2.ApplyProjectRequest, v2.ApplyProjectResponse]
+	patchProject                 *connect.Client[v2.PatchProjectRequest, v2.ApplyProjectResponse]
 	getProject                   *connect.Client[v2.GetProjectRequest, v2.GetProjectResponse]
 	listProjects                 *connect.Client[v2.ListProjectsRequest, v2.ListProjectsResponse]
 	removeProject                *connect.Client[v2.RemoveProjectRequest, v2.RemoveProjectResponse]
@@ -442,6 +487,7 @@ type projectServiceClient struct {
 	startSchedulerRun            *connect.Client[v2.StartSchedulerRunRequest, v2.StartSchedulerRunResponse]
 	getSchedulerRun              *connect.Client[v2.GetSchedulerRunRequest, v2.GetSchedulerRunResponse]
 	listSchedulerRuns            *connect.Client[v2.ListSchedulerRunsRequest, v2.ListSchedulerRunsResponse]
+	batchGetLatestSchedulerRuns  *connect.Client[v2.BatchGetLatestSchedulerRunsRequest, v2.BatchGetLatestSchedulerRunsResponse]
 	streamSchedulerRuns          *connect.Client[v2.StreamSchedulerRunsRequest, v2.StreamSchedulerRunsResponse]
 	pruneSchedulerRuns           *connect.Client[v2.PruneSchedulerRunsRequest, v2.PruneSchedulerRunsResponse]
 	stopSchedulerRun             *connect.Client[v2.StopSchedulerRunRequest, v2.StopSchedulerRunResponse]
@@ -457,6 +503,11 @@ func (c *projectServiceClient) ValidateProject(ctx context.Context, req *connect
 // ApplyProject calls agentcompose.v2.ProjectService.ApplyProject.
 func (c *projectServiceClient) ApplyProject(ctx context.Context, req *connect.Request[v2.ApplyProjectRequest]) (*connect.Response[v2.ApplyProjectResponse], error) {
 	return c.applyProject.CallUnary(ctx, req)
+}
+
+// PatchProject calls agentcompose.v2.ProjectService.PatchProject.
+func (c *projectServiceClient) PatchProject(ctx context.Context, req *connect.Request[v2.PatchProjectRequest]) (*connect.Response[v2.ApplyProjectResponse], error) {
+	return c.patchProject.CallUnary(ctx, req)
 }
 
 // GetProject calls agentcompose.v2.ProjectService.GetProject.
@@ -529,6 +580,11 @@ func (c *projectServiceClient) ListSchedulerRuns(ctx context.Context, req *conne
 	return c.listSchedulerRuns.CallUnary(ctx, req)
 }
 
+// BatchGetLatestSchedulerRuns calls agentcompose.v2.ProjectService.BatchGetLatestSchedulerRuns.
+func (c *projectServiceClient) BatchGetLatestSchedulerRuns(ctx context.Context, req *connect.Request[v2.BatchGetLatestSchedulerRunsRequest]) (*connect.Response[v2.BatchGetLatestSchedulerRunsResponse], error) {
+	return c.batchGetLatestSchedulerRuns.CallUnary(ctx, req)
+}
+
 // StreamSchedulerRuns calls agentcompose.v2.ProjectService.StreamSchedulerRuns.
 func (c *projectServiceClient) StreamSchedulerRuns(ctx context.Context, req *connect.Request[v2.StreamSchedulerRunsRequest]) (*connect.ServerStreamForClient[v2.StreamSchedulerRunsResponse], error) {
 	return c.streamSchedulerRuns.CallServerStream(ctx, req)
@@ -558,6 +614,7 @@ func (c *projectServiceClient) SetSchedulerTriggerEnabled(ctx context.Context, r
 type ProjectServiceHandler interface {
 	ValidateProject(context.Context, *connect.Request[v2.ValidateProjectRequest]) (*connect.Response[v2.ValidateProjectResponse], error)
 	ApplyProject(context.Context, *connect.Request[v2.ApplyProjectRequest]) (*connect.Response[v2.ApplyProjectResponse], error)
+	PatchProject(context.Context, *connect.Request[v2.PatchProjectRequest]) (*connect.Response[v2.ApplyProjectResponse], error)
 	GetProject(context.Context, *connect.Request[v2.GetProjectRequest]) (*connect.Response[v2.GetProjectResponse], error)
 	ListProjects(context.Context, *connect.Request[v2.ListProjectsRequest]) (*connect.Response[v2.ListProjectsResponse], error)
 	RemoveProject(context.Context, *connect.Request[v2.RemoveProjectRequest]) (*connect.Response[v2.RemoveProjectResponse], error)
@@ -567,11 +624,20 @@ type ProjectServiceHandler interface {
 	ListSchedulerEvents(context.Context, *connect.Request[v2.ListSchedulerEventsRequest]) (*connect.Response[v2.ListSchedulerEventsResponse], error)
 	ListProjectSchedulerEvents(context.Context, *connect.Request[v2.ListProjectSchedulerEventsRequest]) (*connect.Response[v2.ListProjectSchedulerEventsResponse], error)
 	StreamProjectSchedulerEvents(context.Context, *connect.Request[v2.StreamProjectSchedulerEventsRequest], *connect.ServerStream[v2.StreamProjectSchedulerEventsResponse]) error
+	// Invokes the scheduler directly and returns its value without creating a
+	// persistent SchedulerRun. Cancellation cancels the invocation.
 	InvokeScheduler(context.Context, *connect.Request[v2.InvokeSchedulerRequest]) (*connect.Response[v2.InvokeSchedulerResponse], error)
+	// Creates a persistent SchedulerRun and waits for it to reach a terminal
+	// state. The returned run is queryable with GetSchedulerRun and
+	// ListSchedulerRuns. Cancellation requests cancellation of the execution.
 	RunScheduler(context.Context, *connect.Request[v2.RunSchedulerRequest]) (*connect.Response[v2.RunSchedulerResponse], error)
+	// Creates a persistent SchedulerRun and returns after submission, without
+	// waiting for a terminal state. Disconnecting after submission does not
+	// cancel the run; use StopSchedulerRun to cancel it.
 	StartSchedulerRun(context.Context, *connect.Request[v2.StartSchedulerRunRequest]) (*connect.Response[v2.StartSchedulerRunResponse], error)
 	GetSchedulerRun(context.Context, *connect.Request[v2.GetSchedulerRunRequest]) (*connect.Response[v2.GetSchedulerRunResponse], error)
 	ListSchedulerRuns(context.Context, *connect.Request[v2.ListSchedulerRunsRequest]) (*connect.Response[v2.ListSchedulerRunsResponse], error)
+	BatchGetLatestSchedulerRuns(context.Context, *connect.Request[v2.BatchGetLatestSchedulerRunsRequest]) (*connect.Response[v2.BatchGetLatestSchedulerRunsResponse], error)
 	StreamSchedulerRuns(context.Context, *connect.Request[v2.StreamSchedulerRunsRequest], *connect.ServerStream[v2.StreamSchedulerRunsResponse]) error
 	PruneSchedulerRuns(context.Context, *connect.Request[v2.PruneSchedulerRunsRequest]) (*connect.Response[v2.PruneSchedulerRunsResponse], error)
 	StopSchedulerRun(context.Context, *connect.Request[v2.StopSchedulerRunRequest]) (*connect.Response[v2.StopSchedulerRunResponse], error)
@@ -596,6 +662,12 @@ func NewProjectServiceHandler(svc ProjectServiceHandler, opts ...connect.Handler
 		ProjectServiceApplyProjectProcedure,
 		svc.ApplyProject,
 		connect.WithSchema(projectServiceMethods.ByName("ApplyProject")),
+		connect.WithHandlerOptions(opts...),
+	)
+	projectServicePatchProjectHandler := connect.NewUnaryHandler(
+		ProjectServicePatchProjectProcedure,
+		svc.PatchProject,
+		connect.WithSchema(projectServiceMethods.ByName("PatchProject")),
 		connect.WithHandlerOptions(opts...),
 	)
 	projectServiceGetProjectHandler := connect.NewUnaryHandler(
@@ -682,6 +754,12 @@ func NewProjectServiceHandler(svc ProjectServiceHandler, opts ...connect.Handler
 		connect.WithSchema(projectServiceMethods.ByName("ListSchedulerRuns")),
 		connect.WithHandlerOptions(opts...),
 	)
+	projectServiceBatchGetLatestSchedulerRunsHandler := connect.NewUnaryHandler(
+		ProjectServiceBatchGetLatestSchedulerRunsProcedure,
+		svc.BatchGetLatestSchedulerRuns,
+		connect.WithSchema(projectServiceMethods.ByName("BatchGetLatestSchedulerRuns")),
+		connect.WithHandlerOptions(opts...),
+	)
 	projectServiceStreamSchedulerRunsHandler := connect.NewServerStreamHandler(
 		ProjectServiceStreamSchedulerRunsProcedure,
 		svc.StreamSchedulerRuns,
@@ -718,6 +796,8 @@ func NewProjectServiceHandler(svc ProjectServiceHandler, opts ...connect.Handler
 			projectServiceValidateProjectHandler.ServeHTTP(w, r)
 		case ProjectServiceApplyProjectProcedure:
 			projectServiceApplyProjectHandler.ServeHTTP(w, r)
+		case ProjectServicePatchProjectProcedure:
+			projectServicePatchProjectHandler.ServeHTTP(w, r)
 		case ProjectServiceGetProjectProcedure:
 			projectServiceGetProjectHandler.ServeHTTP(w, r)
 		case ProjectServiceListProjectsProcedure:
@@ -746,6 +826,8 @@ func NewProjectServiceHandler(svc ProjectServiceHandler, opts ...connect.Handler
 			projectServiceGetSchedulerRunHandler.ServeHTTP(w, r)
 		case ProjectServiceListSchedulerRunsProcedure:
 			projectServiceListSchedulerRunsHandler.ServeHTTP(w, r)
+		case ProjectServiceBatchGetLatestSchedulerRunsProcedure:
+			projectServiceBatchGetLatestSchedulerRunsHandler.ServeHTTP(w, r)
 		case ProjectServiceStreamSchedulerRunsProcedure:
 			projectServiceStreamSchedulerRunsHandler.ServeHTTP(w, r)
 		case ProjectServicePruneSchedulerRunsProcedure:
@@ -771,6 +853,10 @@ func (UnimplementedProjectServiceHandler) ValidateProject(context.Context, *conn
 
 func (UnimplementedProjectServiceHandler) ApplyProject(context.Context, *connect.Request[v2.ApplyProjectRequest]) (*connect.Response[v2.ApplyProjectResponse], error) {
 	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("agentcompose.v2.ProjectService.ApplyProject is not implemented"))
+}
+
+func (UnimplementedProjectServiceHandler) PatchProject(context.Context, *connect.Request[v2.PatchProjectRequest]) (*connect.Response[v2.ApplyProjectResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("agentcompose.v2.ProjectService.PatchProject is not implemented"))
 }
 
 func (UnimplementedProjectServiceHandler) GetProject(context.Context, *connect.Request[v2.GetProjectRequest]) (*connect.Response[v2.GetProjectResponse], error) {
@@ -829,6 +915,10 @@ func (UnimplementedProjectServiceHandler) ListSchedulerRuns(context.Context, *co
 	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("agentcompose.v2.ProjectService.ListSchedulerRuns is not implemented"))
 }
 
+func (UnimplementedProjectServiceHandler) BatchGetLatestSchedulerRuns(context.Context, *connect.Request[v2.BatchGetLatestSchedulerRunsRequest]) (*connect.Response[v2.BatchGetLatestSchedulerRunsResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("agentcompose.v2.ProjectService.BatchGetLatestSchedulerRuns is not implemented"))
+}
+
 func (UnimplementedProjectServiceHandler) StreamSchedulerRuns(context.Context, *connect.Request[v2.StreamSchedulerRunsRequest], *connect.ServerStream[v2.StreamSchedulerRunsResponse]) error {
 	return connect.NewError(connect.CodeUnimplemented, errors.New("agentcompose.v2.ProjectService.StreamSchedulerRuns is not implemented"))
 }
@@ -851,13 +941,28 @@ func (UnimplementedProjectServiceHandler) SetSchedulerTriggerEnabled(context.Con
 
 // RunServiceClient is a client for the agentcompose.v2.RunService service.
 type RunServiceClient interface {
+	// Creates a persistent Agent Run and waits for it to reach a terminal state.
+	// The final RunDetail is equivalent to GetRun for the returned run ID. Client
+	// cancellation requests cancellation of the execution and its cleanup policy
+	// still applies.
 	RunAgent(context.Context, *connect.Request[v2.RunAgentRequest]) (*connect.Response[v2.RunAgentResponse], error)
-	StartRun(context.Context, *connect.Request[v2.StartRunRequest]) (*connect.Response[v2.StartRunResponse], error)
-	// Stable server-stream projection of RunAgent for non-interactive stream views.
-	// Interactive clients that need stdin, resize, signal, or multi-turn prompt
-	// attachment should use RunAttach.
-	RunAgentStream(context.Context, *connect.Request[v2.RunAgentRequest]) (*connect.ServerStreamForClient[v2.RunAgentStreamResponse], error)
-	RunAttach(context.Context) *connect.BidiStreamForClient[v2.RunAttachRequest, v2.RunAttachResponse]
+	// Creates or reuses a persistent Agent Run and returns after submission.
+	// started is true only when this call returns a non-terminal run that has been
+	// scheduled for background execution. A false value means the returned run
+	// was already terminal; it never means that submission failed. Disconnecting
+	// after submission does not cancel the run; use StopRun to cancel it.
+	StartAgentRun(context.Context, *connect.Request[v2.StartAgentRunRequest]) (*connect.Response[v2.StartAgentRunResponse], error)
+	// Creates a persistent Agent Run and projects started, output, status, and
+	// completed events for non-interactive clients. The completed run has the same
+	// terminal state and common fields as RunAgent/GetRun. Client cancellation
+	// requests cancellation of the execution and its cleanup policy still applies.
+	StreamAgentRun(context.Context, *connect.Request[v2.RunAgentRequest]) (*connect.ServerStreamForClient[v2.StreamAgentRunResponse], error)
+	// Starts an interactive Agent Run. The first client frame must be start and
+	// start may appear exactly once. Frames before start, duplicate start frames,
+	// and frames after a terminal server frame are invalid. stdin_eof closes only
+	// stdin; cancel requests cancellation of the execution. Client half-close or
+	// disconnection ends the attachment and requests cancellation of the run.
+	AttachAgentRun(context.Context) *connect.BidiStreamForClient[v2.AttachAgentRunRequest, v2.AttachAgentRunResponse]
 	GetRun(context.Context, *connect.Request[v2.GetRunRequest]) (*connect.Response[v2.GetRunResponse], error)
 	ListRuns(context.Context, *connect.Request[v2.ListRunsRequest]) (*connect.Response[v2.ListRunsResponse], error)
 	FollowRunLogs(context.Context, *connect.Request[v2.FollowRunLogsRequest]) (*connect.ServerStreamForClient[v2.RunLogChunk], error)
@@ -883,22 +988,22 @@ func NewRunServiceClient(httpClient connect.HTTPClient, baseURL string, opts ...
 			connect.WithSchema(runServiceMethods.ByName("RunAgent")),
 			connect.WithClientOptions(opts...),
 		),
-		startRun: connect.NewClient[v2.StartRunRequest, v2.StartRunResponse](
+		startAgentRun: connect.NewClient[v2.StartAgentRunRequest, v2.StartAgentRunResponse](
 			httpClient,
-			baseURL+RunServiceStartRunProcedure,
-			connect.WithSchema(runServiceMethods.ByName("StartRun")),
+			baseURL+RunServiceStartAgentRunProcedure,
+			connect.WithSchema(runServiceMethods.ByName("StartAgentRun")),
 			connect.WithClientOptions(opts...),
 		),
-		runAgentStream: connect.NewClient[v2.RunAgentRequest, v2.RunAgentStreamResponse](
+		streamAgentRun: connect.NewClient[v2.RunAgentRequest, v2.StreamAgentRunResponse](
 			httpClient,
-			baseURL+RunServiceRunAgentStreamProcedure,
-			connect.WithSchema(runServiceMethods.ByName("RunAgentStream")),
+			baseURL+RunServiceStreamAgentRunProcedure,
+			connect.WithSchema(runServiceMethods.ByName("StreamAgentRun")),
 			connect.WithClientOptions(opts...),
 		),
-		runAttach: connect.NewClient[v2.RunAttachRequest, v2.RunAttachResponse](
+		attachAgentRun: connect.NewClient[v2.AttachAgentRunRequest, v2.AttachAgentRunResponse](
 			httpClient,
-			baseURL+RunServiceRunAttachProcedure,
-			connect.WithSchema(runServiceMethods.ByName("RunAttach")),
+			baseURL+RunServiceAttachAgentRunProcedure,
+			connect.WithSchema(runServiceMethods.ByName("AttachAgentRun")),
 			connect.WithClientOptions(opts...),
 		),
 		getRun: connect.NewClient[v2.GetRunRequest, v2.GetRunResponse](
@@ -943,9 +1048,9 @@ func NewRunServiceClient(httpClient connect.HTTPClient, baseURL string, opts ...
 // runServiceClient implements RunServiceClient.
 type runServiceClient struct {
 	runAgent             *connect.Client[v2.RunAgentRequest, v2.RunAgentResponse]
-	startRun             *connect.Client[v2.StartRunRequest, v2.StartRunResponse]
-	runAgentStream       *connect.Client[v2.RunAgentRequest, v2.RunAgentStreamResponse]
-	runAttach            *connect.Client[v2.RunAttachRequest, v2.RunAttachResponse]
+	startAgentRun        *connect.Client[v2.StartAgentRunRequest, v2.StartAgentRunResponse]
+	streamAgentRun       *connect.Client[v2.RunAgentRequest, v2.StreamAgentRunResponse]
+	attachAgentRun       *connect.Client[v2.AttachAgentRunRequest, v2.AttachAgentRunResponse]
 	getRun               *connect.Client[v2.GetRunRequest, v2.GetRunResponse]
 	listRuns             *connect.Client[v2.ListRunsRequest, v2.ListRunsResponse]
 	followRunLogs        *connect.Client[v2.FollowRunLogsRequest, v2.RunLogChunk]
@@ -959,19 +1064,19 @@ func (c *runServiceClient) RunAgent(ctx context.Context, req *connect.Request[v2
 	return c.runAgent.CallUnary(ctx, req)
 }
 
-// StartRun calls agentcompose.v2.RunService.StartRun.
-func (c *runServiceClient) StartRun(ctx context.Context, req *connect.Request[v2.StartRunRequest]) (*connect.Response[v2.StartRunResponse], error) {
-	return c.startRun.CallUnary(ctx, req)
+// StartAgentRun calls agentcompose.v2.RunService.StartAgentRun.
+func (c *runServiceClient) StartAgentRun(ctx context.Context, req *connect.Request[v2.StartAgentRunRequest]) (*connect.Response[v2.StartAgentRunResponse], error) {
+	return c.startAgentRun.CallUnary(ctx, req)
 }
 
-// RunAgentStream calls agentcompose.v2.RunService.RunAgentStream.
-func (c *runServiceClient) RunAgentStream(ctx context.Context, req *connect.Request[v2.RunAgentRequest]) (*connect.ServerStreamForClient[v2.RunAgentStreamResponse], error) {
-	return c.runAgentStream.CallServerStream(ctx, req)
+// StreamAgentRun calls agentcompose.v2.RunService.StreamAgentRun.
+func (c *runServiceClient) StreamAgentRun(ctx context.Context, req *connect.Request[v2.RunAgentRequest]) (*connect.ServerStreamForClient[v2.StreamAgentRunResponse], error) {
+	return c.streamAgentRun.CallServerStream(ctx, req)
 }
 
-// RunAttach calls agentcompose.v2.RunService.RunAttach.
-func (c *runServiceClient) RunAttach(ctx context.Context) *connect.BidiStreamForClient[v2.RunAttachRequest, v2.RunAttachResponse] {
-	return c.runAttach.CallBidiStream(ctx)
+// AttachAgentRun calls agentcompose.v2.RunService.AttachAgentRun.
+func (c *runServiceClient) AttachAgentRun(ctx context.Context) *connect.BidiStreamForClient[v2.AttachAgentRunRequest, v2.AttachAgentRunResponse] {
+	return c.attachAgentRun.CallBidiStream(ctx)
 }
 
 // GetRun calls agentcompose.v2.RunService.GetRun.
@@ -1006,13 +1111,28 @@ func (c *runServiceClient) ListSandboxRunEvents(ctx context.Context, req *connec
 
 // RunServiceHandler is an implementation of the agentcompose.v2.RunService service.
 type RunServiceHandler interface {
+	// Creates a persistent Agent Run and waits for it to reach a terminal state.
+	// The final RunDetail is equivalent to GetRun for the returned run ID. Client
+	// cancellation requests cancellation of the execution and its cleanup policy
+	// still applies.
 	RunAgent(context.Context, *connect.Request[v2.RunAgentRequest]) (*connect.Response[v2.RunAgentResponse], error)
-	StartRun(context.Context, *connect.Request[v2.StartRunRequest]) (*connect.Response[v2.StartRunResponse], error)
-	// Stable server-stream projection of RunAgent for non-interactive stream views.
-	// Interactive clients that need stdin, resize, signal, or multi-turn prompt
-	// attachment should use RunAttach.
-	RunAgentStream(context.Context, *connect.Request[v2.RunAgentRequest], *connect.ServerStream[v2.RunAgentStreamResponse]) error
-	RunAttach(context.Context, *connect.BidiStream[v2.RunAttachRequest, v2.RunAttachResponse]) error
+	// Creates or reuses a persistent Agent Run and returns after submission.
+	// started is true only when this call returns a non-terminal run that has been
+	// scheduled for background execution. A false value means the returned run
+	// was already terminal; it never means that submission failed. Disconnecting
+	// after submission does not cancel the run; use StopRun to cancel it.
+	StartAgentRun(context.Context, *connect.Request[v2.StartAgentRunRequest]) (*connect.Response[v2.StartAgentRunResponse], error)
+	// Creates a persistent Agent Run and projects started, output, status, and
+	// completed events for non-interactive clients. The completed run has the same
+	// terminal state and common fields as RunAgent/GetRun. Client cancellation
+	// requests cancellation of the execution and its cleanup policy still applies.
+	StreamAgentRun(context.Context, *connect.Request[v2.RunAgentRequest], *connect.ServerStream[v2.StreamAgentRunResponse]) error
+	// Starts an interactive Agent Run. The first client frame must be start and
+	// start may appear exactly once. Frames before start, duplicate start frames,
+	// and frames after a terminal server frame are invalid. stdin_eof closes only
+	// stdin; cancel requests cancellation of the execution. Client half-close or
+	// disconnection ends the attachment and requests cancellation of the run.
+	AttachAgentRun(context.Context, *connect.BidiStream[v2.AttachAgentRunRequest, v2.AttachAgentRunResponse]) error
 	GetRun(context.Context, *connect.Request[v2.GetRunRequest]) (*connect.Response[v2.GetRunResponse], error)
 	ListRuns(context.Context, *connect.Request[v2.ListRunsRequest]) (*connect.Response[v2.ListRunsResponse], error)
 	FollowRunLogs(context.Context, *connect.Request[v2.FollowRunLogsRequest], *connect.ServerStream[v2.RunLogChunk]) error
@@ -1034,22 +1154,22 @@ func NewRunServiceHandler(svc RunServiceHandler, opts ...connect.HandlerOption) 
 		connect.WithSchema(runServiceMethods.ByName("RunAgent")),
 		connect.WithHandlerOptions(opts...),
 	)
-	runServiceStartRunHandler := connect.NewUnaryHandler(
-		RunServiceStartRunProcedure,
-		svc.StartRun,
-		connect.WithSchema(runServiceMethods.ByName("StartRun")),
+	runServiceStartAgentRunHandler := connect.NewUnaryHandler(
+		RunServiceStartAgentRunProcedure,
+		svc.StartAgentRun,
+		connect.WithSchema(runServiceMethods.ByName("StartAgentRun")),
 		connect.WithHandlerOptions(opts...),
 	)
-	runServiceRunAgentStreamHandler := connect.NewServerStreamHandler(
-		RunServiceRunAgentStreamProcedure,
-		svc.RunAgentStream,
-		connect.WithSchema(runServiceMethods.ByName("RunAgentStream")),
+	runServiceStreamAgentRunHandler := connect.NewServerStreamHandler(
+		RunServiceStreamAgentRunProcedure,
+		svc.StreamAgentRun,
+		connect.WithSchema(runServiceMethods.ByName("StreamAgentRun")),
 		connect.WithHandlerOptions(opts...),
 	)
-	runServiceRunAttachHandler := connect.NewBidiStreamHandler(
-		RunServiceRunAttachProcedure,
-		svc.RunAttach,
-		connect.WithSchema(runServiceMethods.ByName("RunAttach")),
+	runServiceAttachAgentRunHandler := connect.NewBidiStreamHandler(
+		RunServiceAttachAgentRunProcedure,
+		svc.AttachAgentRun,
+		connect.WithSchema(runServiceMethods.ByName("AttachAgentRun")),
 		connect.WithHandlerOptions(opts...),
 	)
 	runServiceGetRunHandler := connect.NewUnaryHandler(
@@ -1092,12 +1212,12 @@ func NewRunServiceHandler(svc RunServiceHandler, opts ...connect.HandlerOption) 
 		switch r.URL.Path {
 		case RunServiceRunAgentProcedure:
 			runServiceRunAgentHandler.ServeHTTP(w, r)
-		case RunServiceStartRunProcedure:
-			runServiceStartRunHandler.ServeHTTP(w, r)
-		case RunServiceRunAgentStreamProcedure:
-			runServiceRunAgentStreamHandler.ServeHTTP(w, r)
-		case RunServiceRunAttachProcedure:
-			runServiceRunAttachHandler.ServeHTTP(w, r)
+		case RunServiceStartAgentRunProcedure:
+			runServiceStartAgentRunHandler.ServeHTTP(w, r)
+		case RunServiceStreamAgentRunProcedure:
+			runServiceStreamAgentRunHandler.ServeHTTP(w, r)
+		case RunServiceAttachAgentRunProcedure:
+			runServiceAttachAgentRunHandler.ServeHTTP(w, r)
 		case RunServiceGetRunProcedure:
 			runServiceGetRunHandler.ServeHTTP(w, r)
 		case RunServiceListRunsProcedure:
@@ -1123,16 +1243,16 @@ func (UnimplementedRunServiceHandler) RunAgent(context.Context, *connect.Request
 	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("agentcompose.v2.RunService.RunAgent is not implemented"))
 }
 
-func (UnimplementedRunServiceHandler) StartRun(context.Context, *connect.Request[v2.StartRunRequest]) (*connect.Response[v2.StartRunResponse], error) {
-	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("agentcompose.v2.RunService.StartRun is not implemented"))
+func (UnimplementedRunServiceHandler) StartAgentRun(context.Context, *connect.Request[v2.StartAgentRunRequest]) (*connect.Response[v2.StartAgentRunResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("agentcompose.v2.RunService.StartAgentRun is not implemented"))
 }
 
-func (UnimplementedRunServiceHandler) RunAgentStream(context.Context, *connect.Request[v2.RunAgentRequest], *connect.ServerStream[v2.RunAgentStreamResponse]) error {
-	return connect.NewError(connect.CodeUnimplemented, errors.New("agentcompose.v2.RunService.RunAgentStream is not implemented"))
+func (UnimplementedRunServiceHandler) StreamAgentRun(context.Context, *connect.Request[v2.RunAgentRequest], *connect.ServerStream[v2.StreamAgentRunResponse]) error {
+	return connect.NewError(connect.CodeUnimplemented, errors.New("agentcompose.v2.RunService.StreamAgentRun is not implemented"))
 }
 
-func (UnimplementedRunServiceHandler) RunAttach(context.Context, *connect.BidiStream[v2.RunAttachRequest, v2.RunAttachResponse]) error {
-	return connect.NewError(connect.CodeUnimplemented, errors.New("agentcompose.v2.RunService.RunAttach is not implemented"))
+func (UnimplementedRunServiceHandler) AttachAgentRun(context.Context, *connect.BidiStream[v2.AttachAgentRunRequest, v2.AttachAgentRunResponse]) error {
+	return connect.NewError(connect.CodeUnimplemented, errors.New("agentcompose.v2.RunService.AttachAgentRun is not implemented"))
 }
 
 func (UnimplementedRunServiceHandler) GetRun(context.Context, *connect.Request[v2.GetRunRequest]) (*connect.Response[v2.GetRunResponse], error) {
@@ -1161,12 +1281,19 @@ func (UnimplementedRunServiceHandler) ListSandboxRunEvents(context.Context, *con
 
 // ExecServiceClient is a client for the agentcompose.v2.ExecService service.
 type ExecServiceClient interface {
+	// Executes a non-persistent command and waits for its final exit result.
+	// Cancellation requests cancellation of the command. Exec IDs, when emitted
+	// by streaming forms, are correlation IDs and are not queryable resources.
 	Exec(context.Context, *connect.Request[v2.ExecRequest]) (*connect.Response[v2.ExecResponse], error)
-	// Stable server-stream projection of Exec for non-interactive stream views.
-	// Interactive clients that need stdin, resize, or signal attachment should use
-	// ExecAttach.
-	ExecStream(context.Context, *connect.Request[v2.ExecRequest]) (*connect.ServerStreamForClient[v2.ExecStreamResponse], error)
-	ExecAttach(context.Context) *connect.BidiStreamForClient[v2.ExecAttachRequest, v2.ExecAttachResponse]
+	// Executes a non-persistent command and projects output and the same final
+	// ExecResult returned by Exec. Client cancellation cancels the command.
+	StreamExec(context.Context, *connect.Request[v2.ExecRequest]) (*connect.ServerStreamForClient[v2.StreamExecResponse], error)
+	// Starts an interactive, non-persistent command. The first client frame must
+	// be start and start may appear exactly once. Frames before start, duplicate
+	// start frames, and frames after a terminal server frame are invalid.
+	// stdin_eof closes only stdin; cancel, half-close, or disconnection requests
+	// cancellation of the command.
+	AttachExec(context.Context) *connect.BidiStreamForClient[v2.AttachExecRequest, v2.AttachExecResponse]
 }
 
 // NewExecServiceClient constructs a client for the agentcompose.v2.ExecService service. By default,
@@ -1186,16 +1313,16 @@ func NewExecServiceClient(httpClient connect.HTTPClient, baseURL string, opts ..
 			connect.WithSchema(execServiceMethods.ByName("Exec")),
 			connect.WithClientOptions(opts...),
 		),
-		execStream: connect.NewClient[v2.ExecRequest, v2.ExecStreamResponse](
+		streamExec: connect.NewClient[v2.ExecRequest, v2.StreamExecResponse](
 			httpClient,
-			baseURL+ExecServiceExecStreamProcedure,
-			connect.WithSchema(execServiceMethods.ByName("ExecStream")),
+			baseURL+ExecServiceStreamExecProcedure,
+			connect.WithSchema(execServiceMethods.ByName("StreamExec")),
 			connect.WithClientOptions(opts...),
 		),
-		execAttach: connect.NewClient[v2.ExecAttachRequest, v2.ExecAttachResponse](
+		attachExec: connect.NewClient[v2.AttachExecRequest, v2.AttachExecResponse](
 			httpClient,
-			baseURL+ExecServiceExecAttachProcedure,
-			connect.WithSchema(execServiceMethods.ByName("ExecAttach")),
+			baseURL+ExecServiceAttachExecProcedure,
+			connect.WithSchema(execServiceMethods.ByName("AttachExec")),
 			connect.WithClientOptions(opts...),
 		),
 	}
@@ -1204,8 +1331,8 @@ func NewExecServiceClient(httpClient connect.HTTPClient, baseURL string, opts ..
 // execServiceClient implements ExecServiceClient.
 type execServiceClient struct {
 	exec       *connect.Client[v2.ExecRequest, v2.ExecResponse]
-	execStream *connect.Client[v2.ExecRequest, v2.ExecStreamResponse]
-	execAttach *connect.Client[v2.ExecAttachRequest, v2.ExecAttachResponse]
+	streamExec *connect.Client[v2.ExecRequest, v2.StreamExecResponse]
+	attachExec *connect.Client[v2.AttachExecRequest, v2.AttachExecResponse]
 }
 
 // Exec calls agentcompose.v2.ExecService.Exec.
@@ -1213,24 +1340,31 @@ func (c *execServiceClient) Exec(ctx context.Context, req *connect.Request[v2.Ex
 	return c.exec.CallUnary(ctx, req)
 }
 
-// ExecStream calls agentcompose.v2.ExecService.ExecStream.
-func (c *execServiceClient) ExecStream(ctx context.Context, req *connect.Request[v2.ExecRequest]) (*connect.ServerStreamForClient[v2.ExecStreamResponse], error) {
-	return c.execStream.CallServerStream(ctx, req)
+// StreamExec calls agentcompose.v2.ExecService.StreamExec.
+func (c *execServiceClient) StreamExec(ctx context.Context, req *connect.Request[v2.ExecRequest]) (*connect.ServerStreamForClient[v2.StreamExecResponse], error) {
+	return c.streamExec.CallServerStream(ctx, req)
 }
 
-// ExecAttach calls agentcompose.v2.ExecService.ExecAttach.
-func (c *execServiceClient) ExecAttach(ctx context.Context) *connect.BidiStreamForClient[v2.ExecAttachRequest, v2.ExecAttachResponse] {
-	return c.execAttach.CallBidiStream(ctx)
+// AttachExec calls agentcompose.v2.ExecService.AttachExec.
+func (c *execServiceClient) AttachExec(ctx context.Context) *connect.BidiStreamForClient[v2.AttachExecRequest, v2.AttachExecResponse] {
+	return c.attachExec.CallBidiStream(ctx)
 }
 
 // ExecServiceHandler is an implementation of the agentcompose.v2.ExecService service.
 type ExecServiceHandler interface {
+	// Executes a non-persistent command and waits for its final exit result.
+	// Cancellation requests cancellation of the command. Exec IDs, when emitted
+	// by streaming forms, are correlation IDs and are not queryable resources.
 	Exec(context.Context, *connect.Request[v2.ExecRequest]) (*connect.Response[v2.ExecResponse], error)
-	// Stable server-stream projection of Exec for non-interactive stream views.
-	// Interactive clients that need stdin, resize, or signal attachment should use
-	// ExecAttach.
-	ExecStream(context.Context, *connect.Request[v2.ExecRequest], *connect.ServerStream[v2.ExecStreamResponse]) error
-	ExecAttach(context.Context, *connect.BidiStream[v2.ExecAttachRequest, v2.ExecAttachResponse]) error
+	// Executes a non-persistent command and projects output and the same final
+	// ExecResult returned by Exec. Client cancellation cancels the command.
+	StreamExec(context.Context, *connect.Request[v2.ExecRequest], *connect.ServerStream[v2.StreamExecResponse]) error
+	// Starts an interactive, non-persistent command. The first client frame must
+	// be start and start may appear exactly once. Frames before start, duplicate
+	// start frames, and frames after a terminal server frame are invalid.
+	// stdin_eof closes only stdin; cancel, half-close, or disconnection requests
+	// cancellation of the command.
+	AttachExec(context.Context, *connect.BidiStream[v2.AttachExecRequest, v2.AttachExecResponse]) error
 }
 
 // NewExecServiceHandler builds an HTTP handler from the service implementation. It returns the path
@@ -1246,26 +1380,26 @@ func NewExecServiceHandler(svc ExecServiceHandler, opts ...connect.HandlerOption
 		connect.WithSchema(execServiceMethods.ByName("Exec")),
 		connect.WithHandlerOptions(opts...),
 	)
-	execServiceExecStreamHandler := connect.NewServerStreamHandler(
-		ExecServiceExecStreamProcedure,
-		svc.ExecStream,
-		connect.WithSchema(execServiceMethods.ByName("ExecStream")),
+	execServiceStreamExecHandler := connect.NewServerStreamHandler(
+		ExecServiceStreamExecProcedure,
+		svc.StreamExec,
+		connect.WithSchema(execServiceMethods.ByName("StreamExec")),
 		connect.WithHandlerOptions(opts...),
 	)
-	execServiceExecAttachHandler := connect.NewBidiStreamHandler(
-		ExecServiceExecAttachProcedure,
-		svc.ExecAttach,
-		connect.WithSchema(execServiceMethods.ByName("ExecAttach")),
+	execServiceAttachExecHandler := connect.NewBidiStreamHandler(
+		ExecServiceAttachExecProcedure,
+		svc.AttachExec,
+		connect.WithSchema(execServiceMethods.ByName("AttachExec")),
 		connect.WithHandlerOptions(opts...),
 	)
 	return "/agentcompose.v2.ExecService/", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		switch r.URL.Path {
 		case ExecServiceExecProcedure:
 			execServiceExecHandler.ServeHTTP(w, r)
-		case ExecServiceExecStreamProcedure:
-			execServiceExecStreamHandler.ServeHTTP(w, r)
-		case ExecServiceExecAttachProcedure:
-			execServiceExecAttachHandler.ServeHTTP(w, r)
+		case ExecServiceStreamExecProcedure:
+			execServiceStreamExecHandler.ServeHTTP(w, r)
+		case ExecServiceAttachExecProcedure:
+			execServiceAttachExecHandler.ServeHTTP(w, r)
 		default:
 			http.NotFound(w, r)
 		}
@@ -1279,12 +1413,12 @@ func (UnimplementedExecServiceHandler) Exec(context.Context, *connect.Request[v2
 	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("agentcompose.v2.ExecService.Exec is not implemented"))
 }
 
-func (UnimplementedExecServiceHandler) ExecStream(context.Context, *connect.Request[v2.ExecRequest], *connect.ServerStream[v2.ExecStreamResponse]) error {
-	return connect.NewError(connect.CodeUnimplemented, errors.New("agentcompose.v2.ExecService.ExecStream is not implemented"))
+func (UnimplementedExecServiceHandler) StreamExec(context.Context, *connect.Request[v2.ExecRequest], *connect.ServerStream[v2.StreamExecResponse]) error {
+	return connect.NewError(connect.CodeUnimplemented, errors.New("agentcompose.v2.ExecService.StreamExec is not implemented"))
 }
 
-func (UnimplementedExecServiceHandler) ExecAttach(context.Context, *connect.BidiStream[v2.ExecAttachRequest, v2.ExecAttachResponse]) error {
-	return connect.NewError(connect.CodeUnimplemented, errors.New("agentcompose.v2.ExecService.ExecAttach is not implemented"))
+func (UnimplementedExecServiceHandler) AttachExec(context.Context, *connect.BidiStream[v2.AttachExecRequest, v2.AttachExecResponse]) error {
+	return connect.NewError(connect.CodeUnimplemented, errors.New("agentcompose.v2.ExecService.AttachExec is not implemented"))
 }
 
 // ImageServiceClient is a client for the agentcompose.v2.ImageService service.
@@ -2534,6 +2668,12 @@ func (UnimplementedCapabilityServiceHandler) GetCapabilityCatalog(context.Contex
 
 // LLMServiceClient is a client for the agentcompose.v2.LLMService service.
 type LLMServiceClient interface {
+	// Manage API-owned upstream model providers, not coding-agent providers.
+	CreateProvider(context.Context, *connect.Request[v2.CreateProviderRequest]) (*connect.Response[v2.CreateProviderResponse], error)
+	GetProvider(context.Context, *connect.Request[v2.GetProviderRequest]) (*connect.Response[v2.GetProviderResponse], error)
+	ListProviders(context.Context, *connect.Request[v2.ListProvidersRequest]) (*connect.Response[v2.ListProvidersResponse], error)
+	UpdateProvider(context.Context, *connect.Request[v2.UpdateProviderRequest]) (*connect.Response[v2.UpdateProviderResponse], error)
+	DeleteProvider(context.Context, *connect.Request[v2.DeleteProviderRequest]) (*connect.Response[v2.DeleteProviderResponse], error)
 	Generate(context.Context, *connect.Request[v2.GenerateLLMRequest]) (*connect.Response[v2.GenerateLLMResponse], error)
 }
 
@@ -2548,6 +2688,36 @@ func NewLLMServiceClient(httpClient connect.HTTPClient, baseURL string, opts ...
 	baseURL = strings.TrimRight(baseURL, "/")
 	lLMServiceMethods := v2.File_agentcompose_v2_agentcompose_proto.Services().ByName("LLMService").Methods()
 	return &lLMServiceClient{
+		createProvider: connect.NewClient[v2.CreateProviderRequest, v2.CreateProviderResponse](
+			httpClient,
+			baseURL+LLMServiceCreateProviderProcedure,
+			connect.WithSchema(lLMServiceMethods.ByName("CreateProvider")),
+			connect.WithClientOptions(opts...),
+		),
+		getProvider: connect.NewClient[v2.GetProviderRequest, v2.GetProviderResponse](
+			httpClient,
+			baseURL+LLMServiceGetProviderProcedure,
+			connect.WithSchema(lLMServiceMethods.ByName("GetProvider")),
+			connect.WithClientOptions(opts...),
+		),
+		listProviders: connect.NewClient[v2.ListProvidersRequest, v2.ListProvidersResponse](
+			httpClient,
+			baseURL+LLMServiceListProvidersProcedure,
+			connect.WithSchema(lLMServiceMethods.ByName("ListProviders")),
+			connect.WithClientOptions(opts...),
+		),
+		updateProvider: connect.NewClient[v2.UpdateProviderRequest, v2.UpdateProviderResponse](
+			httpClient,
+			baseURL+LLMServiceUpdateProviderProcedure,
+			connect.WithSchema(lLMServiceMethods.ByName("UpdateProvider")),
+			connect.WithClientOptions(opts...),
+		),
+		deleteProvider: connect.NewClient[v2.DeleteProviderRequest, v2.DeleteProviderResponse](
+			httpClient,
+			baseURL+LLMServiceDeleteProviderProcedure,
+			connect.WithSchema(lLMServiceMethods.ByName("DeleteProvider")),
+			connect.WithClientOptions(opts...),
+		),
 		generate: connect.NewClient[v2.GenerateLLMRequest, v2.GenerateLLMResponse](
 			httpClient,
 			baseURL+LLMServiceGenerateProcedure,
@@ -2559,7 +2729,37 @@ func NewLLMServiceClient(httpClient connect.HTTPClient, baseURL string, opts ...
 
 // lLMServiceClient implements LLMServiceClient.
 type lLMServiceClient struct {
-	generate *connect.Client[v2.GenerateLLMRequest, v2.GenerateLLMResponse]
+	createProvider *connect.Client[v2.CreateProviderRequest, v2.CreateProviderResponse]
+	getProvider    *connect.Client[v2.GetProviderRequest, v2.GetProviderResponse]
+	listProviders  *connect.Client[v2.ListProvidersRequest, v2.ListProvidersResponse]
+	updateProvider *connect.Client[v2.UpdateProviderRequest, v2.UpdateProviderResponse]
+	deleteProvider *connect.Client[v2.DeleteProviderRequest, v2.DeleteProviderResponse]
+	generate       *connect.Client[v2.GenerateLLMRequest, v2.GenerateLLMResponse]
+}
+
+// CreateProvider calls agentcompose.v2.LLMService.CreateProvider.
+func (c *lLMServiceClient) CreateProvider(ctx context.Context, req *connect.Request[v2.CreateProviderRequest]) (*connect.Response[v2.CreateProviderResponse], error) {
+	return c.createProvider.CallUnary(ctx, req)
+}
+
+// GetProvider calls agentcompose.v2.LLMService.GetProvider.
+func (c *lLMServiceClient) GetProvider(ctx context.Context, req *connect.Request[v2.GetProviderRequest]) (*connect.Response[v2.GetProviderResponse], error) {
+	return c.getProvider.CallUnary(ctx, req)
+}
+
+// ListProviders calls agentcompose.v2.LLMService.ListProviders.
+func (c *lLMServiceClient) ListProviders(ctx context.Context, req *connect.Request[v2.ListProvidersRequest]) (*connect.Response[v2.ListProvidersResponse], error) {
+	return c.listProviders.CallUnary(ctx, req)
+}
+
+// UpdateProvider calls agentcompose.v2.LLMService.UpdateProvider.
+func (c *lLMServiceClient) UpdateProvider(ctx context.Context, req *connect.Request[v2.UpdateProviderRequest]) (*connect.Response[v2.UpdateProviderResponse], error) {
+	return c.updateProvider.CallUnary(ctx, req)
+}
+
+// DeleteProvider calls agentcompose.v2.LLMService.DeleteProvider.
+func (c *lLMServiceClient) DeleteProvider(ctx context.Context, req *connect.Request[v2.DeleteProviderRequest]) (*connect.Response[v2.DeleteProviderResponse], error) {
+	return c.deleteProvider.CallUnary(ctx, req)
 }
 
 // Generate calls agentcompose.v2.LLMService.Generate.
@@ -2569,6 +2769,12 @@ func (c *lLMServiceClient) Generate(ctx context.Context, req *connect.Request[v2
 
 // LLMServiceHandler is an implementation of the agentcompose.v2.LLMService service.
 type LLMServiceHandler interface {
+	// Manage API-owned upstream model providers, not coding-agent providers.
+	CreateProvider(context.Context, *connect.Request[v2.CreateProviderRequest]) (*connect.Response[v2.CreateProviderResponse], error)
+	GetProvider(context.Context, *connect.Request[v2.GetProviderRequest]) (*connect.Response[v2.GetProviderResponse], error)
+	ListProviders(context.Context, *connect.Request[v2.ListProvidersRequest]) (*connect.Response[v2.ListProvidersResponse], error)
+	UpdateProvider(context.Context, *connect.Request[v2.UpdateProviderRequest]) (*connect.Response[v2.UpdateProviderResponse], error)
+	DeleteProvider(context.Context, *connect.Request[v2.DeleteProviderRequest]) (*connect.Response[v2.DeleteProviderResponse], error)
 	Generate(context.Context, *connect.Request[v2.GenerateLLMRequest]) (*connect.Response[v2.GenerateLLMResponse], error)
 }
 
@@ -2579,6 +2785,36 @@ type LLMServiceHandler interface {
 // and JSON codecs. They also support gzip compression.
 func NewLLMServiceHandler(svc LLMServiceHandler, opts ...connect.HandlerOption) (string, http.Handler) {
 	lLMServiceMethods := v2.File_agentcompose_v2_agentcompose_proto.Services().ByName("LLMService").Methods()
+	lLMServiceCreateProviderHandler := connect.NewUnaryHandler(
+		LLMServiceCreateProviderProcedure,
+		svc.CreateProvider,
+		connect.WithSchema(lLMServiceMethods.ByName("CreateProvider")),
+		connect.WithHandlerOptions(opts...),
+	)
+	lLMServiceGetProviderHandler := connect.NewUnaryHandler(
+		LLMServiceGetProviderProcedure,
+		svc.GetProvider,
+		connect.WithSchema(lLMServiceMethods.ByName("GetProvider")),
+		connect.WithHandlerOptions(opts...),
+	)
+	lLMServiceListProvidersHandler := connect.NewUnaryHandler(
+		LLMServiceListProvidersProcedure,
+		svc.ListProviders,
+		connect.WithSchema(lLMServiceMethods.ByName("ListProviders")),
+		connect.WithHandlerOptions(opts...),
+	)
+	lLMServiceUpdateProviderHandler := connect.NewUnaryHandler(
+		LLMServiceUpdateProviderProcedure,
+		svc.UpdateProvider,
+		connect.WithSchema(lLMServiceMethods.ByName("UpdateProvider")),
+		connect.WithHandlerOptions(opts...),
+	)
+	lLMServiceDeleteProviderHandler := connect.NewUnaryHandler(
+		LLMServiceDeleteProviderProcedure,
+		svc.DeleteProvider,
+		connect.WithSchema(lLMServiceMethods.ByName("DeleteProvider")),
+		connect.WithHandlerOptions(opts...),
+	)
 	lLMServiceGenerateHandler := connect.NewUnaryHandler(
 		LLMServiceGenerateProcedure,
 		svc.Generate,
@@ -2587,6 +2823,16 @@ func NewLLMServiceHandler(svc LLMServiceHandler, opts ...connect.HandlerOption) 
 	)
 	return "/agentcompose.v2.LLMService/", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		switch r.URL.Path {
+		case LLMServiceCreateProviderProcedure:
+			lLMServiceCreateProviderHandler.ServeHTTP(w, r)
+		case LLMServiceGetProviderProcedure:
+			lLMServiceGetProviderHandler.ServeHTTP(w, r)
+		case LLMServiceListProvidersProcedure:
+			lLMServiceListProvidersHandler.ServeHTTP(w, r)
+		case LLMServiceUpdateProviderProcedure:
+			lLMServiceUpdateProviderHandler.ServeHTTP(w, r)
+		case LLMServiceDeleteProviderProcedure:
+			lLMServiceDeleteProviderHandler.ServeHTTP(w, r)
 		case LLMServiceGenerateProcedure:
 			lLMServiceGenerateHandler.ServeHTTP(w, r)
 		default:
@@ -2597,6 +2843,26 @@ func NewLLMServiceHandler(svc LLMServiceHandler, opts ...connect.HandlerOption) 
 
 // UnimplementedLLMServiceHandler returns CodeUnimplemented from all methods.
 type UnimplementedLLMServiceHandler struct{}
+
+func (UnimplementedLLMServiceHandler) CreateProvider(context.Context, *connect.Request[v2.CreateProviderRequest]) (*connect.Response[v2.CreateProviderResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("agentcompose.v2.LLMService.CreateProvider is not implemented"))
+}
+
+func (UnimplementedLLMServiceHandler) GetProvider(context.Context, *connect.Request[v2.GetProviderRequest]) (*connect.Response[v2.GetProviderResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("agentcompose.v2.LLMService.GetProvider is not implemented"))
+}
+
+func (UnimplementedLLMServiceHandler) ListProviders(context.Context, *connect.Request[v2.ListProvidersRequest]) (*connect.Response[v2.ListProvidersResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("agentcompose.v2.LLMService.ListProviders is not implemented"))
+}
+
+func (UnimplementedLLMServiceHandler) UpdateProvider(context.Context, *connect.Request[v2.UpdateProviderRequest]) (*connect.Response[v2.UpdateProviderResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("agentcompose.v2.LLMService.UpdateProvider is not implemented"))
+}
+
+func (UnimplementedLLMServiceHandler) DeleteProvider(context.Context, *connect.Request[v2.DeleteProviderRequest]) (*connect.Response[v2.DeleteProviderResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("agentcompose.v2.LLMService.DeleteProvider is not implemented"))
+}
 
 func (UnimplementedLLMServiceHandler) Generate(context.Context, *connect.Request[v2.GenerateLLMRequest]) (*connect.Response[v2.GenerateLLMResponse], error) {
 	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("agentcompose.v2.LLMService.Generate is not implemented"))
