@@ -39,6 +39,7 @@ func newAuthCommand(state *commandState) *cobra.Command {
 		}
 		stored.URL = state.options.URL
 		stored.APIToken = token
+		stored.APIKey = ""
 		if stored.Timeout == "" {
 			stored.Timeout = state.options.timeoutText
 		}
@@ -66,6 +67,7 @@ func newAuthCommand(state *commandState) *cobra.Command {
 			return err
 		}
 		stored.APIToken = ""
+		stored.APIKey = ""
 		if err := config.SetProduct(state.options.ConfigPath, productName, stored); err != nil {
 			return err
 		}

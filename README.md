@@ -161,6 +161,10 @@ cosmos:
 monkeyscan:
   url: https://monkeyscan-ai.com
   api_key: YOUR_API_KEY
+
+agent-compose:
+  url: https://agent-compose.example.com
+  api_token: YOUR_API_TOKEN
 ```
 也可以把同样的配置放到环境变量或本地 `.env` 文件中。变量命名规则为 `<PRODUCT>_<FIELD>`：
 
@@ -200,6 +204,8 @@ safeline.url         -> SAFELINE_URL
 safeline.api_key     -> SAFELINE_API_KEY
 monkeyscan.url       -> MONKEYSCAN_URL
 monkeyscan.api_key   -> MONKEYSCAN_API_KEY
+agent-compose.url    -> AGENT_COMPOSE_URL
+agent-compose.api_token -> AGENT_COMPOSE_API_TOKEN
 ```
 
 ### 全悉快速开始

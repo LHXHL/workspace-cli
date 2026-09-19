@@ -60,6 +60,10 @@ monkeyscan:
   url: ""
   api_key: ""
 
+agent-compose:
+  url: ""
+  api_token: ""
+
 # TODO: Replace with real insight API key and URL
 insight:
   url: "http://192.168.1.100"

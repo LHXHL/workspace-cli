@@ -18,9 +18,17 @@ const productName = "agent-compose"
 type productConfig struct {
 	URL            string `yaml:"url"`
 	APIToken       string `yaml:"api_token"`
+	APIKey         string `yaml:"api_key,omitempty"`
 	DefaultProject string `yaml:"default_project"`
 	Timeout        string `yaml:"timeout"`
 	Insecure       bool   `yaml:"insecure"`
+}
+
+func (c productConfig) token() string {
+	if strings.TrimSpace(c.APIToken) != "" {
+		return c.APIToken
+	}
+	return c.APIKey
 }
 
 type runtimeOptions struct {
@@ -59,7 +67,7 @@ func ApplyRuntimeConfig(cmd *cobra.Command, raw config.Raw, configPath string, d
 	if !cmd.Flags().Changed("insecure") && !cmd.InheritedFlags().Changed("insecure") {
 		state.options.Insecure = cfg.Insecure
 	}
-	state.options.Token = cfg.APIToken
+	state.options.Token = cfg.token()
 	state.options.TokenSource = "config"
 	if envTokenActive() {
 		state.options.TokenSource = "environment"
@@ -174,14 +182,18 @@ func normalizeBaseURL(raw string) (string, error) {
 	if err != nil || parsed.Scheme == "" || parsed.Host == "" {
 		return "", fmt.Errorf("Agent Compose URL must include a valid scheme and host")
 	}
-	if parsed.RawQuery != "" || parsed.Fragment != "" || (parsed.Path != "" && parsed.Path != "/") {
-		return "", fmt.Errorf("Agent Compose URL must be a base URL without path, query, or fragment")
+	if parsed.RawQuery != "" || parsed.Fragment != "" {
+		return "", fmt.Errorf("Agent Compose URL must not contain a query or fragment")
 	}
 	if parsed.User != nil {
 		return "", fmt.Errorf("Agent Compose URL must not contain user information")
 	}
 	if parsed.Scheme != "http" && parsed.Scheme != "https" {
 		return "", fmt.Errorf("Agent Compose URL scheme must be http or https")
+	}
+	parsed.Path = strings.TrimSuffix(parsed.Path, "/")
+	if parsed.Path == "/" {
+		parsed.Path = ""
 	}
 	return strings.TrimSuffix(parsed.String(), "/"), nil
 }
@@ -227,5 +239,5 @@ func (t *bearerTransport) RoundTrip(req *http.Request) (*http.Response, error) {
 }
 
 func envTokenActive() bool {
-	return strings.TrimSpace(os.Getenv("AGENT_COMPOSE_API_TOKEN")) != ""
+	return strings.TrimSpace(os.Getenv("AGENT_COMPOSE_API_TOKEN")) != "" || strings.TrimSpace(os.Getenv("AGENT_COMPOSE_API_KEY")) != ""
 }
