@@ -26,7 +26,7 @@ type sandboxDTO struct {
 }
 
 func sandboxFromProto(sandbox *agentcomposev2.Sandbox, run *agentcomposev2.RunSummary) sandboxDTO {
-	result := sandboxDTO{SandboxID: sandbox.GetSandboxId(), SandboxShortID: shortID(sandbox.GetSandboxId()), Agent: sandbox.GetAgentName(), Status: strings.ToLower(sandbox.GetStatus()), Driver: sandbox.GetDriver(), Image: sandbox.GetImage()}
+	result := sandboxDTO{SandboxID: sandbox.GetSandboxId(), SandboxShortID: shortID(sandbox.GetSandboxId()), Agent: sandbox.GetAgentName(), Status: enumText(sandbox.GetStatus(), "SANDBOX_STATUS_"), Driver: sandbox.GetDriver(), Image: sandbox.GetImage()}
 	if sandbox.GetCreatedAt() != nil {
 		result.CreatedAt = sandbox.GetCreatedAt().AsTime().Format(time.RFC3339)
 	}
@@ -41,16 +41,16 @@ func sandboxFromProto(sandbox *agentcomposev2.Sandbox, run *agentcomposev2.RunSu
 }
 
 type sandboxListOptions struct {
-	cursorOptions
+	offsetOptions
 	All     bool
 	Status  string
 	Verbose bool
 }
 
 func newPSCommand(state *commandState, use string) *cobra.Command {
-	options := sandboxListOptions{cursorOptions: cursorOptions{Limit: 50}}
+	options := sandboxListOptions{offsetOptions: offsetOptions{Limit: 50}}
 	cmd := &cobra.Command{Use: use, Short: "List project Sandboxes", Args: noArgs(state), RunE: func(cmd *cobra.Command, _ []string) error { return executeSandboxList(cmd, state, options) }}
-	addCursorFlags(cmd, &options.cursorOptions)
+	addOffsetFlags(cmd, &options.offsetOptions)
 	cmd.Flags().BoolVarP(&options.All, "all", "a", false, "Include all Sandbox states")
 	cmd.Flags().StringVar(&options.Status, "status", "", "Filter by comma-separated status")
 	cmd.Flags().BoolVar(&options.Verbose, "verbose", false, "Show full IDs")
@@ -58,7 +58,7 @@ func newPSCommand(state *commandState, use string) *cobra.Command {
 }
 
 func executeSandboxList(cmd *cobra.Command, state *commandState, options sandboxListOptions) error {
-	if err := validateCursorOptions(cmd, options.cursorOptions, state); err != nil {
+	if err := validateOffsetOptions(cmd, options.offsetOptions, state); err != nil {
 		return err
 	}
 	statuses := []string{"RUNNING"}
@@ -82,7 +82,11 @@ func executeSandboxList(cmd *cobra.Command, state *commandState, options sandbox
 	if err != nil {
 		return err
 	}
-	sandboxes, more, next, err := listSandboxes(ctx, state.clients().sandbox, project.GetSummary().GetProjectId(), statuses, options.cursorOptions)
+	statusFilters, err := parseSandboxStatuses(statuses)
+	if err != nil {
+		return usageError(err.Error(), state.options.JSON)
+	}
+	sandboxes, more, next, err := listSandboxes(ctx, state.clients().sandbox, project.GetSummary().GetProjectId(), statusFilters, options.offsetOptions)
 	if err != nil {
 		return mapConnectError(err, state.options.URL, state.options.JSON)
 	}
@@ -106,7 +110,7 @@ func executeSandboxList(cmd *cobra.Command, state *commandState, options sandbox
 		}
 	}
 	if needsSchedulerRuns {
-		schedulerRuns, _, _, schedulerErr := listSchedulerRuns(ctx, state.clients().project, project.GetSummary().GetProjectId(), "", schedulerRunsOptions{cursorOptions: cursorOptions{AllPages: true, Limit: 50}})
+		schedulerRuns, _, _, schedulerErr := listSchedulerRuns(ctx, state.clients().project, project.GetSummary().GetProjectId(), "", schedulerRunsOptions{offsetOptions: offsetOptions{AllPages: true, Limit: 50}})
 		if schedulerErr != nil {
 			return mapConnectError(schedulerErr, state.options.URL, state.options.JSON)
 		}
@@ -127,7 +131,7 @@ func executeSandboxList(cmd *cobra.Command, state *commandState, options sandbox
 			Project   projectDTO   `json:"project"`
 			Sandboxes []sandboxDTO `json:"sandboxes"`
 			HasMore   bool         `json:"has_more"`
-			Next      string       `json:"next_cursor,omitempty"`
+			Next      uint32       `json:"next_offset,omitempty"`
 		}{projectFromProto(project.GetSummary()), output, more, next})
 	}
 	table := newTable(cmd.OutOrStdout(), "SANDBOX\tAGENT\tSTATUS\tRUN\tDRIVER\tCREATED")
@@ -142,7 +146,7 @@ func executeSandboxList(cmd *cobra.Command, state *commandState, options sandbox
 		return err
 	}
 	if more {
-		fmt.Fprintf(cmd.ErrOrStderr(), "More Sandboxes are available; continue with --cursor %s or use --all-pages\n", next)
+		fmt.Fprintf(cmd.ErrOrStderr(), "More Sandboxes are available; continue with --offset %d or use --all-pages\n", next)
 	}
 	return nil
 }
@@ -166,47 +170,84 @@ func normalizeSandboxStatuses(statuses []string) []string {
 	return result
 }
 
-func listSandboxes(ctx context.Context, client agentcomposev2connect.SandboxServiceClient, projectID string, status []string, options cursorOptions) ([]*agentcomposev2.Sandbox, bool, string, error) {
-	cursor := options.Cursor
+func parseSandboxStatuses(statuses []string) ([]agentcomposev2.SandboxStatus, error) {
+	if len(statuses) == 0 {
+		return nil, nil
+	}
+	result := make([]agentcomposev2.SandboxStatus, 0, len(statuses))
+	for _, status := range statuses {
+		parsed, err := parseSandboxStatus(status)
+		if err != nil {
+			return nil, err
+		}
+		result = append(result, parsed)
+	}
+	return result, nil
+}
+
+func parseSandboxStatus(raw string) (agentcomposev2.SandboxStatus, error) {
+	switch strings.ToUpper(strings.TrimSpace(raw)) {
+	case "PENDING":
+		return agentcomposev2.SandboxStatus_SANDBOX_STATUS_PENDING, nil
+	case "RUNNING":
+		return agentcomposev2.SandboxStatus_SANDBOX_STATUS_RUNNING, nil
+	case "STOPPED":
+		return agentcomposev2.SandboxStatus_SANDBOX_STATUS_STOPPED, nil
+	case "FAILED":
+		return agentcomposev2.SandboxStatus_SANDBOX_STATUS_FAILED, nil
+	case "DELETING":
+		return agentcomposev2.SandboxStatus_SANDBOX_STATUS_DELETING, nil
+	default:
+		return 0, fmt.Errorf("invalid Sandbox status %q", raw)
+	}
+}
+
+func listSandboxes(ctx context.Context, client agentcomposev2connect.SandboxServiceClient, projectID string, status []agentcomposev2.SandboxStatus, options offsetOptions) ([]*agentcomposev2.Sandbox, bool, uint32, error) {
+	offset := options.Offset
 	sandboxes := make([]*agentcomposev2.Sandbox, 0)
-	statusSet := make(map[string]struct{}, len(status))
+	statusSet := make(map[agentcomposev2.SandboxStatus]struct{}, len(status))
 	for _, value := range status {
-		statusSet[strings.ToUpper(value)] = struct{}{}
+		statusSet[value] = struct{}{}
 	}
 	for {
-		requestCursor := cursor
-		requestLimit := uint32(1)
-		if options.AllPages {
-			requestLimit = 100
-		}
-		resp, err := client.ListSandboxes(ctx, connect.NewRequest(&agentcomposev2.ListSandboxesRequest{ProjectId: projectID, Status: status, Cursor: cursor, Limit: requestLimit}))
+		pageSize := offsetPageSize(options, len(sandboxes))
+		resp, err := client.ListSandboxes(ctx, connect.NewRequest(&agentcomposev2.ListSandboxesRequest{ProjectId: projectID, Status: status, Offset: offset, Limit: pageSize}))
 		if err != nil {
-			return nil, false, "", err
+			return nil, false, 0, err
 		}
-		next := resp.Msg.GetNextCursor()
+		page := make([]*agentcomposev2.Sandbox, 0, len(resp.Msg.GetSandboxes()))
 		for _, sandbox := range resp.Msg.GetSandboxes() {
 			if sandbox.GetProjectId() != projectID {
 				continue
 			}
 			if len(statusSet) > 0 {
-				if _, ok := statusSet[strings.ToUpper(sandbox.GetStatus())]; !ok {
+				if _, ok := statusSet[sandbox.GetStatus()]; !ok {
 					continue
 				}
 			}
-			if !options.AllPages && uint32(len(sandboxes)) == options.Limit {
-				return sandboxes, true, requestCursor, nil
+			page = append(page, sandbox)
+		}
+		sandboxes = append(sandboxes, page...)
+		next := offset + uint32(len(resp.Msg.GetSandboxes()))
+		more := next < resp.Msg.GetTotal()
+		if !options.AllPages && uint32(len(sandboxes)) >= options.Limit {
+			if uint32(len(sandboxes)) > options.Limit {
+				sandboxes = sandboxes[:options.Limit]
 			}
-			sandboxes = append(sandboxes, sandbox)
+			if !more {
+				next = 0
+			}
+			return sandboxes, more, next, nil
 		}
-		if next == "" || next == cursor {
-			return sandboxes, false, "", nil
+		if !more || len(resp.Msg.GetSandboxes()) == 0 {
+			return sandboxes, false, 0, nil
 		}
-		cursor = next
+		offset = next
 	}
 }
 
 func resolveSandbox(ctx context.Context, state *commandState, client agentcomposev2connect.SandboxServiceClient, projectID, ref string) (*agentcomposev2.Sandbox, error) {
-	sandboxes, _, _, err := listSandboxes(ctx, client, projectID, nil, cursorOptions{AllPages: true, Limit: 50})
+	sandboxes, _, _, err := listSandboxes(ctx, client, projectID, nil, offsetOptions{AllPages: true, Limit: 50})
 	if err != nil {
 		return nil, mapConnectError(err, state.options.URL, state.options.JSON)
 	}

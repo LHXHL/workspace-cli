@@ -20,8 +20,9 @@ func TestNormalizeBaseURL(t *testing.T) {
 	}{
 		{"https", "https://example.com/", "https://example.com", false},
 		{"http", "http://127.0.0.1:8081", "http://127.0.0.1:8081", false},
+		{"path prefix", "https://example.com/agent-compose", "https://example.com/agent-compose", false},
+		{"path prefix slash", "https://example.com/agent-compose/", "https://example.com/agent-compose", false},
 		{"missing scheme", "example.com", "", true},
-		{"path", "https://example.com/rpc", "", true},
 		{"query", "https://example.com?token=secret", "", true},
 		{"fragment", "https://example.com/#x", "", true},
 		{"userinfo", "https://user:secret@example.com", "", true},
@@ -207,6 +208,46 @@ func TestApplyRuntimeConfigFlagPrecedence(t *testing.T) {
 	}
 }
 
+func TestApplyRuntimeConfigAPIKeyAlias(t *testing.T) {
+	cmd := NewCommand()
+	var node yaml.Node
+	if err := node.Encode(map[string]string{"url": "https://example.com/agent-compose", "api_key": "legacy-key"}); err != nil {
+		t.Fatal(err)
+	}
+	ApplyRuntimeConfig(cmd, config.Raw{productName: node}, "config.yaml", false)
+	state := stateFromCommand(cmd)
+	if state.options.URL != "https://example.com/agent-compose" || state.options.Token != "legacy-key" || state.options.TokenSource != "config" {
+		t.Fatalf("options = %+v", state.options)
+	}
+}
+
+func TestApplyRuntimeConfigPrefersAPITokenOverAPIKey(t *testing.T) {
+	cmd := NewCommand()
+	var node yaml.Node
+	if err := node.Encode(productConfig{URL: "https://example.com", APIToken: "canonical-token", APIKey: "legacy-key"}); err != nil {
+		t.Fatal(err)
+	}
+	ApplyRuntimeConfig(cmd, config.Raw{productName: node}, "config.yaml", false)
+	state := stateFromCommand(cmd)
+	if state.options.Token != "canonical-token" || state.options.TokenSource != "config" {
+		t.Fatalf("options = %+v", state.options)
+	}
+}
+
+func TestApplyRuntimeConfigIgnoresUnrelatedAPIKeyEnv(t *testing.T) {
+	t.Setenv("AGENT_COMPOSE_API_KEY", "environment-key")
+	cmd := NewCommand()
+	var node yaml.Node
+	if err := node.Encode(productConfig{URL: "https://example.com", APIToken: "config-token"}); err != nil {
+		t.Fatal(err)
+	}
+	ApplyRuntimeConfig(cmd, config.Raw{productName: node}, "config.yaml", false)
+	state := stateFromCommand(cmd)
+	if state.options.Token != "config-token" || state.options.TokenSource != "config" {
+		t.Fatalf("options = %+v", state.options)
+	}
+}
+
 func TestApplyRuntimeConfigEnvironmentPrecedence(t *testing.T) {
 	t.Setenv("AGENT_COMPOSE_URL", "https://environment.example")
 	t.Setenv("AGENT_COMPOSE_API_TOKEN", "environment-token")
@@ -220,7 +261,7 @@ func TestApplyRuntimeConfigEnvironmentPrecedence(t *testing.T) {
 	}
 	ApplyRuntimeConfig(cmd, config.Raw{productName: node}, "config.yaml", false)
 	state := stateFromCommand(cmd)
-	if state.options.URL != "https://environment.example" || state.options.Token != "environment-token" || state.options.Project != "environment-project" || state.options.timeoutText != "7s" || !state.options.Insecure {
+	if state.options.URL != "https://environment.example" || state.options.Token != "environment-token" || state.options.Project != "environment-project" || state.options.timeoutText != "7s" || !state.options.Insecure || state.options.TokenSource != "environment" {
 		t.Fatalf("options = %+v", state.options)
 	}
 }

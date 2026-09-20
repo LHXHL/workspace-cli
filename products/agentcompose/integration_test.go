@@ -37,46 +37,28 @@ type projectStub struct {
 
 func (s *projectStub) ListSchedulerRuns(_ context.Context, req *connect.Request[agentcomposev2.ListSchedulerRunsRequest]) (*connect.Response[agentcomposev2.ListSchedulerRunsResponse], error) {
 	s.schedulerRunRequests = append(s.schedulerRunRequests, proto.Clone(req.Msg).(*agentcomposev2.ListSchedulerRunsRequest))
-	start := 0
-	if req.Msg.GetCursor() != "" {
-		if _, err := fmt.Sscanf(req.Msg.GetCursor(), "scheduler-%d", &start); err != nil {
-			return nil, connect.NewError(connect.CodeInvalidArgument, err)
-		}
-	}
+	start := int(req.Msg.GetOffset())
 	if start >= len(s.schedulerRuns) {
-		return connect.NewResponse(&agentcomposev2.ListSchedulerRunsResponse{}), nil
+		return connect.NewResponse(&agentcomposev2.ListSchedulerRunsResponse{Total: uint32(len(s.schedulerRuns))}), nil
 	}
 	end := start + int(req.Msg.GetLimit())
 	if end > len(s.schedulerRuns) {
 		end = len(s.schedulerRuns)
 	}
-	next := ""
-	if end < len(s.schedulerRuns) {
-		next = fmt.Sprintf("scheduler-%d", end)
-	}
-	return connect.NewResponse(&agentcomposev2.ListSchedulerRunsResponse{Runs: s.schedulerRuns[start:end], NextCursor: next}), nil
+	return connect.NewResponse(&agentcomposev2.ListSchedulerRunsResponse{Runs: s.schedulerRuns[start:end], Total: uint32(len(s.schedulerRuns))}), nil
 }
 
 func (s *projectStub) ListProjectSchedulerEvents(_ context.Context, req *connect.Request[agentcomposev2.ListProjectSchedulerEventsRequest]) (*connect.Response[agentcomposev2.ListProjectSchedulerEventsResponse], error) {
 	s.schedulerEventRequests = append(s.schedulerEventRequests, proto.Clone(req.Msg).(*agentcomposev2.ListProjectSchedulerEventsRequest))
-	start := 0
-	if req.Msg.GetCursor() != "" {
-		if _, err := fmt.Sscanf(req.Msg.GetCursor(), "event-%d", &start); err != nil {
-			return nil, connect.NewError(connect.CodeInvalidArgument, err)
-		}
-	}
+	start := int(req.Msg.GetOffset())
 	if start >= len(s.schedulerEvents) {
-		return connect.NewResponse(&agentcomposev2.ListProjectSchedulerEventsResponse{}), nil
+		return connect.NewResponse(&agentcomposev2.ListProjectSchedulerEventsResponse{Total: uint32(len(s.schedulerEvents))}), nil
 	}
 	end := start + int(req.Msg.GetLimit())
 	if end > len(s.schedulerEvents) {
 		end = len(s.schedulerEvents)
 	}
-	next := ""
-	if end < len(s.schedulerEvents) {
-		next = fmt.Sprintf("event-%d", end)
-	}
-	return connect.NewResponse(&agentcomposev2.ListProjectSchedulerEventsResponse{Events: s.schedulerEvents[start:end], NextCursor: next}), nil
+	return connect.NewResponse(&agentcomposev2.ListProjectSchedulerEventsResponse{Events: s.schedulerEvents[start:end], Total: uint32(len(s.schedulerEvents))}), nil
 }
 
 func (s *projectStub) GetSchedulerRun(_ context.Context, req *connect.Request[agentcomposev2.GetSchedulerRunRequest]) (*connect.Response[agentcomposev2.GetSchedulerRunResponse], error) {
@@ -106,13 +88,13 @@ func (s *projectStub) ListProjects(_ context.Context, req *connect.Request[agent
 	}
 	start := int(req.Msg.GetOffset())
 	if start >= len(all) {
-		return connect.NewResponse(&agentcomposev2.ListProjectsResponse{TotalCount: uint32(len(all))}), nil
+		return connect.NewResponse(&agentcomposev2.ListProjectsResponse{Total: uint32(len(all))}), nil
 	}
 	end := start + int(req.Msg.GetLimit())
 	if end > len(all) {
 		end = len(all)
 	}
-	return connect.NewResponse(&agentcomposev2.ListProjectsResponse{Projects: all[start:end], TotalCount: uint32(len(all)), HasMore: end < len(all), NextOffset: uint32(end)}), nil
+	return connect.NewResponse(&agentcomposev2.ListProjectsResponse{Projects: all[start:end], Total: uint32(len(all))}), nil
 }
 func (s *projectStub) GetProject(context.Context, *connect.Request[agentcomposev2.GetProjectRequest]) (*connect.Response[agentcomposev2.GetProjectResponse], error) {
 	return connect.NewResponse(&agentcomposev2.GetProjectResponse{Project: s.project}), nil
@@ -171,24 +153,15 @@ func (s *sandboxStub) ListSandboxes(_ context.Context, req *connect.Request[agen
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	s.listRequests = append(s.listRequests, proto.Clone(req.Msg).(*agentcomposev2.ListSandboxesRequest))
-	start := 0
-	if req.Msg.GetCursor() != "" {
-		if _, err := fmt.Sscanf(req.Msg.GetCursor(), "cursor-%d", &start); err != nil {
-			return nil, connect.NewError(connect.CodeInvalidArgument, err)
-		}
-	}
+	start := int(req.Msg.GetOffset())
 	if start >= len(s.sandboxes) {
-		return connect.NewResponse(&agentcomposev2.ListSandboxesResponse{}), nil
+		return connect.NewResponse(&agentcomposev2.ListSandboxesResponse{Total: uint32(len(s.sandboxes))}), nil
 	}
 	end := start + int(req.Msg.GetLimit())
 	if end > len(s.sandboxes) {
 		end = len(s.sandboxes)
 	}
-	next := ""
-	if end < len(s.sandboxes) {
-		next = fmt.Sprintf("cursor-%d", end)
-	}
-	return connect.NewResponse(&agentcomposev2.ListSandboxesResponse{Sandboxes: s.sandboxes[start:end], NextCursor: next}), nil
+	return connect.NewResponse(&agentcomposev2.ListSandboxesResponse{Sandboxes: s.sandboxes[start:end], Total: uint32(len(s.sandboxes))}), nil
 }
 
 func (s *sandboxStub) GetSandboxStats(_ context.Context, req *connect.Request[agentcomposev2.GetSandboxStatsRequest]) (*connect.Response[agentcomposev2.GetSandboxStatsResponse], error) {
@@ -227,7 +200,7 @@ func (s *runStub) ListRuns(_ context.Context, req *connect.Request[agentcomposev
 	if end > len(s.runs) {
 		end = len(s.runs)
 	}
-	return connect.NewResponse(&agentcomposev2.ListRunsResponse{Runs: s.runs[start:end]}), nil
+	return connect.NewResponse(&agentcomposev2.ListRunsResponse{Runs: s.runs[start:end], Total: uint32(len(s.runs))}), nil
 }
 func (s *runStub) FollowRunLogs(ctx context.Context, _ *connect.Request[agentcomposev2.FollowRunLogsRequest], stream *connect.ServerStream[agentcomposev2.RunLogChunk]) error {
 	s.mu.Lock()
@@ -351,7 +324,7 @@ func TestRunListProbesAndNeverFetchesLogs(t *testing.T) {
 	if run.followCalls != 0 {
 		t.Fatalf("FollowRunLogs calls = %d", run.followCalls)
 	}
-	if len(run.listRequests) != 2 || run.listRequests[1].GetLimit() != 1 {
+	if len(run.listRequests) != 1 || run.listRequests[0].GetLimit() != 1 {
 		t.Fatalf("requests = %+v", run.listRequests)
 	}
 }
@@ -371,7 +344,7 @@ func TestRunListLimitOverOnePageKeepsContinuationOffset(t *testing.T) {
 	if !strings.Contains(out, `"next_offset":150`) || !strings.Contains(out, `"has_more":true`) {
 		t.Fatalf("output = %s", out)
 	}
-	if len(run.listRequests) != 3 || run.listRequests[0].GetLimit() != 100 || run.listRequests[1].GetLimit() != 50 || run.listRequests[2].GetOffset() != 150 {
+	if len(run.listRequests) != 2 || run.listRequests[0].GetLimit() != 100 || run.listRequests[1].GetLimit() != 50 || run.listRequests[1].GetOffset() != 100 {
 		t.Fatalf("requests = %#v", run.listRequests)
 	}
 }
@@ -397,17 +370,17 @@ func TestProjectListLimitOverOnePageKeepsContinuationOffset(t *testing.T) {
 func TestSandboxListFiltersIgnoredServerFieldsAndPreservesCursor(t *testing.T) {
 	project := &projectStub{project: fixtureProject()}
 	sandbox := &sandboxStub{sandboxes: []*agentcomposev2.Sandbox{
-		{SandboxId: "wrong-project", ProjectId: "project-other", Status: "RUNNING"},
-		{SandboxId: "stopped", ProjectId: "project-aaaaaaaaaaaaaaaa", Status: "STOPPED"},
-		{SandboxId: "running-1", ProjectId: "project-aaaaaaaaaaaaaaaa", Status: "running"},
-		{SandboxId: "running-2", ProjectId: "project-aaaaaaaaaaaaaaaa", Status: "RUNNING"},
+		{SandboxId: "wrong-project", ProjectId: "project-other", Status: agentcomposev2.SandboxStatus_SANDBOX_STATUS_RUNNING},
+		{SandboxId: "stopped", ProjectId: "project-aaaaaaaaaaaaaaaa", Status: agentcomposev2.SandboxStatus_SANDBOX_STATUS_STOPPED},
+		{SandboxId: "running-1", ProjectId: "project-aaaaaaaaaaaaaaaa", Status: agentcomposev2.SandboxStatus_SANDBOX_STATUS_RUNNING},
+		{SandboxId: "running-2", ProjectId: "project-aaaaaaaaaaaaaaaa", Status: agentcomposev2.SandboxStatus_SANDBOX_STATUS_RUNNING},
 	}}
 	server, _ := newTestServer(t, project, &runStub{}, sandbox)
 	out, _, err := executeCommand(t, server.URL, false, "--json", "ps", "--limit", "1")
 	if err != nil {
 		t.Fatal(err)
 	}
-	for _, want := range []string{`"sandbox_id":"running-1"`, `"has_more":true`, `"next_cursor":"cursor-3"`} {
+	for _, want := range []string{`"sandbox_id":"running-1"`, `"has_more":true`, `"next_offset":3`} {
 		if !strings.Contains(out, want) {
 			t.Fatalf("output = %s, want %s", out, want)
 		}
@@ -415,7 +388,7 @@ func TestSandboxListFiltersIgnoredServerFieldsAndPreservesCursor(t *testing.T) {
 	if strings.Contains(out, "wrong-project") || strings.Contains(out, "stopped") || strings.Contains(out, "running-2") {
 		t.Fatalf("output contains filtered Sandbox: %s", out)
 	}
-	out, _, err = executeCommand(t, server.URL, false, "--json", "ps", "--limit", "1", "--cursor", "cursor-3")
+	out, _, err = executeCommand(t, server.URL, false, "--json", "ps", "--limit", "1", "--offset", "3")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -429,7 +402,7 @@ func TestSandboxListAssociatesSchedulerRun(t *testing.T) {
 		project:       fixtureProject(),
 		schedulerRuns: []*agentcomposev2.SchedulerRun{{RunId: "scheduler-run-123456", SandboxIds: []string{"scheduler-sandbox"}}},
 	}
-	sandbox := &sandboxStub{sandboxes: []*agentcomposev2.Sandbox{{SandboxId: "scheduler-sandbox", ProjectId: "project-aaaaaaaaaaaaaaaa", Status: "RUNNING"}}}
+	sandbox := &sandboxStub{sandboxes: []*agentcomposev2.Sandbox{{SandboxId: "scheduler-sandbox", ProjectId: "project-aaaaaaaaaaaaaaaa", Status: agentcomposev2.SandboxStatus_SANDBOX_STATUS_RUNNING}}}
 	server, _ := newTestServer(t, project, &runStub{}, sandbox)
 	out, _, err := executeCommand(t, server.URL, false, "--json", "ps")
 	if err != nil {
@@ -515,9 +488,9 @@ func TestSchedulerTriggerNameAmbiguityAcrossSchedulers(t *testing.T) {
 func TestStatsFiltersProjectAndRunningStatusClientSide(t *testing.T) {
 	project := &projectStub{project: fixtureProject()}
 	sandbox := &sandboxStub{sandboxes: []*agentcomposev2.Sandbox{
-		{SandboxId: "wrong-project", ProjectId: "project-other", Status: "RUNNING"},
-		{SandboxId: "stopped", ProjectId: "project-aaaaaaaaaaaaaaaa", Status: "STOPPED"},
-		{SandboxId: "running", ProjectId: "project-aaaaaaaaaaaaaaaa", Status: "RUNNING"},
+		{SandboxId: "wrong-project", ProjectId: "project-other", Status: agentcomposev2.SandboxStatus_SANDBOX_STATUS_RUNNING},
+		{SandboxId: "stopped", ProjectId: "project-aaaaaaaaaaaaaaaa", Status: agentcomposev2.SandboxStatus_SANDBOX_STATUS_STOPPED},
+		{SandboxId: "running", ProjectId: "project-aaaaaaaaaaaaaaaa", Status: agentcomposev2.SandboxStatus_SANDBOX_STATUS_RUNNING},
 	}}
 	server, _ := newTestServer(t, project, nil, sandbox)
 	if _, _, err := executeCommand(t, server.URL, false, "--json", "stats"); err != nil {
@@ -534,8 +507,8 @@ func TestStatsFiltersProjectAndRunningStatusClientSide(t *testing.T) {
 func TestResolveSandboxRejectsOtherProjects(t *testing.T) {
 	project := &projectStub{project: fixtureProject()}
 	sandbox := &sandboxStub{sandboxes: []*agentcomposev2.Sandbox{
-		{SandboxId: "sandbox-other", ProjectId: "project-other", Status: "RUNNING"},
-		{SandboxId: "sandbox-local", ProjectId: "project-aaaaaaaaaaaaaaaa", Status: "RUNNING"},
+		{SandboxId: "sandbox-other", ProjectId: "project-other", Status: agentcomposev2.SandboxStatus_SANDBOX_STATUS_RUNNING},
+		{SandboxId: "sandbox-local", ProjectId: "project-aaaaaaaaaaaaaaaa", Status: agentcomposev2.SandboxStatus_SANDBOX_STATUS_RUNNING},
 	}}
 	server, _ := newTestServer(t, project, nil, sandbox)
 	_, _, err := executeCommand(t, server.URL, false, "--json", "stats", "sandbox-other")
@@ -652,7 +625,7 @@ func TestLogsCancellationReturns130(t *testing.T) {
 func TestLogsFallsBackToSandboxHistoryWithoutRun(t *testing.T) {
 	project := &projectStub{project: fixtureProject()}
 	sandbox := &sandboxStub{
-		sandboxes: []*agentcomposev2.Sandbox{{SandboxId: "sandbox-history", ProjectId: "project-aaaaaaaaaaaaaaaa", Status: "STOPPED"}},
+		sandboxes: []*agentcomposev2.Sandbox{{SandboxId: "sandbox-history", ProjectId: "project-aaaaaaaaaaaaaaaa", Status: agentcomposev2.SandboxStatus_SANDBOX_STATUS_STOPPED}},
 		history: &agentcomposev2.ListSandboxHistoryResponse{
 			Cells:  []*agentcomposev2.SandboxHistoryCell{{Output: "first\nsecond\n"}},
 			Events: []*agentcomposev2.SandboxHistoryEvent{{Id: "event-1", Type: "completed", Level: "info"}},

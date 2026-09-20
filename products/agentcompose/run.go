@@ -35,7 +35,7 @@ type runDTO struct {
 }
 
 func runFromSummary(run *agentcomposev2.RunSummary) runDTO {
-	return runDTO{ID: run.GetRunId(), ShortID: firstNonEmpty(run.GetRunShortId(), shortID(run.GetRunId())), ProjectID: run.GetProjectId(), ProjectName: run.GetProjectName(), AgentName: run.GetAgentName(), Source: enumText(run.GetSource(), "RUN_SOURCE_"), Status: enumText(run.GetStatus(), "RUN_STATUS_"), SandboxID: run.GetSandboxId(), SandboxShortID: firstNonEmpty(run.GetSandboxShortId(), shortID(run.GetSandboxId())), ExitCode: run.GetExitCode(), Error: run.GetError(), StartedAt: run.GetStartedAt(), CompletedAt: run.GetCompletedAt(), DurationMS: run.GetDurationMs()}
+	return runDTO{ID: run.GetRunId(), ShortID: firstNonEmpty(run.GetRunShortId(), shortID(run.GetRunId())), ProjectID: run.GetProjectId(), ProjectName: run.GetProjectName(), AgentName: run.GetAgentName(), Source: enumText(run.GetSource(), "RUN_SOURCE_"), Status: enumText(run.GetStatus(), "RUN_STATUS_"), SandboxID: run.GetSandboxId(), SandboxShortID: firstNonEmpty(run.GetSandboxShortId(), shortID(run.GetSandboxId())), ExitCode: run.GetExitCode(), Error: run.GetError(), StartedAt: timestampText(run.GetStartedAt()), CompletedAt: timestampText(run.GetCompletedAt()), DurationMS: run.GetDurationMs()}
 }
 func runFromDetail(detail *agentcomposev2.RunDetail) runDTO {
 	result := runFromSummary(detail.GetSummary())
@@ -116,7 +116,7 @@ func executeRun(cmd *cobra.Command, state *commandState, agentRef string, option
 	if options.Detach {
 		ctx, cancel := requestContext(cmd, state)
 		defer cancel()
-		resp, err := client.StartRun(ctx, connect.NewRequest(&agentcomposev2.StartRunRequest{Run: req}))
+		resp, err := client.StartAgentRun(ctx, connect.NewRequest(&agentcomposev2.StartAgentRunRequest{Run: req}))
 		if err != nil {
 			return mapConnectError(err, state.options.URL, state.options.JSON)
 		}
@@ -129,14 +129,14 @@ func executeRun(cmd *cobra.Command, state *commandState, agentRef string, option
 	}
 	ctx, cancel = streamContext(cmd)
 	defer cancel()
-	stream, err := client.RunAgentStream(ctx, connect.NewRequest(req))
+	stream, err := client.StreamAgentRun(ctx, connect.NewRequest(req))
 	if err != nil {
 		return mapConnectError(err, state.options.URL, state.options.JSON)
 	}
 	for stream.Receive() {
 		event := stream.Msg()
 		if state.options.JSON {
-			record := map[string]any{"event_type": enumText(event.GetEventType(), "RUN_AGENT_STREAM_EVENT_TYPE_"), "run_id": event.GetRunId(), "chunk": event.GetChunk(), "stream": enumText(event.GetStream(), "STDIO_STREAM_"), "created_at": event.GetCreatedAt(), "warnings": event.GetWarnings()}
+			record := map[string]any{"event_type": enumText(event.GetEventType(), "STREAM_AGENT_RUN_EVENT_TYPE_"), "run_id": event.GetRunId(), "chunk": event.GetChunk(), "stream": enumText(event.GetStream(), "STDIO_STREAM_"), "created_at": timestampText(event.GetCreatedAt()), "warnings": event.GetWarnings()}
 			if event.GetRun() != nil {
 				addRunFields(record, runFromSummary(event.GetRun()))
 			}
@@ -238,6 +238,12 @@ func newRunListCommand(state *commandState) *cobra.Command {
 		if _, err := parseRunSource(options.Source); err != nil {
 			return usageError(err.Error(), state.options.JSON)
 		}
+		if _, err := parseOptionalTimestamp(options.StartedFrom); err != nil {
+			return usageError("invalid --started-from timestamp", state.options.JSON)
+		}
+		if _, err := parseOptionalTimestamp(options.StartedTo); err != nil {
+			return usageError("invalid --started-to timestamp", state.options.JSON)
+		}
 		ctx, cancel := requestContext(cmd, state)
 		defer cancel()
 		project, err := resolveProject(ctx, state, state.clients().project)
@@ -292,35 +298,36 @@ func listRuns(ctx context.Context, client agentcomposev2connect.RunServiceClient
 	if err != nil {
 		return nil, false, 0, err
 	}
+	startedFrom, err := parseOptionalTimestamp(options.StartedFrom)
+	if err != nil {
+		return nil, false, 0, err
+	}
+	startedTo, err := parseOptionalTimestamp(options.StartedTo)
+	if err != nil {
+		return nil, false, 0, err
+	}
 	offset := options.Offset
 	runs := make([]*agentcomposev2.RunSummary, 0)
 	for {
 		pageSize := offsetPageSize(options.offsetOptions, len(runs))
-		resp, err := client.ListRuns(ctx, connect.NewRequest(&agentcomposev2.ListRunsRequest{ProjectId: projectID, AgentName: options.Agent, SchedulerId: options.Scheduler, Status: status, Source: source, StartedFrom: options.StartedFrom, StartedTo: options.StartedTo, SandboxId: options.Sandbox, Offset: offset, Limit: pageSize}))
+		resp, err := client.ListRuns(ctx, connect.NewRequest(&agentcomposev2.ListRunsRequest{ProjectId: projectID, AgentName: options.Agent, SchedulerId: options.Scheduler, Status: status, Source: source, StartedFrom: startedFrom, StartedTo: startedTo, SandboxId: options.Sandbox, Offset: offset, Limit: pageSize}))
 		if err != nil {
 			return nil, false, 0, err
 		}
 		page := resp.Msg.GetRuns()
 		runs = append(runs, page...)
 		next := offset + uint32(len(page))
-		more := uint32(len(page)) == pageSize
+		more := next < resp.Msg.GetTotal()
 		if !options.AllPages && uint32(len(runs)) >= options.Limit {
 			if uint32(len(runs)) > options.Limit {
 				runs = runs[:options.Limit]
-			}
-			if more {
-				probe, probeErr := client.ListRuns(ctx, connect.NewRequest(&agentcomposev2.ListRunsRequest{ProjectId: projectID, AgentName: options.Agent, SchedulerId: options.Scheduler, Status: status, Source: source, StartedFrom: options.StartedFrom, StartedTo: options.StartedTo, SandboxId: options.Sandbox, Offset: next, Limit: 1}))
-				if probeErr != nil {
-					return nil, false, 0, probeErr
-				}
-				more = len(probe.Msg.GetRuns()) > 0
 			}
 			if !more {
 				next = 0
 			}
 			return runs, more, next, nil
 		}
-		if !more {
+		if !more || len(page) == 0 {
 			return runs, false, 0, nil
 		}
 		offset = next
@@ -397,9 +404,9 @@ func resolveRun(ctx context.Context, state *commandState, client agentcomposev2c
 }
 
 func newRunEventsCommand(state *commandState) *cobra.Command {
-	options := cursorOptions{Limit: 50}
+	options := offsetOptions{Limit: 50}
 	cmd := &cobra.Command{Use: "events <run-ref>", Short: "List Run events", Args: exactArgs(1, state), RunE: func(cmd *cobra.Command, args []string) error {
-		if err := validateCursorOptions(cmd, options, state); err != nil {
+		if err := validateOffsetOptions(cmd, options, state); err != nil {
 			return err
 		}
 		ctx, cancel := requestContext(cmd, state)
@@ -421,49 +428,46 @@ func newRunEventsCommand(state *commandState) *cobra.Command {
 			for _, event := range events {
 				output = append(output, runEventFromProto(event))
 			}
-			return writeJSON(cmd.OutOrStdout(), map[string]any{"events": output, "history_available": history, "has_more": more, "next_cursor": next})
+			return writeJSON(cmd.OutOrStdout(), map[string]any{"events": output, "history_available": history, "has_more": more, "next_offset": next})
 		}
 		for _, event := range events {
 			fmt.Fprintf(cmd.OutOrStdout(), "%d\t%s\t%s\n", event.GetSeq(), enumText(event.GetKind(), "RUN_EVENT_KIND_"), event.GetText())
 		}
 		return nil
 	}}
-	addCursorFlags(cmd, &options)
+	addOffsetFlags(cmd, &options)
 	return cmd
 }
 
-func listRunEvents(ctx context.Context, client agentcomposev2connect.RunServiceClient, runID string, options cursorOptions) ([]*agentcomposev2.RunEvent, bool, bool, string, error) {
+func listRunEvents(ctx context.Context, client agentcomposev2connect.RunServiceClient, runID string, options offsetOptions) ([]*agentcomposev2.RunEvent, bool, bool, uint32, error) {
 	events := make([]*agentcomposev2.RunEvent, 0)
-	cursor := options.Cursor
+	offset := options.Offset
 	history := false
 	for {
-		limit := cursorPageSize(options, len(events))
-		resp, err := client.ListRunEvents(ctx, connect.NewRequest(&agentcomposev2.ListRunEventsRequest{RunId: runID, Limit: limit, Cursor: cursor}))
+		pageSize := offsetPageSize(options, len(events))
+		resp, err := client.ListRunEvents(ctx, connect.NewRequest(&agentcomposev2.ListRunEventsRequest{RunId: runID, Limit: pageSize, Offset: offset}))
 		if err != nil {
-			return nil, false, false, "", err
+			return nil, false, false, 0, err
 		}
-		events = append(events, resp.Msg.GetEvents()...)
+		page := resp.Msg.GetEvents()
+		events = append(events, page...)
 		history = history || resp.Msg.GetHistoryAvailable()
-		next := resp.Msg.GetNextCursor()
-		if (!options.AllPages && uint32(len(events)) >= options.Limit) || next == "" || next == cursor {
-			if !options.AllPages && uint32(len(events)) > options.Limit {
+		next := offset + uint32(len(page))
+		more := next < resp.Msg.GetTotal()
+		if !options.AllPages && uint32(len(events)) >= options.Limit {
+			if uint32(len(events)) > options.Limit {
 				events = events[:options.Limit]
 			}
-			return events, history, next != "", next, nil
+			if !more {
+				next = 0
+			}
+			return events, history, more, next, nil
 		}
-		cursor = next
+		if !more || len(page) == 0 {
+			return events, history, false, 0, nil
+		}
+		offset = next
 	}
-}
-
-func cursorPageSize(options cursorOptions, collected int) uint32 {
-	if options.AllPages {
-		return 100
-	}
-	remaining := options.Limit - uint32(collected)
-	if remaining > 100 {
-		return 100
-	}
-	return remaining
 }
 
 func newRunStopCommand(state *commandState) *cobra.Command {
@@ -495,26 +499,4 @@ func newRunStopCommand(state *commandState) *cobra.Command {
 	}}
 	cmd.Flags().StringVar(&reason, "reason", "", "Stop reason")
 	return cmd
-}
-
-type cursorOptions struct {
-	Limit    uint32
-	Cursor   string
-	AllPages bool
-}
-
-func addCursorFlags(cmd *cobra.Command, options *cursorOptions) {
-	cmd.Flags().Uint32Var(&options.Limit, "limit", 50, "Maximum total results")
-	cmd.Flags().StringVar(&options.Cursor, "cursor", "", "Pagination cursor")
-	cmd.Flags().BoolVar(&options.AllPages, "all-pages", false, "Read all remaining pages")
-}
-
-func validateCursorOptions(cmd *cobra.Command, options cursorOptions, state *commandState) error {
-	if options.AllPages && cmd.Flags().Changed("limit") {
-		return usageError("--limit and --all-pages are mutually exclusive", state.options.JSON)
-	}
-	if !options.AllPages && options.Limit == 0 {
-		return usageError("--limit must be greater than zero", state.options.JSON)
-	}
-	return nil
 }

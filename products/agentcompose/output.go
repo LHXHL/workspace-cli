@@ -6,6 +6,7 @@ import (
 	"io"
 	"strings"
 	"text/tabwriter"
+	"time"
 
 	agentcomposev2 "github.com/chaitin/chaitin-cli/products/agentcompose/gen/agentcompose/v2"
 	"google.golang.org/protobuf/types/known/timestamppb"
@@ -17,6 +18,21 @@ func timestampText(value *timestamppb.Timestamp) string {
 		return ""
 	}
 	return value.AsTime().Format("2006-01-02T15:04:05.999999999Z07:00")
+}
+
+func parseOptionalTimestamp(raw string) (*timestamppb.Timestamp, error) {
+	raw = strings.TrimSpace(raw)
+	if raw == "" {
+		return nil, nil
+	}
+	parsed, err := time.Parse(time.RFC3339Nano, raw)
+	if err != nil {
+		parsed, err = time.Parse(time.RFC3339, raw)
+	}
+	if err != nil {
+		return nil, err
+	}
+	return timestamppb.New(parsed), nil
 }
 
 type runEventDTO struct {
@@ -132,7 +148,7 @@ type projectDTO struct {
 }
 
 func projectFromProto(project *agentcomposev2.ProjectSummary) projectDTO {
-	return projectDTO{ID: project.GetProjectId(), ShortID: shortID(project.GetProjectId()), Name: project.GetName(), CurrentRevision: project.GetCurrentRevision(), SpecHash: project.GetSpecHash(), AgentCount: project.GetAgentCount(), SchedulerCount: project.GetSchedulerCount(), RunningRunCount: project.GetRunningRunCount(), CreatedAt: project.GetCreatedAt(), UpdatedAt: project.GetUpdatedAt()}
+	return projectDTO{ID: project.GetProjectId(), ShortID: shortID(project.GetProjectId()), Name: project.GetName(), CurrentRevision: project.GetCurrentRevision(), SpecHash: project.GetSpecHash(), AgentCount: project.GetAgentCount(), SchedulerCount: project.GetSchedulerCount(), RunningRunCount: project.GetRunningRunCount(), CreatedAt: timestampText(project.GetCreatedAt()), UpdatedAt: timestampText(project.GetUpdatedAt())}
 }
 
 type agentDTO struct {

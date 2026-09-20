@@ -91,17 +91,21 @@ func listProjects(ctx context.Context, client agentcomposev2connect.ProjectServi
 		if err != nil {
 			return nil, 0, false, 0, err
 		}
-		total = resp.Msg.GetTotalCount()
-		projects = append(projects, resp.Msg.GetProjects()...)
-		next := resp.Msg.GetNextOffset()
-		more := resp.Msg.GetHasMore()
+		total = resp.Msg.GetTotal()
+		page := resp.Msg.GetProjects()
+		projects = append(projects, page...)
+		next := offset + uint32(len(page))
+		more := next < total
 		if !options.AllPages && uint32(len(projects)) >= options.Limit {
 			if uint32(len(projects)) > options.Limit {
 				projects = projects[:options.Limit]
 			}
+			if !more {
+				next = 0
+			}
 			return projects, total, more, next, nil
 		}
-		if !more || next == 0 || next == offset {
+		if !more || len(page) == 0 {
 			return projects, total, false, 0, nil
 		}
 		offset = next
@@ -117,6 +121,10 @@ func offsetPageSize(options offsetOptions, collected int) uint32 {
 		return 100
 	}
 	return remaining
+}
+
+func projectRefID(id string) *agentcomposev2.ProjectRef {
+	return &agentcomposev2.ProjectRef{Selector: &agentcomposev2.ProjectRef_ProjectId{ProjectId: id}}
 }
 
 func resolveProject(ctx context.Context, state *commandState, client agentcomposev2connect.ProjectServiceClient) (*agentcomposev2.Project, error) {
@@ -160,7 +168,7 @@ func resolveProject(ctx context.Context, state *commandState, client agentcompos
 		}
 		return nil, usageError("project reference is ambiguous: "+strings.Join(names, ", "), state.options.JSON)
 	}
-	resp, err := client.GetProject(ctx, connect.NewRequest(&agentcomposev2.GetProjectRequest{Project: &agentcomposev2.ProjectRef{ProjectId: matches[0].GetProjectId()}, IncludeSpec: true}))
+	resp, err := client.GetProject(ctx, connect.NewRequest(&agentcomposev2.GetProjectRequest{Project: projectRefID(matches[0].GetProjectId()), IncludeSpec: true}))
 	if err != nil {
 		return nil, mapConnectError(err, state.options.URL, state.options.JSON)
 	}

@@ -35,7 +35,7 @@ func inspectTyped(ctx context.Context, cmd *cobra.Command, state *commandState, 
 		if err != nil {
 			return err
 		}
-		resp, err := state.clients().project.GetProject(ctx, connect.NewRequest(&agentcomposev2.GetProjectRequest{Project: &agentcomposev2.ProjectRef{ProjectId: summary.GetProjectId()}, IncludeSpec: true}))
+		resp, err := state.clients().project.GetProject(ctx, connect.NewRequest(&agentcomposev2.GetProjectRequest{Project: projectRefID(summary.GetProjectId()), IncludeSpec: true}))
 		if err != nil {
 			return mapConnectError(err, state.options.URL, state.options.JSON)
 		}
@@ -148,7 +148,7 @@ func inspectGeneric(ctx context.Context, cmd *cobra.Command, state *commandState
 	}
 	var project *agentcomposev2.Project
 	if strings.TrimSpace(state.options.Project) == "" && matchedProject != nil {
-		resp, err := state.clients().project.GetProject(ctx, connect.NewRequest(&agentcomposev2.GetProjectRequest{Project: &agentcomposev2.ProjectRef{ProjectId: matchedProject.GetProjectId()}, IncludeSpec: true}))
+		resp, err := state.clients().project.GetProject(ctx, connect.NewRequest(&agentcomposev2.GetProjectRequest{Project: projectRefID(matchedProject.GetProjectId()), IncludeSpec: true}))
 		if err != nil {
 			return mapConnectError(err, state.options.URL, state.options.JSON)
 		}

@@ -208,7 +208,7 @@ func resolveLogsTarget(ctx context.Context, state *commandState, project *agentc
 			addMatch("run", run.GetRunId())
 		}
 	}
-	sandboxes, _, _, err := listSandboxes(ctx, state.clients().sandbox, summary.GetProjectId(), nil, cursorOptions{AllPages: true, Limit: 50})
+	sandboxes, _, _, err := listSandboxes(ctx, state.clients().sandbox, summary.GetProjectId(), nil, offsetOptions{AllPages: true, Limit: 50})
 	if err != nil {
 		return "", "", mapConnectError(err, state.options.URL, state.options.JSON)
 	}
@@ -303,7 +303,7 @@ func followOneRun(cmd *cobra.Command, state *commandState, projectID string, run
 	for stream.Receive() {
 		chunk := stream.Msg()
 		if state.options.JSON {
-			record := map[string]any{"agent_name": run.GetAgentName(), "run_id": run.GetRunId(), "run_short_id": firstNonEmpty(run.GetRunShortId(), shortID(run.GetRunId())), "time": chunk.GetCreatedAt(), "prompt": chunk.GetPrompt(), "content": chunk.GetData(), "offset": chunk.GetOffset(), "is_final": chunk.GetIsFinal(), "run_status": enumText(chunk.GetRunStatus(), "RUN_STATUS_")}
+			record := map[string]any{"agent_name": run.GetAgentName(), "run_id": run.GetRunId(), "run_short_id": firstNonEmpty(run.GetRunShortId(), shortID(run.GetRunId())), "time": timestampText(chunk.GetCreatedAt()), "prompt": chunk.GetPrompt(), "content": chunk.GetData(), "offset": chunk.GetOffset(), "is_final": chunk.GetIsFinal(), "run_status": enumText(chunk.GetRunStatus(), "RUN_STATUS_")}
 			if err := writeJSON(cmd.OutOrStdout(), record); err != nil {
 				return err
 			}
@@ -312,8 +312,10 @@ func followOneRun(cmd *cobra.Command, state *commandState, projectID string, run
 			if len(run.GetRunId()) > 0 {
 				prefix = firstNonEmpty(run.GetRunShortId(), shortID(run.GetRunId())) + " | "
 			}
-			if options.Timestamp && chunk.GetCreatedAt() != "" {
-				prefix = chunk.GetCreatedAt() + " " + prefix
+			if options.Timestamp {
+				if created := timestampText(chunk.GetCreatedAt()); created != "" {
+					prefix = created + " " + prefix
+				}
 			}
 			for _, line := range strings.SplitAfter(chunk.GetData(), "\n") {
 				if line != "" {

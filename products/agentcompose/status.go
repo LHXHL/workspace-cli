@@ -20,13 +20,13 @@ func newStatusCommand(state *commandState) *cobra.Command {
 		if state.options.JSON {
 			return writeJSON(cmd.OutOrStdout(), healthDTO(resp.Msg))
 		}
-		fmt.Fprintf(cmd.OutOrStdout(), "Status: healthy\nVersion: %s\nUptime: %ds\nStarted: %s\n", firstNonEmpty(resp.Msg.GetBuildVersion(), resp.Msg.GetVersion(), "unknown"), resp.Msg.GetUptimeSeconds(), resp.Msg.GetStartedAt())
+		fmt.Fprintf(cmd.OutOrStdout(), "Status: healthy\nVersion: %s\nUptime: %ds\nStarted: %s\n", firstNonEmpty(resp.Msg.GetBuildVersion(), resp.Msg.GetVersion(), "unknown"), resp.Msg.GetUptimeSeconds(), timestampText(resp.Msg.GetStartedAt()))
 		return nil
 	}}
 }
 
 func healthDTO(status *healthv1.HealthStatusResponse) map[string]any {
-	return map[string]any{"status": "healthy", "version": firstNonEmpty(status.GetBuildVersion(), status.GetVersion()), "current_time": status.GetCurrentTime(), "started_at": status.GetStartedAt(), "uptime_seconds": status.GetUptimeSeconds(), "go_version": status.GetGoVersion(), "num_goroutines": status.GetNumGoroutines()}
+	return map[string]any{"status": "healthy", "version": firstNonEmpty(status.GetBuildVersion(), status.GetVersion()), "current_time": timestampText(status.GetCurrentTime()), "started_at": timestampText(status.GetStartedAt()), "uptime_seconds": status.GetUptimeSeconds(), "go_version": status.GetGoVersion(), "num_goroutines": status.GetNumGoroutines()}
 }
 
 func firstNonEmpty(values ...string) string {

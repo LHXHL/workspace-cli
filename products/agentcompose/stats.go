@@ -36,7 +36,7 @@ func metricFromProto(metric *agentcomposev2.MetricValue) metricDTO {
 	return metricDTO{Value: metric.GetValue(), Unit: metric.GetUnit(), Status: enumText(metric.GetStatus(), "METRIC_STATUS_"), Message: metric.GetMessage()}
 }
 func statsFromProto(stats *agentcomposev2.SandboxStats) statsDTO {
-	return statsDTO{SandboxID: stats.GetSandboxId(), Driver: stats.GetDriver(), SampledAt: stats.GetSampledAt(), CPU: metricFromProto(stats.GetCpuPercent()), MemoryUsage: metricFromProto(stats.GetMemoryUsageBytes()), MemoryLimit: metricFromProto(stats.GetMemoryLimitBytes()), MemoryPercent: metricFromProto(stats.GetMemoryPercent()), NetworkRX: metricFromProto(stats.GetNetworkRxBytes()), NetworkTX: metricFromProto(stats.GetNetworkTxBytes()), BlockRead: metricFromProto(stats.GetBlockReadBytes()), BlockWrite: metricFromProto(stats.GetBlockWriteBytes()), Uptime: metricFromProto(stats.GetUptimeSeconds())}
+	return statsDTO{SandboxID: stats.GetSandboxId(), Driver: stats.GetDriver(), SampledAt: timestampText(stats.GetSampledAt()), CPU: metricFromProto(stats.GetCpuPercent()), MemoryUsage: metricFromProto(stats.GetMemoryUsageBytes()), MemoryLimit: metricFromProto(stats.GetMemoryLimitBytes()), MemoryPercent: metricFromProto(stats.GetMemoryPercent()), NetworkRX: metricFromProto(stats.GetNetworkRxBytes()), NetworkTX: metricFromProto(stats.GetNetworkTxBytes()), BlockRead: metricFromProto(stats.GetBlockReadBytes()), BlockWrite: metricFromProto(stats.GetBlockWriteBytes()), Uptime: metricFromProto(stats.GetUptimeSeconds())}
 }
 func newStatsCommand(state *commandState) *cobra.Command {
 	return &cobra.Command{Use: "stats [sandbox-ref]", Short: "Show Sandbox resource statistics", Args: rangeArgs(0, 1, state), RunE: func(cmd *cobra.Command, args []string) error {
@@ -54,7 +54,7 @@ func newStatsCommand(state *commandState) *cobra.Command {
 			}
 			targets = append(targets, sandbox)
 		} else {
-			targets, _, _, err = listSandboxes(ctx, state.clients().sandbox, project.GetSummary().GetProjectId(), []string{"RUNNING"}, cursorOptions{AllPages: true, Limit: 50})
+			targets, _, _, err = listSandboxes(ctx, state.clients().sandbox, project.GetSummary().GetProjectId(), []agentcomposev2.SandboxStatus{agentcomposev2.SandboxStatus_SANDBOX_STATUS_RUNNING}, offsetOptions{AllPages: true, Limit: 50})
 			if err != nil {
 				return mapConnectError(err, state.options.URL, state.options.JSON)
 			}

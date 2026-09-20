@@ -60,6 +60,12 @@ monkeyscan:
   url: ""
   api_key: ""
 
+agent-compose:
+  url: ""
+  api_token: ""
+  # api_key is accepted as an alias for api_token
+  default_project: ""
+
 # TODO: Replace with real insight API key and URL
 insight:
   url: "http://192.168.1.100"
