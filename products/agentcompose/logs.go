@@ -11,9 +11,9 @@ import (
 )
 
 type logsOptions struct {
-	Agent, Run, Sandbox string
-	Follow, Timestamp   bool
-	Tail                int32
+	Agent, Run, Sandbox, Event string
+	Follow, Timestamp          bool
+	Tail                       int32
 }
 
 func newLogsCommand(state *commandState) *cobra.Command {
@@ -22,6 +22,7 @@ func newLogsCommand(state *commandState) *cobra.Command {
 	cmd.Flags().StringVar(&options.Agent, "agent", "", "Filter by Agent")
 	cmd.Flags().StringVar(&options.Run, "run", "", "Select one Run")
 	cmd.Flags().StringVar(&options.Sandbox, "sandbox", "", "Filter by Sandbox")
+	cmd.Flags().StringVar(&options.Event, "event", "", "Filter by event-bus event id (evt_...)")
 	cmd.Flags().BoolVar(&options.Follow, "follow", false, "Continue following logs")
 	cmd.Flags().Int32VarP(&options.Tail, "tail", "n", -1, "Number of trailing lines; -1 means all")
 	cmd.Flags().BoolVarP(&options.Timestamp, "timestamp", "t", false, "Show timestamps")
@@ -35,6 +36,23 @@ func executeLogs(cmd *cobra.Command, state *commandState, args []string, options
 	if len(args) > 0 && options.Agent != "" {
 		return usageError("a positional target and --agent are mutually exclusive", state.options.JSON)
 	}
+	options.Run = strings.TrimSpace(options.Run)
+	options.Sandbox = strings.TrimSpace(options.Sandbox)
+	options.Event = strings.TrimSpace(options.Event)
+	if options.Run != "" && options.Event != "" {
+		return usageError("--run and --event are mutually exclusive", state.options.JSON)
+	}
+	if options.Sandbox != "" && options.Event != "" {
+		return usageError("--sandbox and --event are mutually exclusive", state.options.JSON)
+	}
+	if len(args) > 0 && options.Event != "" {
+		return usageError("a positional target and --event are mutually exclusive", state.options.JSON)
+	}
+	if options.Event != "" {
+		if err := validateEventLogTarget(options.Event, state.options.JSON); err != nil {
+			return err
+		}
+	}
 	ctx, cancel := requestContext(cmd, state)
 	project, err := resolveProject(ctx, state, state.clients().project)
 	if err != nil {
@@ -42,6 +60,20 @@ func executeLogs(cmd *cobra.Command, state *commandState, args []string, options
 		return err
 	}
 	projectID := project.GetSummary().GetProjectId()
+	if options.Event != "" {
+		if options.Agent != "" {
+			agent, agentErr := resolveAgent(ctx, project, options.Agent, state)
+			if agentErr != nil {
+				cancel()
+				return agentErr
+			}
+			options.Agent = agent.GetAgentName()
+		}
+		// executeLogsForEvent uses cmd.Context() because the request context
+		// only bounds the resolution RPCs above, not the log streams.
+		cancel()
+		return executeLogsForEvent(cmd, state, projectID, options)
+	}
 	client := state.clients().run
 	targets := make([]*agentcomposev2.RunSummary, 0)
 	var explicitRun *agentcomposev2.RunSummary
