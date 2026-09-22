@@ -3,16 +3,18 @@ package agentcompose
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"strings"
 	"sync"
 	"testing"
+	"time"
 
 	"connectrpc.com/connect"
 	agentcomposev2 "github.com/chaitin/chaitin-cli/products/agentcompose/gen/agentcompose/v2"
 	agentcomposev2connect "github.com/chaitin/chaitin-cli/products/agentcompose/gen/agentcompose/v2/agentcomposev2connect"
-	"google.golang.org/protobuf/proto"
+	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
 func TestValidateEventLogTarget(t *testing.T) {
@@ -31,47 +33,40 @@ func TestValidateEventLogTarget(t *testing.T) {
 	}
 }
 
-func TestEventLogReplayRunsNarrowsByAgent(t *testing.T) {
-	runs := []*agentcomposev2.RunSummary{
-		{RunId: "run-reviewer", AgentName: "reviewer"},
-		{RunId: "run-writer", AgentName: "writer"},
-	}
-	if got := eventLogReplayRuns(runs, ""); len(got) != 2 {
-		t.Fatalf("eventLogReplayRuns without agent = %d runs, want 2", len(got))
-	}
-	narrowed := eventLogReplayRuns(runs, "writer")
-	if len(narrowed) != 1 || narrowed[0].GetRunId() != "run-writer" {
-		t.Fatalf("eventLogReplayRuns(writer) = %#v", narrowed)
-	}
-	if got := eventLogReplayRuns(runs, "missing"); len(got) != 0 {
-		t.Fatalf("eventLogReplayRuns(missing) = %#v, want empty", got)
-	}
-}
-
-// schedulerRunStub filters ListRuns by the scheduler_run_id filter, unlike the
-// shared runStub, which ignores request filters.
-type schedulerRunStub struct {
+// eventRunStub emulates the daemon-side event filter: known event ids return
+// the seeded runs, unknown ids return NotFound.
+type eventRunStub struct {
 	agentcomposev2connect.UnimplementedRunServiceHandler
-	mu               sync.Mutex
-	runsByScheduler  map[string][]*agentcomposev2.RunSummary
-	listRequests     []*agentcomposev2.ListRunsRequest
-	followRunOutputs map[string]string
+	mu           sync.Mutex
+	runs         []*agentcomposev2.RunSummary
+	notFound     bool
+	listRequests []*agentcomposev2.ListRunsRequest
 }
 
-func (s *schedulerRunStub) ListRuns(_ context.Context, req *connect.Request[agentcomposev2.ListRunsRequest]) (*connect.Response[agentcomposev2.ListRunsResponse], error) {
+func (s *eventRunStub) ListRuns(_ context.Context, req *connect.Request[agentcomposev2.ListRunsRequest]) (*connect.Response[agentcomposev2.ListRunsResponse], error) {
 	s.mu.Lock()
-	defer s.mu.Unlock()
-	s.listRequests = append(s.listRequests, proto.Clone(req.Msg).(*agentcomposev2.ListRunsRequest))
-	runs := s.runsByScheduler[req.Msg.GetSchedulerRunId()]
-	if int(req.Msg.GetLimit()) < len(runs) {
-		runs = runs[:req.Msg.GetLimit()]
+	s.listRequests = append(s.listRequests, req.Msg)
+	notFound := s.notFound
+	agentName := req.Msg.GetAgentName()
+	s.mu.Unlock()
+	if req.Msg.GetEventId() == "" {
+		return connect.NewResponse(&agentcomposev2.ListRunsResponse{}), nil
+	}
+	if notFound {
+		return nil, connect.NewError(connect.CodeNotFound, fmt.Errorf("event %s not found", req.Msg.GetEventId()))
+	}
+	runs := make([]*agentcomposev2.RunSummary, 0, len(s.runs))
+	for _, run := range s.runs {
+		if agentName != "" && run.GetAgentName() != agentName {
+			continue
+		}
+		runs = append(runs, run)
 	}
 	return connect.NewResponse(&agentcomposev2.ListRunsResponse{Runs: runs, Total: uint32(len(runs))}), nil
 }
 
-func (s *schedulerRunStub) FollowRunLogs(_ context.Context, req *connect.Request[agentcomposev2.FollowRunLogsRequest], stream *connect.ServerStream[agentcomposev2.RunLogChunk]) error {
-	output := s.followRunOutputs[req.Msg.GetRunId()]
-	for _, line := range strings.SplitAfter(output, "\n") {
+func (s *eventRunStub) FollowRunLogs(_ context.Context, req *connect.Request[agentcomposev2.FollowRunLogsRequest], stream *connect.ServerStream[agentcomposev2.RunLogChunk]) error {
+	for _, line := range strings.SplitAfter(s.followOutput(req.Msg.GetRunId()), "\n") {
 		if line == "" {
 			continue
 		}
@@ -82,66 +77,66 @@ func (s *schedulerRunStub) FollowRunLogs(_ context.Context, req *connect.Request
 	return stream.Send(&agentcomposev2.RunLogChunk{RunStatus: agentcomposev2.RunStatus_RUN_STATUS_SUCCEEDED, IsFinal: true})
 }
 
-func newEventLogsTestServer(t *testing.T, run *schedulerRunStub, trace func(w http.ResponseWriter, r *http.Request)) *httptest.Server {
+func (s *eventRunStub) followOutput(runID string) string {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	for _, run := range s.runs {
+		if run.GetRunId() == runID {
+			return runID + " output\n"
+		}
+	}
+	return ""
+}
+
+func newEventLogsTestServer(t *testing.T, run *eventRunStub) *httptest.Server {
+	return newEventLogsTestServerForHandler(t, run)
+}
+
+// newEventLogsTestServerForHandler takes the outer handler value so stub
+// overrides on embedded structs are dispatched, and asserts the CLI attaches
+// the Bearer token to every request including the run service calls.
+func newEventLogsTestServerForHandler(t *testing.T, run agentcomposev2connect.RunServiceHandler) *httptest.Server {
 	t.Helper()
 	mux := http.NewServeMux()
 	path, handler := agentcomposev2connect.NewProjectServiceHandler(&projectStub{project: fixtureProject()})
 	mux.Handle(path, handler)
 	path, handler = agentcomposev2connect.NewRunServiceHandler(run)
 	mux.Handle(path, handler)
-	mux.HandleFunc("/api/events/", trace)
-	return httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if got := r.Header.Get("Authorization"); got != "Bearer test-token" {
 			t.Errorf("Authorization = %q", got)
 		}
 		mux.ServeHTTP(w, r)
 	}))
+	t.Cleanup(server.Close)
+	return server
 }
 
-func eventTraceResponse(t *testing.T, eventID string, schedulerRunIDs ...string) func(w http.ResponseWriter, r *http.Request) {
-	return func(w http.ResponseWriter, r *http.Request) {
-		if r.URL.Path != "/api/events/"+eventID+"/trace" {
-			w.WriteHeader(http.StatusNotFound)
-			return
-		}
-		runs := make([]map[string]any, 0, len(schedulerRunIDs))
-		for _, schedulerRunID := range schedulerRunIDs {
-			runs = append(runs, map[string]any{"delivery": map[string]any{"run_id": schedulerRunID, "status": "run_succeeded"}})
-		}
-		w.Header().Set("Content-Type", "application/json")
-		if err := json.NewEncoder(w).Encode(map[string]any{"event": map[string]any{"id": eventID}, "runs": runs}); err != nil {
-			t.Fatalf("encode trace response: %v", err)
-		}
-	}
-}
+func TestExecuteLogsForEventSendsFilterAndValidatesSelectors(t *testing.T) {
+	run := &eventRunStub{runs: []*agentcomposev2.RunSummary{{
+		RunId: "run-event-agent", ProjectId: "project-aaaaaaaaaaaaaaaa", AgentName: "agent", SandboxId: "sandbox-1",
+	}}}
+	server := newEventLogsTestServer(t, run)
 
-func TestExecuteLogsForEventReplaysRunsAndValidatesSelectors(t *testing.T) {
-	run := &schedulerRunStub{
-		runsByScheduler: map[string][]*agentcomposev2.RunSummary{
-			"sched-run-reviewer": {{RunId: "run-event-reviewer", ProjectId: "project-aaaaaaaaaaaaaaaa", AgentName: "agent", SandboxId: "sandbox-1"}},
-			"sched-run-empty":    {},
-		},
-		followRunOutputs: map[string]string{"run-event-reviewer": "event output\n"},
-	}
-	server := newEventLogsTestServer(t, run, eventTraceResponse(t, "evt_event_test", "sched-run-reviewer", "sched-run-empty", "sched-run-reviewer"))
-
-	stdout, _, err := executeCommand(t, server.URL, false, "logs", "--event", "evt_event_test")
+	stdout, stderr, err := executeCommand(t, server.URL, false, "logs", "--event", "evt_event_test")
 	if err != nil {
-		t.Fatalf("logs --event returned error: %v", err)
+		t.Fatalf("logs --event returned error: %v\nstderr=%s", err, stderr)
 	}
-	if !strings.Contains(stdout, "run-event-re") || !strings.Contains(stdout, "event output") {
+	if !strings.Contains(stdout, "run-event-ag") || !strings.Contains(stdout, "run-event-agent output") {
 		t.Fatalf("logs --event output = %q", stdout)
 	}
-	if len(run.listRequests) != 2 {
-		t.Fatalf("ListRuns calls = %d, want 2 (deduplicated scheduler runs)", len(run.listRequests))
+	if len(run.listRequests) != 1 {
+		t.Fatalf("ListRuns calls = %d, want 1", len(run.listRequests))
 	}
-	for _, request := range run.listRequests {
-		if request.GetSchedulerRunId() == "" {
-			t.Fatalf("ListRuns without scheduler_run_id filter: %+v", request)
-		}
-		if request.GetProjectId() != "project-aaaaaaaaaaaaaaaa" {
-			t.Fatalf("ListRuns project id = %q", request.GetProjectId())
-		}
+	request := run.listRequests[0]
+	if request.GetEventId() != "evt_event_test" {
+		t.Fatalf("ListRuns event_id = %q", request.GetEventId())
+	}
+	if request.GetProjectId() != "project-aaaaaaaaaaaaaaaa" {
+		t.Fatalf("ListRuns project id = %q", request.GetProjectId())
+	}
+	if request.GetLimit() != 200 || request.GetOffset() != 0 {
+		t.Fatalf("ListRuns paging = limit %d offset %d, want 200/0", request.GetLimit(), request.GetOffset())
 	}
 
 	for _, testCase := range []struct {
@@ -165,57 +160,51 @@ func TestExecuteLogsForEventReplaysRunsAndValidatesSelectors(t *testing.T) {
 }
 
 func TestExecuteLogsForEventResolvesAgentReference(t *testing.T) {
-	run := &schedulerRunStub{
-		runsByScheduler: map[string][]*agentcomposev2.RunSummary{
-			"sched-run-agent": {
-				{RunId: "run-event-agent", ProjectId: "project-aaaaaaaaaaaaaaaa", AgentName: "agent", SandboxId: "sandbox-1"},
-				{RunId: "run-event-other", ProjectId: "project-aaaaaaaaaaaaaaaa", AgentName: "other", SandboxId: "sandbox-2"},
-			},
-		},
-		followRunOutputs: map[string]string{"run-event-agent": "agent output\n", "run-event-other": "other output\n"},
-	}
-	server := newEventLogsTestServer(t, run, eventTraceResponse(t, "evt_agent_ref", "sched-run-agent"))
+	run := &eventRunStub{runs: []*agentcomposev2.RunSummary{
+		{RunId: "run-event-agent", ProjectId: "project-aaaaaaaaaaaaaaaa", AgentName: "agent", SandboxId: "sandbox-1"},
+		{RunId: "run-event-other", ProjectId: "project-aaaaaaaaaaaaaaaa", AgentName: "other", SandboxId: "sandbox-2"},
+	}}
+	server := newEventLogsTestServer(t, run)
 
 	stdout, stderr, err := executeCommand(t, server.URL, false, "logs", "--event", "evt_agent_ref", "--agent", "agent-bbbbbbbbbbbbbbbb")
 	if err != nil {
 		t.Fatalf("logs --event --agent <managed-id> returned error: %v\nstderr=%s", err, stderr)
 	}
-	if !strings.Contains(stdout, "agent output") || strings.Contains(stdout, "other output") {
+	if !strings.Contains(stdout, "run-event-agent output") || strings.Contains(stdout, "run-event-other output") {
 		t.Fatalf("logs --event --agent <managed-id> output = %q", stdout)
+	}
+	request := run.listRequests[len(run.listRequests)-1]
+	if request.GetAgentName() != "agent" {
+		t.Fatalf("ListRuns agent_name = %q, want resolved canonical name agent", request.GetAgentName())
 	}
 }
 
 func TestExecuteLogsForEventJSONOutputAndEmptyNotice(t *testing.T) {
-	run := &schedulerRunStub{
-		runsByScheduler: map[string][]*agentcomposev2.RunSummary{
-			"sched-run-reviewer": {{RunId: "run-event-reviewer", ProjectId: "project-aaaaaaaaaaaaaaaa", AgentName: "agent", SandboxId: "sandbox-1"}},
-		},
-		followRunOutputs: map[string]string{"run-event-reviewer": "json output\n"},
-	}
-	server := newEventLogsTestServer(t, run, eventTraceResponse(t, "evt_json_test", "sched-run-reviewer"))
+	run := &eventRunStub{runs: []*agentcomposev2.RunSummary{{
+		RunId: "run-event-agent", ProjectId: "project-aaaaaaaaaaaaaaaa", AgentName: "agent", SandboxId: "sandbox-1",
+	}}}
+	server := newEventLogsTestServer(t, run)
 
 	stdout, _, err := executeCommand(t, server.URL, false, "--json", "logs", "--event", "evt_json_test")
 	if err != nil {
 		t.Fatalf("logs --event --json returned error: %v", err)
 	}
+	decoder := json.NewDecoder(strings.NewReader(stdout))
 	var decoded struct {
 		AgentName string `json:"agent_name"`
 		RunID     string `json:"run_id"`
-		Offset    uint64 `json:"offset"`
 		IsFinal   bool   `json:"is_final"`
-		RunStatus string `json:"run_status"`
 		Content   string `json:"content"`
 	}
-	decoder := json.NewDecoder(strings.NewReader(stdout))
 	var sawContent, sawFinal bool
 	for decoder.More() {
 		if err := decoder.Decode(&decoded); err != nil {
 			t.Fatalf("decode NDJSON line: %v\n%s", err, stdout)
 		}
-		if decoded.RunID != "run-event-reviewer" {
+		if decoded.RunID != "run-event-agent" {
 			t.Fatalf("NDJSON run_id = %q", decoded.RunID)
 		}
-		if decoded.Content == "json output\n" {
+		if decoded.Content == "run-event-agent output\n" {
 			sawContent = true
 		}
 		if decoded.IsFinal {
@@ -226,8 +215,8 @@ func TestExecuteLogsForEventJSONOutputAndEmptyNotice(t *testing.T) {
 		t.Fatalf("NDJSON output missing content or final chunk: %s", stdout)
 	}
 
-	empty := &schedulerRunStub{runsByScheduler: map[string][]*agentcomposev2.RunSummary{}}
-	emptyServer := newEventLogsTestServer(t, empty, eventTraceResponse(t, "evt_empty_test"))
+	empty := &eventRunStub{}
+	emptyServer := newEventLogsTestServer(t, empty)
 	jsonOut, errOut, err := executeCommand(t, emptyServer.URL, false, "--json", "logs", "--event", "evt_empty_test")
 	if err != nil {
 		t.Fatalf("logs --event empty --json returned error: %v\nstderr=%s", err, errOut)
@@ -245,67 +234,104 @@ func TestExecuteLogsForEventJSONOutputAndEmptyNotice(t *testing.T) {
 	}
 }
 
-func TestResolveEventLogSchedulerRunIDsNotFoundAndStatuses(t *testing.T) {
-	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		switch r.URL.Path {
-		case "/api/events/evt_missing/trace":
-			w.WriteHeader(http.StatusNotFound)
-			_, _ = w.Write([]byte(`{"error":"event not found"}`))
-		case "/api/events/evt_broken/trace":
-			w.WriteHeader(http.StatusInternalServerError)
-			_, _ = w.Write([]byte(`{"error":"failed to trace event"}`))
-		case "/api/events/evt_bad/trace":
-			_, _ = w.Write([]byte("not json"))
-		default:
-			t.Fatalf("unexpected trace path %q", r.URL.Path)
-		}
-	}))
-	defer server.Close()
-	state := &commandState{options: runtimeOptions{URL: server.URL, Token: "test-token"}}
-
-	_, err := resolveEventLogSchedulerRunIDs(context.Background(), state, "evt_missing")
+func TestExecuteLogsForEventNotFoundMapsToNotFound(t *testing.T) {
+	server := newEventLogsTestServer(t, &eventRunStub{notFound: true})
+	_, _, err := executeCommand(t, server.URL, false, "logs", "--event", "evt_missing")
 	cliErr, ok := err.(*CLIError)
-	if !ok || cliErr.ExitCode() != exitNotFound || !strings.Contains(cliErr.Message, "evt_missing not found") {
-		t.Fatalf("not-found error = %#v", err)
-	}
-
-	_, err = resolveEventLogSchedulerRunIDs(context.Background(), state, "evt_broken")
-	cliErr, ok = err.(*CLIError)
-	if !ok || cliErr.ExitCode() != exitNetwork {
-		t.Fatalf("server error = %#v", err)
-	}
-
-	_, err = resolveEventLogSchedulerRunIDs(context.Background(), state, "evt_bad")
-	cliErr, ok = err.(*CLIError)
-	if !ok || cliErr.ExitCode() != exitGeneral || !strings.Contains(cliErr.Message, "parse event") {
-		t.Fatalf("malformed json error = %#v", err)
+	if !ok || cliErr.ExitCode() != exitNotFound || !strings.Contains(cliErr.Message, "evt_missing") {
+		t.Fatalf("not-found error = %#v, want not_found exit %d", err, exitNotFound)
 	}
 }
 
-func TestResolveEventLogSchedulerRunIDsDeduplicates(t *testing.T) {
-	var gotPath string
-	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		gotPath = r.URL.Path
-		runs := []map[string]any{
-			{"delivery": map[string]any{"run_id": "sched-run-1"}},
-			{"delivery": map[string]any{"run_id": "sched-run-2"}},
-			{"delivery": map[string]any{"run_id": "sched-run-1"}},
-			{"delivery": map[string]any{"run_id": ""}},
-		}
-		w.Header().Set("Content-Type", "application/json")
-		_ = json.NewEncoder(w).Encode(map[string]any{"event": map[string]any{"id": "evt_x"}, "runs": runs})
-	}))
-	defer server.Close()
-	state := &commandState{options: runtimeOptions{URL: server.URL, Token: "test-token"}}
+func TestExecuteLogsForEventReplaysOldestFirst(t *testing.T) {
+	// The daemon returns newest first; mixed fraction precision would expose a
+	// string-key sort bug, so the middle run uses a shorter fraction.
+	late := mustTimestamp(t, "2026-09-21T10:00:00.15Z")
+	early := mustTimestamp(t, "2026-09-21T10:00:00.1Z")
+	earliest := mustTimestamp(t, "2026-09-21T10:00:00Z")
+	run := &eventRunStub{runs: []*agentcomposev2.RunSummary{
+		{RunId: "run-late", ProjectId: "project-aaaaaaaaaaaaaaaa", AgentName: "agent", SandboxId: "sandbox-3", StartedAt: late},
+		{RunId: "run-early", ProjectId: "project-aaaaaaaaaaaaaaaa", AgentName: "agent", SandboxId: "sandbox-2", StartedAt: early},
+		{RunId: "run-earliest", ProjectId: "project-aaaaaaaaaaaaaaaa", AgentName: "agent", SandboxId: "sandbox-1", StartedAt: earliest},
+	}}
+	server := newEventLogsTestServer(t, run)
 
-	runIDs, err := resolveEventLogSchedulerRunIDs(context.Background(), state, "evt_x")
+	stdout, _, err := executeCommand(t, server.URL, false, "logs", "--event", "evt_order_test")
 	if err != nil {
-		t.Fatalf("resolveEventLogSchedulerRunIDs returned error: %v", err)
+		t.Fatalf("logs --event returned error: %v", err)
 	}
-	if gotPath != "/api/events/evt_x/trace" {
-		t.Fatalf("trace path = %q", gotPath)
+	earliestPos := strings.Index(stdout, "run-earliest output")
+	earlyPos := strings.Index(stdout, "run-early output")
+	latePos := strings.Index(stdout, "run-late output")
+	if earliestPos == -1 || earlyPos == -1 || latePos == -1 || !(earliestPos < earlyPos && earlyPos < latePos) {
+		t.Fatalf("replay order wrong: %q", stdout)
 	}
-	if len(runIDs) != 2 || runIDs[0] != "sched-run-1" || runIDs[1] != "sched-run-2" {
-		t.Fatalf("scheduler run ids = %#v", runIDs)
+}
+
+func TestExecuteLogsForEventPagesUntilTotal(t *testing.T) {
+	// A page smaller than total must advance the offset and stop at total.
+	first := make([]*agentcomposev2.RunSummary, 0, 200)
+	for i := 0; i < 200; i++ {
+		first = append(first, &agentcomposev2.RunSummary{RunId: fmt.Sprintf("run-page1-%03d", i), ProjectId: "project-aaaaaaaaaaaaaaaa", AgentName: "agent"})
 	}
+	run := &pagedEventRunStub{firstPage: first, secondPage: []*agentcomposev2.RunSummary{
+		{RunId: "run-page2", ProjectId: "project-aaaaaaaaaaaaaaaa", AgentName: "agent"},
+	}}
+	server := newEventLogsTestServerForHandler(t, run)
+
+	stdout, _, err := executeCommand(t, server.URL, false, "logs", "--event", "evt_paged_test")
+	if err != nil {
+		t.Fatalf("logs --event paged returned error: %v", err)
+	}
+	if !strings.Contains(stdout, "run-page2 output") {
+		t.Fatalf("second page missing from output: %q", stdout)
+	}
+	if len(run.listRequests) != 2 {
+		t.Fatalf("ListRuns calls = %d, want 2", len(run.listRequests))
+	}
+	if run.listRequests[1].GetOffset() != 200 {
+		t.Fatalf("second request offset = %d, want 200", run.listRequests[1].GetOffset())
+	}
+}
+
+// pagedEventRunStub returns a full first page and a partial second page,
+// exercising the offset+total paging termination.
+type pagedEventRunStub struct {
+	eventRunStub
+	firstPage  []*agentcomposev2.RunSummary
+	secondPage []*agentcomposev2.RunSummary
+	page       int
+}
+
+func (s *pagedEventRunStub) ListRuns(_ context.Context, req *connect.Request[agentcomposev2.ListRunsRequest]) (*connect.Response[agentcomposev2.ListRunsResponse], error) {
+	s.mu.Lock()
+	s.listRequests = append(s.listRequests, req.Msg)
+	s.page++
+	page := s.page
+	s.mu.Unlock()
+	if req.Msg.GetEventId() == "" {
+		return connect.NewResponse(&agentcomposev2.ListRunsResponse{}), nil
+	}
+	switch page {
+	case 1:
+		return connect.NewResponse(&agentcomposev2.ListRunsResponse{Runs: s.firstPage, Total: uint32(len(s.firstPage) + len(s.secondPage))}), nil
+	default:
+		return connect.NewResponse(&agentcomposev2.ListRunsResponse{Runs: s.secondPage, Total: uint32(len(s.firstPage) + len(s.secondPage))}), nil
+	}
+}
+
+func (s *pagedEventRunStub) FollowRunLogs(_ context.Context, req *connect.Request[agentcomposev2.FollowRunLogsRequest], stream *connect.ServerStream[agentcomposev2.RunLogChunk]) error {
+	if err := stream.Send(&agentcomposev2.RunLogChunk{Data: req.Msg.GetRunId() + " output\n", RunStatus: agentcomposev2.RunStatus_RUN_STATUS_SUCCEEDED}); err != nil {
+		return err
+	}
+	return stream.Send(&agentcomposev2.RunLogChunk{RunStatus: agentcomposev2.RunStatus_RUN_STATUS_SUCCEEDED, IsFinal: true})
+}
+
+func mustTimestamp(t *testing.T, value string) *timestamppb.Timestamp {
+	t.Helper()
+	parsed, err := time.Parse(time.RFC3339Nano, value)
+	if err != nil {
+		t.Fatalf("parse %s: %v", value, err)
+	}
+	return timestamppb.New(parsed)
 }
