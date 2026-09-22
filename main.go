@@ -54,12 +54,17 @@ func newApp() (*app, error) {
 		SilenceErrors: true,
 	}
 
+	root.Version = resolveVersion()
+	root.SetVersionTemplate("{{.Version}}\n")
+
 	a := &app{
 		root:             root,
 		aliasSubcommands: make(map[string]struct{}),
 		productNames:     make(map[string]struct{}),
 		configPath:       defaultConfigPath(),
 	}
+
+	root.AddCommand(newVersionCommand(root))
 
 	root.PersistentFlags().StringVarP(&a.configPath, "config", "c", a.configPath, "Config file path; when unset, CLI tries recognized ./config.yaml before ~/.chaitin-cli/config.yaml")
 	root.PersistentFlags().BoolVar(&a.dryRun, "dry-run", false, "Do not send requests; commands that support dry-run print a request summary")
