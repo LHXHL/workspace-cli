@@ -387,7 +387,7 @@ Versioning:
 
 - `task build` / `task package` inject the version with `-ldflags "-X main.version=..."`; by default it comes from `git describe --tags --always --dirty`.
 - Pass an explicit version when needed, for example `task build VERSION=v1.2.3`.
-- When no version is injected (for example `go run .`), the command falls back to the module version or commit from Go build info, and to `dev` when neither is available.
+- When no version is injected (for example `go run .` or a plain `go build`), the command falls back to Go build info: an untagged build that can be traced to a commit shows `dev+<commit>`, a `go install <module>@<version>` of a released tag shows the module version, and `dev` is shown when neither is available.
 - Verify with `task build VERSION=v0.0.0-test && ./bin/chaitin-cli version`.
 
 ## Maintenance and Feedback

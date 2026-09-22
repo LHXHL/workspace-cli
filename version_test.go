@@ -25,14 +25,17 @@ func runRootCommand(t *testing.T, args ...string) string {
 	if err != nil {
 		t.Fatalf("newApp() error = %v", err)
 	}
-	var out strings.Builder
-	app.root.SetOut(&out)
-	app.root.SetErr(&out)
+	var stdout, stderr strings.Builder
+	app.root.SetOut(&stdout)
+	app.root.SetErr(&stderr)
 	app.root.SetArgs(args)
 	if err := app.execute(); err != nil {
 		t.Fatalf("execute() error = %v", err)
 	}
-	return out.String()
+	if stderr.Len() != 0 {
+		t.Fatalf("stderr = %q, want empty so version output stays script-friendly on stdout", stderr.String())
+	}
+	return stdout.String()
 }
 
 func TestVersionCommandPrintsInjectedVersion(t *testing.T) {
@@ -80,10 +83,25 @@ func TestVersionFromBuildInfo(t *testing.T) {
 		want string
 	}{
 		{
-			name: "module version wins",
+			name: "module version without vcs revision",
 			info: &debug.BuildInfo{Main: debug.Module{Version: "v1.0.0"}},
 			ok:   true,
 			want: "v1.0.0",
+		},
+		{
+			name: "stamped pseudo-version falls back to vcs revision",
+			info: &debug.BuildInfo{
+				Main:     debug.Module{Version: "v0.0.0-20260922074332-dc0b69e60f23"},
+				Settings: []debug.BuildSetting{{Key: "vcs.revision", Value: "dc0b69e60f23628db60df018446d27c6053038d8"}},
+			},
+			ok:   true,
+			want: "dev+dc0b69e60f23",
+		},
+		{
+			name: "pseudo-version without vcs settings",
+			info: &debug.BuildInfo{Main: debug.Module{Version: "v0.0.0-20260920052045-2d4b5d8fd518"}},
+			ok:   true,
+			want: "dev+2d4b5d8fd518",
 		},
 		{
 			name: "devel falls back to vcs revision",

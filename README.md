@@ -506,7 +506,7 @@ task package GOOS=linux GOARCH=amd64
 
 - `task build` / `task package` 通过 `-ldflags "-X main.version=..."` 把版本注入二进制，默认取 `git describe --tags --always --dirty` 的结果。
 - 需要指定版本时显式传入，例如 `task build VERSION=v1.2.3`。
-- 未注入版本时（例如 `go run .`），命令回退到 Go 构建信息中的模块版本或 commit，找不到时显示 `dev`。
+- 未注入版本时（例如 `go run .`、直接 `go build`），命令回退到 Go 构建信息：对应到具体 commit 的未发布构建显示 `dev+<commit>`，通过 `go install <module>@<version>` 安装到正式 tag 时显示模块版本，都取不到时显示 `dev`。
 - 校验方式：`task build VERSION=v0.0.0-test && ./bin/chaitin-cli version`。
 
 ## 维护与反馈
