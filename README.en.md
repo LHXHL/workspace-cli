@@ -27,6 +27,13 @@ curl -fsSL https://raw.githubusercontent.com/chaitin/chaitin-cli/main/skills/cha
 
 Windows users should download the matching package from [GitHub Releases](https://github.com/chaitin/chaitin-cli/releases), extract `chaitin-cli.exe`, and add it to PATH.
 
+Check the installed version:
+
+```bash
+chaitin-cli version
+chaitin-cli --version
+```
+
 ## Skill
 
 This project provides an AI Agent skill. Once installed, AI agents (Claude Code, Cursor, etc.) can invoke `chaitin-cli` commands to manage Chaitin security products directly.
@@ -375,6 +382,13 @@ task lint
 task test
 task package GOOS=linux GOARCH=amd64
 ```
+
+Versioning:
+
+- `task build` / `task package` inject the version with `-ldflags "-X main.version=..."`; by default it comes from `git describe --tags --always --dirty`.
+- Pass an explicit version when needed, for example `task build VERSION=v1.2.3`.
+- When no version is injected (for example `go run .` or a plain `go build`), the command falls back to Go build info: an untagged build that can be traced to a commit shows `dev+<commit>`, a `go install <module>@<version>` of a released tag shows the module version, and `dev` is shown when neither is available.
+- Verify with `task build VERSION=v0.0.0-test && ./bin/chaitin-cli version`.
 
 ## Maintenance and Feedback
 

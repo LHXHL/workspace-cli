@@ -29,6 +29,13 @@ curl -fsSL https://raw.githubusercontent.com/chaitin/chaitin-cli/main/skills/cha
 
 Windows 用户请从 [GitHub Releases](https://github.com/chaitin/chaitin-cli/releases) 下载对应版本，解压 `chaitin-cli.exe` 并加入 PATH。
 
+查看当前版本：
+
+```bash
+chaitin-cli version
+chaitin-cli --version
+```
+
 ## Skill
 
 本项目提供了 skill，安装后 AI Agent（Claude Code、Cursor 等）可以直接调用 `chaitin-cli` 命令管理长亭安全产品。
@@ -494,6 +501,13 @@ task lint
 task test
 task package GOOS=linux GOARCH=amd64
 ```
+
+版本信息:
+
+- `task build` / `task package` 通过 `-ldflags "-X main.version=..."` 把版本注入二进制，默认取 `git describe --tags --always --dirty` 的结果。
+- 需要指定版本时显式传入，例如 `task build VERSION=v1.2.3`。
+- 未注入版本时（例如 `go run .`、直接 `go build`），命令回退到 Go 构建信息：对应到具体 commit 的未发布构建显示 `dev+<commit>`，通过 `go install <module>@<version>` 安装到正式 tag 时显示模块版本，都取不到时显示 `dev`。
+- 校验方式：`task build VERSION=v0.0.0-test && ./bin/chaitin-cli version`。
 
 ## 维护与反馈
 
