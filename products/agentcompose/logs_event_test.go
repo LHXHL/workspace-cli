@@ -40,6 +40,7 @@ type eventRunStub struct {
 	mu           sync.Mutex
 	runs         []*agentcomposev2.RunSummary
 	notFound     bool
+	truncated    bool
 	listRequests []*agentcomposev2.ListRunsRequest
 }
 
@@ -47,6 +48,7 @@ func (s *eventRunStub) ListRuns(_ context.Context, req *connect.Request[agentcom
 	s.mu.Lock()
 	s.listRequests = append(s.listRequests, req.Msg)
 	notFound := s.notFound
+	truncated := s.truncated
 	agentName := req.Msg.GetAgentName()
 	s.mu.Unlock()
 	if req.Msg.GetEventId() == "" {
@@ -62,7 +64,7 @@ func (s *eventRunStub) ListRuns(_ context.Context, req *connect.Request[agentcom
 		}
 		runs = append(runs, run)
 	}
-	return connect.NewResponse(&agentcomposev2.ListRunsResponse{Runs: runs, Total: uint32(len(runs))}), nil
+	return connect.NewResponse(&agentcomposev2.ListRunsResponse{Runs: runs, Total: uint32(len(runs)), EventScopeTruncated: truncated}), nil
 }
 
 func (s *eventRunStub) FollowRunLogs(_ context.Context, req *connect.Request[agentcomposev2.FollowRunLogsRequest], stream *connect.ServerStream[agentcomposev2.RunLogChunk]) error {
@@ -240,6 +242,25 @@ func TestExecuteLogsForEventNotFoundMapsToNotFound(t *testing.T) {
 	cliErr, ok := err.(*CLIError)
 	if !ok || cliErr.ExitCode() != exitNotFound || !strings.Contains(cliErr.Message, "evt_missing") {
 		t.Fatalf("not-found error = %#v, want not_found exit %d", err, exitNotFound)
+	}
+}
+
+func TestExecuteLogsForEventScopeTruncatedWarns(t *testing.T) {
+	server := newEventLogsTestServer(t, &eventRunStub{truncated: true})
+	_, stderr, err := executeCommand(t, server.URL, false, "logs", "--event", "evt_big")
+	if err != nil {
+		t.Fatalf("logs --event truncated returned error: %v", err)
+	}
+	if !strings.Contains(stderr, "more associated events than the daemon resolves") || !strings.Contains(stderr, "evt_big") {
+		t.Fatalf("logs --event truncated stderr = %q", stderr)
+	}
+
+	_, stderr, err = executeCommand(t, server.URL, false, "--json", "logs", "--event", "evt_big")
+	if err != nil {
+		t.Fatalf("logs --event truncated --json returned error: %v", err)
+	}
+	if !strings.Contains(stderr, "more associated events than the daemon resolves") {
+		t.Fatalf("logs --event truncated --json stderr = %q", stderr)
 	}
 }
 
