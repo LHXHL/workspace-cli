@@ -219,12 +219,14 @@ func TestExecuteLogsForEventJSONOutputAndEmptyNotice(t *testing.T) {
 
 	empty := &eventRunStub{}
 	emptyServer := newEventLogsTestServer(t, empty)
+	// JSON is a record stream: an empty result writes no records, matching
+	// logs --json with no targets.
 	jsonOut, errOut, err := executeCommand(t, emptyServer.URL, false, "--json", "logs", "--event", "evt_empty_test")
 	if err != nil {
 		t.Fatalf("logs --event empty --json returned error: %v\nstderr=%s", err, errOut)
 	}
-	if strings.TrimSpace(jsonOut) != `{"runs":[]}` {
-		t.Fatalf("logs --event empty --json output = %q", jsonOut)
+	if strings.TrimSpace(jsonOut) != "" {
+		t.Fatalf("logs --event empty --json output = %q, want no records", jsonOut)
 	}
 
 	textOut, textErr, err := executeCommand(t, emptyServer.URL, false, "logs", "--event", "evt_empty_test")

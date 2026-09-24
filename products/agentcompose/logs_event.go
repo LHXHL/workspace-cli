@@ -62,13 +62,14 @@ func executeLogsForEvent(cmd *cobra.Command, state *commandState, projectID stri
 		}
 	}
 	if len(runs) == 0 {
-		if state.options.JSON {
-			return writeJSON(cmd.OutOrStdout(), struct {
-				Runs []*agentcomposev2.RunSummary `json:"runs"`
-			}{Runs: []*agentcomposev2.RunSummary{}})
+		// JSON mode writes nothing, matching the record-stream contract of
+		// followOneRun and the empty output of logs --json with no targets;
+		// scripts detect emptiness by the absence of records, not a wrapper.
+		if !state.options.JSON {
+			_, err := fmt.Fprintf(cmd.ErrOrStderr(), "No runs are associated with event %s\n", strings.TrimSpace(options.Event))
+			return err
 		}
-		_, err := fmt.Fprintf(cmd.ErrOrStderr(), "No runs are associated with event %s\n", strings.TrimSpace(options.Event))
-		return err
+		return nil
 	}
 	// ListRuns returns newest first; replay oldest first by start time.
 	// Ties keep the daemon's order (SliceStable) — the sibling CLI additionally
