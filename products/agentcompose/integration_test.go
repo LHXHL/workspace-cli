@@ -37,15 +37,24 @@ type projectStub struct {
 
 func (s *projectStub) ListSchedulerRuns(_ context.Context, req *connect.Request[agentcomposev2.ListSchedulerRunsRequest]) (*connect.Response[agentcomposev2.ListSchedulerRunsResponse], error) {
 	s.schedulerRunRequests = append(s.schedulerRunRequests, proto.Clone(req.Msg).(*agentcomposev2.ListSchedulerRunsRequest))
+	runs := s.schedulerRuns
+	if agent := req.Msg.GetAgentName(); agent != "" {
+		runs = make([]*agentcomposev2.SchedulerRun, 0)
+		for _, run := range s.schedulerRuns {
+			if run.GetAgentName() == agent {
+				runs = append(runs, run)
+			}
+		}
+	}
 	start := int(req.Msg.GetOffset())
-	if start >= len(s.schedulerRuns) {
-		return connect.NewResponse(&agentcomposev2.ListSchedulerRunsResponse{Total: uint32(len(s.schedulerRuns))}), nil
+	if start >= len(runs) {
+		return connect.NewResponse(&agentcomposev2.ListSchedulerRunsResponse{Total: uint32(len(runs))}), nil
 	}
 	end := start + int(req.Msg.GetLimit())
-	if end > len(s.schedulerRuns) {
-		end = len(s.schedulerRuns)
+	if end > len(runs) {
+		end = len(runs)
 	}
-	return connect.NewResponse(&agentcomposev2.ListSchedulerRunsResponse{Runs: s.schedulerRuns[start:end], Total: uint32(len(s.schedulerRuns))}), nil
+	return connect.NewResponse(&agentcomposev2.ListSchedulerRunsResponse{Runs: runs[start:end], Total: uint32(len(runs))}), nil
 }
 
 func (s *projectStub) ListProjectSchedulerEvents(_ context.Context, req *connect.Request[agentcomposev2.ListProjectSchedulerEventsRequest]) (*connect.Response[agentcomposev2.ListProjectSchedulerEventsResponse], error) {
