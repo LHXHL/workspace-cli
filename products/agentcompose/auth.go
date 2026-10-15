@@ -1,16 +1,17 @@
 package agentcompose
 
 import (
+	"context"
 	"fmt"
 	"io"
 	"os"
 	"strings"
 
 	"connectrpc.com/connect"
+	agentcomposev2 "github.com/chaitin/agent-compose/proto/agentcompose/v2"
 	"github.com/chaitin/chaitin-cli/config"
 	"github.com/spf13/cobra"
 	"golang.org/x/term"
-	"google.golang.org/protobuf/types/known/emptypb"
 )
 
 func newAuthCommand(state *commandState) *cobra.Command {
@@ -28,7 +29,7 @@ func newAuthCommand(state *commandState) *cobra.Command {
 		state.options.Token = token
 		ctx, cancel := requestContext(cmd, state)
 		defer cancel()
-		_, err = state.clients().health.Status(ctx, connect.NewRequest(&emptypb.Empty{}))
+		err = verifyToken(ctx, state)
 		if err != nil {
 			state.options.Token = oldToken
 			return mapConnectError(err, state.options.URL, state.options.JSON)
@@ -137,8 +138,7 @@ func runAuthStatus(cmd *cobra.Command, state *commandState) error {
 	}
 	ctx, cancel := requestContext(cmd, state)
 	defer cancel()
-	_, err := state.clients().health.Status(ctx, connect.NewRequest(&emptypb.Empty{}))
-	if err != nil {
+	if err := verifyToken(ctx, state); err != nil {
 		return mapConnectError(err, state.options.URL, state.options.JSON)
 	}
 	valid = true
@@ -147,4 +147,11 @@ func runAuthStatus(cmd *cobra.Command, state *commandState) error {
 	}
 	fmt.Fprintf(cmd.OutOrStdout(), "URL: %s\nToken source: %s\nToken configured: yes\nToken valid: yes\n", state.options.URL, state.options.TokenSource)
 	return nil
+}
+
+// verifyToken calls a protected RPC. HealthService is exempt from daemon
+// authentication, so it accepts any Token and cannot validate one.
+func verifyToken(ctx context.Context, state *commandState) error {
+	_, err := state.clients().project.ListProjects(ctx, connect.NewRequest(&agentcomposev2.ListProjectsRequest{Limit: 1}))
+	return err
 }

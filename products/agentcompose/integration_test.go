@@ -229,16 +229,30 @@ type healthStub struct {
 	healthv1connect.UnimplementedHealthServiceHandler
 }
 
-type validatingHealthStub struct {
-	healthv1connect.UnimplementedHealthServiceHandler
+// validatingProjectStub mirrors the daemon: control-plane services check the
+// Bearer Token while HealthService stays exempt.
+type validatingProjectStub struct {
+	agentcomposev2connect.UnimplementedProjectServiceHandler
 	want string
 }
 
-func (s validatingHealthStub) Status(_ context.Context, req *connect.Request[emptypb.Empty]) (*connect.Response[healthv1.HealthStatusResponse], error) {
+func (s validatingProjectStub) ListProjects(_ context.Context, req *connect.Request[agentcomposev2.ListProjectsRequest]) (*connect.Response[agentcomposev2.ListProjectsResponse], error) {
 	if req.Header().Get("Authorization") != "Bearer "+s.want {
 		return nil, connect.NewError(connect.CodeUnauthenticated, fmt.Errorf("invalid Token"))
 	}
-	return connect.NewResponse(&healthv1.HealthStatusResponse{BuildVersion: "test"}), nil
+	return connect.NewResponse(&agentcomposev2.ListProjectsResponse{}), nil
+}
+
+func newAuthTestServer(t *testing.T, want string) *httptest.Server {
+	t.Helper()
+	mux := http.NewServeMux()
+	path, handler := healthv1connect.NewHealthServiceHandler(healthStub{})
+	mux.Handle(path, handler)
+	path, handler = agentcomposev2connect.NewProjectServiceHandler(validatingProjectStub{want: want})
+	mux.Handle(path, handler)
+	server := httptest.NewServer(mux)
+	t.Cleanup(server.Close)
+	return server
 }
 
 func (healthStub) Status(context.Context, *connect.Request[emptypb.Empty]) (*connect.Response[healthv1.HealthStatusResponse], error) {
@@ -720,11 +734,7 @@ func TestMissingTokenFailsBeforeNetwork(t *testing.T) {
 }
 
 func TestAuthLoginValidatesBeforeSavingAndHidesToken(t *testing.T) {
-	mux := http.NewServeMux()
-	path, handler := healthv1connect.NewHealthServiceHandler(validatingHealthStub{want: "new-secret-token"})
-	mux.Handle(path, handler)
-	server := httptest.NewServer(mux)
-	defer server.Close()
+	server := newAuthTestServer(t, "new-secret-token")
 	configPath := t.TempDir() + "/nested/config.yaml"
 	cmd := NewCommand()
 	var out, errOut bytes.Buffer
@@ -749,11 +759,7 @@ func TestAuthLoginValidatesBeforeSavingAndHidesToken(t *testing.T) {
 }
 
 func TestAuthLoginInvalidTokenDoesNotWrite(t *testing.T) {
-	mux := http.NewServeMux()
-	path, handler := healthv1connect.NewHealthServiceHandler(validatingHealthStub{want: "valid"})
-	mux.Handle(path, handler)
-	server := httptest.NewServer(mux)
-	defer server.Close()
+	server := newAuthTestServer(t, "valid")
 	configPath := t.TempDir() + "/config.yaml"
 	cmd := NewCommand()
 	cmd.SetIn(strings.NewReader("invalid\n"))
@@ -801,13 +807,29 @@ func TestAuthLogoutOnlyClearsStoredTokenAndWarnsForEnvironment(t *testing.T) {
 
 func TestAuthStatusReportsEnvironmentTokenSource(t *testing.T) {
 	t.Setenv("AGENT_COMPOSE_API_TOKEN", "test-token")
-	server, _ := newTestServer(t, nil, nil)
+	server, _ := newTestServer(t, &projectStub{project: fixtureProject()}, nil)
 	out, _, err := executeCommand(t, server.URL, false, "--json", "auth", "status")
 	if err != nil {
 		t.Fatal(err)
 	}
 	if !strings.Contains(out, `"token_source":"environment"`) || strings.Contains(out, "test-token") {
 		t.Fatalf("output = %s", out)
+	}
+}
+
+func TestAuthStatusRejectsInvalidTokenDespiteHealthExemption(t *testing.T) {
+	server := newAuthTestServer(t, "valid")
+	cmd := NewCommand()
+	cmd.SetArgs([]string{"--url", server.URL, "auth", "status"})
+	var node yaml.Node
+	if err := node.Encode(productConfig{APIToken: "invalid"}); err != nil {
+		t.Fatal(err)
+	}
+	ApplyRuntimeConfig(cmd, config.Raw{productName: node}, t.TempDir()+"/config.yaml", false)
+	err := cmd.Execute()
+	coder, ok := err.(interface{ ExitCode() int })
+	if !ok || coder.ExitCode() != exitAuth {
+		t.Fatalf("error = %v", err)
 	}
 }
 
