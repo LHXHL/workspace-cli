@@ -4,7 +4,7 @@ go 1.25.0
 
 require (
 	connectrpc.com/connect v1.19.2
-	github.com/chaitin/agent-compose/proto v0.1.8
+	github.com/chaitin/agent-compose/proto v0.1.12
 	github.com/go-openapi/errors v0.22.7
 	github.com/go-openapi/runtime v0.29.3
 	github.com/go-openapi/strfmt v0.26.1

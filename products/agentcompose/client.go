@@ -11,6 +11,7 @@ type clients struct {
 	exec     agentcomposev2connect.ExecServiceClient
 	sandbox  agentcomposev2connect.SandboxServiceClient
 	resource agentcomposev2connect.ResourceServiceClient
+	llm      agentcomposev2connect.LLMServiceClient
 	health   healthv1connect.HealthServiceClient
 }
 
@@ -23,6 +24,7 @@ func (s *commandState) clients() clients {
 		exec:     agentcomposev2connect.NewExecServiceClient(httpClient, baseURL),
 		sandbox:  agentcomposev2connect.NewSandboxServiceClient(httpClient, baseURL),
 		resource: agentcomposev2connect.NewResourceServiceClient(httpClient, baseURL),
+		llm:      agentcomposev2connect.NewLLMServiceClient(httpClient, baseURL),
 		health:   healthv1connect.NewHealthServiceClient(httpClient, baseURL),
 	}
 }

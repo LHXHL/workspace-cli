@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"strings"
+	"time"
 
 	"connectrpc.com/connect"
 	agentcomposev2 "github.com/chaitin/agent-compose/proto/agentcompose/v2"
@@ -13,29 +14,38 @@ import (
 )
 
 type runDTO struct {
-	ID             string `json:"id" yaml:"id"`
-	ShortID        string `json:"short_id" yaml:"short_id"`
-	ProjectID      string `json:"project_id" yaml:"project_id"`
-	ProjectName    string `json:"project_name" yaml:"project_name"`
-	AgentName      string `json:"agent_name" yaml:"agent_name"`
-	Source         string `json:"source" yaml:"source"`
-	Status         string `json:"status" yaml:"status"`
-	SandboxID      string `json:"sandbox_id,omitempty" yaml:"sandbox_id,omitempty"`
-	SandboxShortID string `json:"sandbox_short_id,omitempty" yaml:"sandbox_short_id,omitempty"`
-	ExitCode       int32  `json:"exit_code" yaml:"exit_code"`
-	Error          string `json:"error,omitempty" yaml:"error,omitempty"`
-	StartedAt      string `json:"started_at,omitempty" yaml:"started_at,omitempty"`
-	CompletedAt    string `json:"completed_at,omitempty" yaml:"completed_at,omitempty"`
-	DurationMS     int64  `json:"duration_ms,omitempty" yaml:"duration_ms,omitempty"`
-	Prompt         string `json:"prompt,omitempty" yaml:"prompt,omitempty"`
-	Output         string `json:"output,omitempty" yaml:"output,omitempty"`
-	ResultJSON     string `json:"result_json,omitempty" yaml:"result_json,omitempty"`
-	Driver         string `json:"driver,omitempty" yaml:"driver,omitempty"`
-	Image          string `json:"image_ref,omitempty" yaml:"image_ref,omitempty"`
+	ID             string            `json:"id" yaml:"id"`
+	ShortID        string            `json:"short_id" yaml:"short_id"`
+	ProjectID      string            `json:"project_id" yaml:"project_id"`
+	ProjectName    string            `json:"project_name" yaml:"project_name"`
+	AgentName      string            `json:"agent_name" yaml:"agent_name"`
+	Source         string            `json:"source" yaml:"source"`
+	Status         string            `json:"status" yaml:"status"`
+	SandboxID      string            `json:"sandbox_id,omitempty" yaml:"sandbox_id,omitempty"`
+	SandboxShortID string            `json:"sandbox_short_id,omitempty" yaml:"sandbox_short_id,omitempty"`
+	ExitCode       int32             `json:"exit_code" yaml:"exit_code"`
+	Error          string            `json:"error,omitempty" yaml:"error,omitempty"`
+	StartedAt      string            `json:"started_at,omitempty" yaml:"started_at,omitempty"`
+	CompletedAt    string            `json:"completed_at,omitempty" yaml:"completed_at,omitempty"`
+	DurationMS     int64             `json:"duration_ms,omitempty" yaml:"duration_ms,omitempty"`
+	Prompt         string            `json:"prompt,omitempty" yaml:"prompt,omitempty"`
+	Output         string            `json:"output,omitempty" yaml:"output,omitempty"`
+	ResultJSON     string            `json:"result_json,omitempty" yaml:"result_json,omitempty"`
+	Driver         string            `json:"driver,omitempty" yaml:"driver,omitempty"`
+	Image          string            `json:"image_ref,omitempty" yaml:"image_ref,omitempty"`
+	SchedulerID    string            `json:"scheduler_id,omitempty" yaml:"scheduler_id,omitempty"`
+	TriggerID      string            `json:"trigger_id,omitempty" yaml:"trigger_id,omitempty"`
+	SchedulerRunID string            `json:"scheduler_run_id,omitempty" yaml:"scheduler_run_id,omitempty"`
+	Warnings       []string          `json:"warnings,omitempty" yaml:"warnings,omitempty"`
+	Labels         map[string]string `json:"labels,omitempty" yaml:"labels,omitempty"`
+	ErrorStack     string            `json:"error_stack,omitempty" yaml:"error_stack,omitempty"`
+	CleanupError   string            `json:"cleanup_error,omitempty" yaml:"cleanup_error,omitempty"`
+	LogsPath       string            `json:"logs_path,omitempty" yaml:"logs_path,omitempty"`
+	ArtifactsDir   string            `json:"artifacts_dir,omitempty" yaml:"artifacts_dir,omitempty"`
 }
 
 func runFromSummary(run *agentcomposev2.RunSummary) runDTO {
-	return runDTO{ID: run.GetRunId(), ShortID: firstNonEmpty(run.GetRunShortId(), shortID(run.GetRunId())), ProjectID: run.GetProjectId(), ProjectName: run.GetProjectName(), AgentName: run.GetAgentName(), Source: enumText(run.GetSource(), "RUN_SOURCE_"), Status: enumText(run.GetStatus(), "RUN_STATUS_"), SandboxID: run.GetSandboxId(), SandboxShortID: firstNonEmpty(run.GetSandboxShortId(), shortID(run.GetSandboxId())), ExitCode: run.GetExitCode(), Error: run.GetError(), StartedAt: timestampText(run.GetStartedAt()), CompletedAt: timestampText(run.GetCompletedAt()), DurationMS: run.GetDurationMs()}
+	return runDTO{ID: run.GetRunId(), ShortID: firstNonEmpty(run.GetRunShortId(), shortID(run.GetRunId())), ProjectID: run.GetProjectId(), ProjectName: run.GetProjectName(), AgentName: run.GetAgentName(), Source: enumText(run.GetSource(), "RUN_SOURCE_"), Status: enumText(run.GetStatus(), "RUN_STATUS_"), SandboxID: run.GetSandboxId(), SandboxShortID: firstNonEmpty(run.GetSandboxShortId(), shortID(run.GetSandboxId())), ExitCode: run.GetExitCode(), Error: run.GetError(), StartedAt: timestampText(run.GetStartedAt()), CompletedAt: timestampText(run.GetCompletedAt()), DurationMS: run.GetDurationMs(), SchedulerID: run.GetSchedulerId(), TriggerID: run.GetTriggerId(), SchedulerRunID: run.GetSchedulerRunId(), Warnings: run.GetWarnings()}
 }
 func runFromDetail(detail *agentcomposev2.RunDetail) runDTO {
 	result := runFromSummary(detail.GetSummary())
@@ -44,6 +54,14 @@ func runFromDetail(detail *agentcomposev2.RunDetail) runDTO {
 	result.ResultJSON = detail.GetResultJson()
 	result.Driver = detail.GetDriver()
 	result.Image = detail.GetImageRef()
+	if len(detail.GetWarnings()) > 0 {
+		result.Warnings = detail.GetWarnings()
+	}
+	result.Labels = detail.GetLabels()
+	result.ErrorStack = detail.GetErrorStack()
+	result.CleanupError = detail.GetCleanupError()
+	result.LogsPath = detail.GetLogsPath()
+	result.ArtifactsDir = detail.GetArtifactsDir()
 	return result
 }
 
@@ -223,7 +241,9 @@ func resolveAgent(ctx context.Context, project *agentcomposev2.Project, ref stri
 
 type runListOptions struct {
 	offsetOptions
-	Agent, Scheduler, Status, Source, StartedFrom, StartedTo, Sandbox string
+	Agent, Scheduler, SchedulerRun, Status, Source, StartedFrom, StartedTo, Sandbox string
+	Labels                                                                          []string
+	AllProjects                                                                     bool
 }
 
 func newRunListCommand(state *commandState) *cobra.Command {
@@ -238,19 +258,31 @@ func newRunListCommand(state *commandState) *cobra.Command {
 		if _, err := parseRunSource(options.Source); err != nil {
 			return usageError(err.Error(), state.options.JSON)
 		}
-		if _, err := parseOptionalTimestamp(options.StartedFrom); err != nil {
-			return usageError("invalid --started-from timestamp", state.options.JSON)
+		if _, err := parseTimeBound(options.StartedFrom, time.Now()); err != nil {
+			return usageError("invalid --started-from: "+err.Error(), state.options.JSON)
 		}
-		if _, err := parseOptionalTimestamp(options.StartedTo); err != nil {
-			return usageError("invalid --started-to timestamp", state.options.JSON)
+		if _, err := parseTimeBound(options.StartedTo, time.Now()); err != nil {
+			return usageError("invalid --started-to: "+err.Error(), state.options.JSON)
+		}
+		if _, err := parseLabels(options.Labels); err != nil {
+			return usageError(err.Error(), state.options.JSON)
+		}
+		if options.AllProjects && cmd.Flags().Changed("project") {
+			return usageError("--all-projects and --project are mutually exclusive", state.options.JSON)
 		}
 		ctx, cancel := requestContext(cmd, state)
 		defer cancel()
-		project, err := resolveProject(ctx, state, state.clients().project)
-		if err != nil {
-			return err
+		var project *projectDTO
+		projectID := ""
+		if !options.AllProjects {
+			resolved, err := resolveProject(ctx, state, state.clients().project)
+			if err != nil {
+				return err
+			}
+			summary := projectFromProto(resolved.GetSummary())
+			project, projectID = &summary, summary.ID
 		}
-		runs, hasMore, next, err := listRuns(ctx, state.clients().run, project.GetSummary().GetProjectId(), options)
+		runs, hasMore, next, err := listRuns(ctx, state.clients().run, projectID, options)
 		if err != nil {
 			return mapConnectError(err, state.options.URL, state.options.JSON)
 		}
@@ -260,15 +292,24 @@ func newRunListCommand(state *commandState) *cobra.Command {
 		}
 		if state.options.JSON {
 			return writeJSON(cmd.OutOrStdout(), struct {
-				Project projectDTO `json:"project"`
-				Runs    []runDTO   `json:"runs"`
-				HasMore bool       `json:"has_more"`
-				Next    uint32     `json:"next_offset,omitempty"`
-			}{projectFromProto(project.GetSummary()), output, hasMore, next})
+				Project *projectDTO `json:"project,omitempty"`
+				Runs    []runDTO    `json:"runs"`
+				HasMore bool        `json:"has_more"`
+				Next    uint32      `json:"next_offset,omitempty"`
+			}{project, output, hasMore, next})
 		}
-		table := newTable(cmd.OutOrStdout(), "RUN\tAGENT\tSTATUS\tSOURCE\tSANDBOX\tSTARTED")
+		header := "RUN\tAGENT\tSTATUS\tSOURCE\tSANDBOX\tSTARTED"
+		if options.AllProjects {
+			header = "RUN\tPROJECT\tAGENT\tSTATUS\tSOURCE\tSANDBOX\tSTARTED"
+		}
+		table := newTable(cmd.OutOrStdout(), header)
 		for _, run := range output {
-			fmt.Fprintf(table, "%s\t%s\t%s\t%s\t%s\t%s\n", run.ShortID, run.AgentName, run.Status, run.Source, run.SandboxShortID, run.StartedAt)
+			if options.AllProjects {
+				fmt.Fprintf(table, "%s\t%s\t", run.ShortID, run.ProjectName)
+			} else {
+				fmt.Fprintf(table, "%s\t", run.ShortID)
+			}
+			fmt.Fprintf(table, "%s\t%s\t%s\t%s\t%s\n", run.AgentName, run.Status, run.Source, run.SandboxShortID, run.StartedAt)
 		}
 		if err := table.Flush(); err != nil {
 			return err
@@ -283,9 +324,12 @@ func newRunListCommand(state *commandState) *cobra.Command {
 	cmd.Flags().StringVar(&options.Scheduler, "scheduler", "", "Filter by Scheduler ID")
 	cmd.Flags().StringVar(&options.Status, "status", "", "Filter by status")
 	cmd.Flags().StringVar(&options.Source, "source", "", "Filter by source")
-	cmd.Flags().StringVar(&options.StartedFrom, "started-from", "", "Filter by start time lower bound")
-	cmd.Flags().StringVar(&options.StartedTo, "started-to", "", "Filter by start time upper bound")
+	cmd.Flags().StringVar(&options.SchedulerRun, "scheduler-run", "", "Filter by Scheduler Run ID")
+	cmd.Flags().StringVar(&options.StartedFrom, "started-from", "", "Filter by start time lower bound (RFC3339, or relative such as 30m, 24h, 7d)")
+	cmd.Flags().StringVar(&options.StartedTo, "started-to", "", "Filter by start time upper bound (RFC3339, or relative such as 30m, 24h, 7d)")
 	cmd.Flags().StringVar(&options.Sandbox, "sandbox", "", "Filter by Sandbox ID")
+	cmd.Flags().StringArrayVar(&options.Labels, "label", nil, "Filter by label key=value; repeat to require several")
+	cmd.Flags().BoolVar(&options.AllProjects, "all-projects", false, "List Runs across every project the token can access")
 	return cmd
 }
 
@@ -298,11 +342,16 @@ func listRuns(ctx context.Context, client agentcomposev2connect.RunServiceClient
 	if err != nil {
 		return nil, false, 0, err
 	}
-	startedFrom, err := parseOptionalTimestamp(options.StartedFrom)
+	now := time.Now()
+	startedFrom, err := parseTimeBound(options.StartedFrom, now)
 	if err != nil {
 		return nil, false, 0, err
 	}
-	startedTo, err := parseOptionalTimestamp(options.StartedTo)
+	startedTo, err := parseTimeBound(options.StartedTo, now)
+	if err != nil {
+		return nil, false, 0, err
+	}
+	labels, err := parseLabels(options.Labels)
 	if err != nil {
 		return nil, false, 0, err
 	}
@@ -310,7 +359,7 @@ func listRuns(ctx context.Context, client agentcomposev2connect.RunServiceClient
 	runs := make([]*agentcomposev2.RunSummary, 0)
 	for {
 		pageSize := offsetPageSize(options.offsetOptions, len(runs))
-		resp, err := client.ListRuns(ctx, connect.NewRequest(&agentcomposev2.ListRunsRequest{ProjectId: projectID, AgentName: options.Agent, SchedulerId: options.Scheduler, Status: status, Source: source, StartedFrom: startedFrom, StartedTo: startedTo, SandboxId: options.Sandbox, Offset: offset, Limit: pageSize}))
+		resp, err := client.ListRuns(ctx, connect.NewRequest(&agentcomposev2.ListRunsRequest{ProjectId: projectID, AgentName: options.Agent, SchedulerId: options.Scheduler, SchedulerRunId: options.SchedulerRun, Labels: labels, Status: status, Source: source, StartedFrom: startedFrom, StartedTo: startedTo, SandboxId: options.Sandbox, Offset: offset, Limit: pageSize}))
 		if err != nil {
 			return nil, false, 0, err
 		}

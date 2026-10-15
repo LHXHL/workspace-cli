@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"strconv"
 	"strings"
 	"text/tabwriter"
 	"time"
@@ -20,19 +21,59 @@ func timestampText(value *timestamppb.Timestamp) string {
 	return value.AsTime().Format("2006-01-02T15:04:05.999999999Z07:00")
 }
 
-func parseOptionalTimestamp(raw string) (*timestamppb.Timestamp, error) {
+// parseTimeBound accepts an RFC3339 timestamp or a duration relative to now
+// ("30m", "24h", "7d"). The result is truncated to milliseconds because the
+// daemon rejects sub-millisecond time filters.
+func parseTimeBound(raw string, now time.Time) (*timestamppb.Timestamp, error) {
 	raw = strings.TrimSpace(raw)
 	if raw == "" {
 		return nil, nil
 	}
 	parsed, err := time.Parse(time.RFC3339Nano, raw)
 	if err != nil {
-		parsed, err = time.Parse(time.RFC3339, raw)
+		ago, durationErr := parseRelativeDuration(raw)
+		if durationErr != nil {
+			return nil, fmt.Errorf("%q is neither an RFC3339 timestamp nor a duration such as 30m, 24h, or 7d", raw)
+		}
+		parsed = now.Add(-ago)
 	}
-	if err != nil {
-		return nil, err
+	return timestamppb.New(parsed.Truncate(time.Millisecond)), nil
+}
+
+func parseRelativeDuration(raw string) (time.Duration, error) {
+	var ago time.Duration
+	if days, ok := strings.CutSuffix(raw, "d"); ok {
+		count, err := strconv.ParseUint(days, 10, 16)
+		if err != nil {
+			return 0, err
+		}
+		ago = time.Duration(count) * 24 * time.Hour
+	} else {
+		var err error
+		if ago, err = time.ParseDuration(raw); err != nil {
+			return 0, err
+		}
 	}
-	return timestamppb.New(parsed), nil
+	if ago <= 0 {
+		return 0, fmt.Errorf("duration must be positive")
+	}
+	return ago, nil
+}
+
+func parseLabels(raw []string) (map[string]string, error) {
+	if len(raw) == 0 {
+		return nil, nil
+	}
+	labels := make(map[string]string, len(raw))
+	for _, item := range raw {
+		key, value, ok := strings.Cut(item, "=")
+		key = strings.TrimSpace(key)
+		if !ok || key == "" {
+			return nil, fmt.Errorf("invalid --label %q; expected key=value", item)
+		}
+		labels[key] = value
+	}
+	return labels, nil
 }
 
 type runEventDTO struct {
