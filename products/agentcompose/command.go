@@ -20,7 +20,7 @@ func NewCommand() *cobra.Command {
 	}
 	cmd.SetContext(context.WithValue(context.Background(), stateKey{}, state))
 	cmd.PersistentFlags().StringVar(&state.options.URL, "url", "", "Token/RBAC API base URL, including an optional path prefix")
-	cmd.PersistentFlags().StringVar(&state.options.Project, "project", "", "Default project name or ID")
+	cmd.PersistentFlags().StringVarP(&state.options.Project, "project", "p", "", "Default project name or ID")
 	cmd.PersistentFlags().StringVar(&state.options.timeoutText, "timeout", "30s", "Unary request timeout")
 	cmd.PersistentFlags().BoolVar(&state.options.Insecure, "insecure", false, "Skip TLS certificate verification")
 	cmd.PersistentFlags().BoolVar(&state.options.JSON, "json", false, "Output JSON or NDJSON")
@@ -42,6 +42,7 @@ func NewCommand() *cobra.Command {
 		newSchedulerCommand(state),
 		newSandboxCommand(state),
 		newExecCommand(state),
+		newLLMCommand(state),
 	)
 	return cmd
 }

@@ -104,6 +104,7 @@ type runStub struct {
 	agentcomposev2connect.UnimplementedRunServiceHandler
 	mu            sync.Mutex
 	runs          []*agentcomposev2.RunSummary
+	details       map[string]*agentcomposev2.RunDetail
 	listRequests  []*agentcomposev2.ListRunsRequest
 	followCalls   int
 	chunks        int
@@ -262,6 +263,9 @@ func newTestServer(t *testing.T, project *projectStub, run *runStub, extras ...a
 			mux.Handle(path, connectHandler)
 		case *resourceStub:
 			path, connectHandler := agentcomposev2connect.NewResourceServiceHandler(handler)
+			mux.Handle(path, connectHandler)
+		case *llmStub:
+			path, connectHandler := agentcomposev2connect.NewLLMServiceHandler(handler)
 			mux.Handle(path, connectHandler)
 		}
 	}
@@ -804,5 +808,19 @@ func TestAuthStatusReportsEnvironmentTokenSource(t *testing.T) {
 	}
 	if !strings.Contains(out, `"token_source":"environment"`) || strings.Contains(out, "test-token") {
 		t.Fatalf("output = %s", out)
+	}
+}
+
+func TestProjectShorthandFlag(t *testing.T) {
+	project := &projectStub{project: fixtureProject()}
+	run := &runStub{}
+	server, _ := newTestServer(t, project, run, &resourceStub{})
+	// The configured default project exists, so only an honored -p can make this fail.
+	_, _, err := executeCommand(t, server.URL, false, "-p", "missing-project", "run", "ls")
+	if !isNotFoundError(err) {
+		t.Fatalf("error = %v", err)
+	}
+	if len(run.listRequests) != 0 {
+		t.Fatalf("requests = %+v", run.listRequests)
 	}
 }
