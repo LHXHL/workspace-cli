@@ -109,7 +109,7 @@ func executeSandboxList(cmd *cobra.Command, state *commandState, options sandbox
 		}
 	}
 	if len(wanted) > 0 {
-		schedulerRuns, schedulerErr := associateSchedulerRuns(ctx, state.clients().project, project.GetSummary().GetProjectId(), wanted)
+		schedulerRuns, schedulerErr := latestSchedulerRunsBySandbox(ctx, state.clients().project, project.GetSummary().GetProjectId(), wanted)
 		if schedulerErr != nil {
 			return mapConnectError(schedulerErr, state.options.URL, state.options.JSON)
 		}
@@ -197,88 +197,41 @@ func parseSandboxStatus(raw string) (agentcomposev2.SandboxStatus, error) {
 	}
 }
 
-// schedulerRunScanMargin is how far before the oldest wanted Sandbox's
-// creation the scan still looks for its Scheduler Run. A Scheduler Run starts
-// before the Sandboxes it creates, but a long run may create one hours later;
-// 24h covers common SCHEDULER_RUN_TIMEOUT values.
-const schedulerRunScanMargin = 24 * time.Hour
+// schedulerRunLookupBatchSize mirrors the daemon's cap on sandbox IDs per
+// BatchGetLatestSchedulerRuns request. A ps page holds at most 100 Sandboxes,
+// so one request covers it; the loop keeps this correct if that changes.
+const schedulerRunLookupBatchSize = 500
 
-// associateSchedulerRuns finds the Scheduler Run that created each wanted
-// Sandbox. The API cannot filter Scheduler Runs by Sandbox, and a busy project
-// keeps tens of thousands of them, so reading the whole history is too slow.
-// A scheduler creates Sandboxes for its own agent, so each agent's Sandboxes
-// are first looked up among that agent's runs only; any still unmatched are
-// then looked up across all runs, so no association is lost if that ever
-// does not hold.
-func associateSchedulerRuns(ctx context.Context, client agentcomposev2connect.ProjectServiceClient, projectID string, wanted []*agentcomposev2.Sandbox) (map[string]*agentcomposev2.SchedulerRun, error) {
-	byAgent := map[string][]*agentcomposev2.Sandbox{}
+// latestSchedulerRunsBySandbox asks the daemon for the newest Scheduler Run
+// linked to each wanted Sandbox. The API filters by Sandbox, so this costs one
+// request per 500 Sandboxes instead of scanning the project's Scheduler Run
+// history.
+func latestSchedulerRunsBySandbox(ctx context.Context, client agentcomposev2connect.ProjectServiceClient, projectID string, wanted []*agentcomposev2.Sandbox) (map[string]*agentcomposev2.SchedulerRun, error) {
+	sandboxIDs := make([]string, 0, len(wanted))
 	for _, sandbox := range wanted {
-		if agent := sandbox.GetAgentName(); agent != "" {
-			byAgent[agent] = append(byAgent[agent], sandbox)
+		if id := strings.TrimSpace(sandbox.GetSandboxId()); id != "" {
+			sandboxIDs = append(sandboxIDs, id)
 		}
 	}
-	found := make(map[string]*agentcomposev2.SchedulerRun, len(wanted))
-	for agent, sandboxes := range byAgent {
-		if err := scanSchedulerRuns(ctx, client, projectID, agent, sandboxes, found); err != nil {
+	found := make(map[string]*agentcomposev2.SchedulerRun, len(sandboxIDs))
+	for start := 0; start < len(sandboxIDs); start += schedulerRunLookupBatchSize {
+		end := min(start+schedulerRunLookupBatchSize, len(sandboxIDs))
+		resp, err := client.BatchGetLatestSchedulerRuns(ctx, connect.NewRequest(&agentcomposev2.BatchGetLatestSchedulerRunsRequest{
+			Project:    projectRefID(projectID),
+			SandboxIds: sandboxIDs[start:end],
+		}))
+		if err != nil {
 			return nil, err
 		}
-	}
-	unmatched := make([]*agentcomposev2.Sandbox, 0)
-	for _, sandbox := range wanted {
-		if found[sandbox.GetSandboxId()] == nil {
-			unmatched = append(unmatched, sandbox)
-		}
-	}
-	if len(unmatched) > 0 {
-		if err := scanSchedulerRuns(ctx, client, projectID, "", unmatched, found); err != nil {
-			return nil, err
+		for _, result := range resp.Msg.GetResults() {
+			sandboxID := strings.TrimSpace(result.GetSandboxId())
+			if sandboxID == "" || result.GetRun() == nil {
+				continue
+			}
+			found[sandboxID] = result.GetRun()
 		}
 	}
 	return found, nil
-}
-
-// scanSchedulerRuns records in found the newest Scheduler Run that lists each
-// of the given Sandboxes. ListSchedulerRuns returns newest first, so the scan
-// stops once every Sandbox is matched, or once a page reaches runs that
-// started before the cutoff. A Sandbox without a creation time disables the
-// cutoff rather than risk missing its run.
-func scanSchedulerRuns(ctx context.Context, client agentcomposev2connect.ProjectServiceClient, projectID, agentName string, sandboxes []*agentcomposev2.Sandbox, found map[string]*agentcomposev2.SchedulerRun) error {
-	pending := make(map[string]struct{}, len(sandboxes))
-	cutoff, bounded := time.Time{}, true
-	for _, sandbox := range sandboxes {
-		pending[sandbox.GetSandboxId()] = struct{}{}
-		createdAt := sandbox.GetCreatedAt()
-		if createdAt == nil {
-			bounded = false
-			continue
-		}
-		if earliest := createdAt.AsTime().Add(-schedulerRunScanMargin); cutoff.IsZero() || earliest.Before(cutoff) {
-			cutoff = earliest
-		}
-	}
-	for offset := uint32(0); len(pending) > 0; {
-		resp, err := client.ListSchedulerRuns(ctx, connect.NewRequest(&agentcomposev2.ListSchedulerRunsRequest{Project: projectRefID(projectID), AgentName: agentName, Offset: offset, Limit: 100}))
-		if err != nil {
-			return err
-		}
-		page := resp.Msg.GetRuns()
-		for _, run := range page {
-			for _, sandboxID := range run.GetSandboxIds() {
-				if _, ok := pending[sandboxID]; ok {
-					found[sandboxID] = run
-					delete(pending, sandboxID)
-				}
-			}
-		}
-		offset += uint32(len(page))
-		if len(page) == 0 || offset >= resp.Msg.GetTotal() {
-			return nil
-		}
-		if oldest := page[len(page)-1].GetStartedAt(); bounded && oldest != nil && oldest.AsTime().Before(cutoff) {
-			return nil
-		}
-	}
-	return nil
 }
 
 func listSandboxes(ctx context.Context, client agentcomposev2connect.SandboxServiceClient, projectID string, status []agentcomposev2.SandboxStatus, options offsetOptions) ([]*agentcomposev2.Sandbox, bool, uint32, error) {

@@ -31,6 +31,7 @@ type projectStub struct {
 	schedulerRuns          []*agentcomposev2.SchedulerRun
 	schedulerEvents        []*agentcomposev2.SchedulerEvent
 	schedulerRunRequests   []*agentcomposev2.ListSchedulerRunsRequest
+	batchRunRequests       []*agentcomposev2.BatchGetLatestSchedulerRunsRequest
 	schedulerEventRequests []*agentcomposev2.ListProjectSchedulerEventsRequest
 	schedulerResponses     map[string]*agentcomposev2.GetSchedulerResponse
 }
@@ -55,6 +56,23 @@ func (s *projectStub) ListSchedulerRuns(_ context.Context, req *connect.Request[
 		end = len(runs)
 	}
 	return connect.NewResponse(&agentcomposev2.ListSchedulerRunsResponse{Runs: runs[start:end], Total: uint32(len(runs))}), nil
+}
+
+func (s *projectStub) BatchGetLatestSchedulerRuns(_ context.Context, req *connect.Request[agentcomposev2.BatchGetLatestSchedulerRunsRequest]) (*connect.Response[agentcomposev2.BatchGetLatestSchedulerRunsResponse], error) {
+	s.batchRunRequests = append(s.batchRunRequests, proto.Clone(req.Msg).(*agentcomposev2.BatchGetLatestSchedulerRunsRequest))
+	results := make([]*agentcomposev2.SandboxSchedulerRun, 0, len(req.Msg.GetSandboxIds()))
+	for _, sandboxID := range req.Msg.GetSandboxIds() {
+		var match *agentcomposev2.SchedulerRun
+		for _, run := range s.schedulerRuns {
+			for _, linked := range run.GetSandboxIds() {
+				if linked == sandboxID {
+					match = run
+				}
+			}
+		}
+		results = append(results, &agentcomposev2.SandboxSchedulerRun{SandboxId: sandboxID, Run: match})
+	}
+	return connect.NewResponse(&agentcomposev2.BatchGetLatestSchedulerRunsResponse{Results: results}), nil
 }
 
 func (s *projectStub) ListProjectSchedulerEvents(_ context.Context, req *connect.Request[agentcomposev2.ListProjectSchedulerEventsRequest]) (*connect.Response[agentcomposev2.ListProjectSchedulerEventsResponse], error) {
